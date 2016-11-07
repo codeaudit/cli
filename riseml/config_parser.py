@@ -7,6 +7,9 @@ import yaml
 import requests
 
 
+class ConfigException(Exception): pass
+
+
 @contextlib.contextmanager
 def chdir(new_dir):
     old_dir = os.getcwd()
@@ -48,8 +51,15 @@ class Config(object):
 
 def parse(f):
     tmp = yaml.load(f)
+    if not 'image' in tmp:
+        raise ConfigException(u'missing key: öimage')
+    elif not 'script' in tmp:
+        raise ConfigException(u'missing key: script')
+
     config = Config()
-    config.data = tmp['data'][0]
+    if 'data' in tmp:
+        config.data = tmp['data'][0]
+    config.image = tmp['image'][0]
     config.script = tmp['script'][0]
     return config
 
