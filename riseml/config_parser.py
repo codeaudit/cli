@@ -52,7 +52,7 @@ class Config(object):
 def parse(f):
     tmp = yaml.load(f)
     if not 'image' in tmp:
-        raise ConfigException(u'missing key: öimage')
+        raise ConfigException(u'missing key: image')
     elif not 'script' in tmp:
         raise ConfigException(u'missing key: script')
 
