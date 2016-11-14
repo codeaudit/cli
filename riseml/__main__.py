@@ -220,6 +220,26 @@ def add_update_key_parser(subparsers):
     parser.set_defaults(run=run)
 
 
+def add_ps_parser(subparsers):
+    parser = subparsers.add_parser('ps')
+    parser.add_argument('-a', action='store_const', const=True)
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        for job in client.get_jobs():
+            if args.a:
+                status = job.status
+                if job.reason:
+                    status += ': ' + job.reason
+                print("%s (%s)" % (job.id, status))
+            else:
+                if job.status == 'TASK_RUNNING':
+                    print(job.id)
+
+
+    parser.set_defaults(run=run)
+
+
 def get_parser():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -232,6 +252,7 @@ def get_parser():
     add_logs_parser(subparsers)
     add_push_parser(subparsers)
     add_update_key_parser(subparsers)
+    add_ps_parser(subparsers)
     return parser
 
 
