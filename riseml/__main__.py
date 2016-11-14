@@ -147,10 +147,16 @@ def add_whoami_parser(subparsers):
 
 def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs')
+    parser.add_argument('job', nargs='?', default='')
     def run(args):
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
-        job_id = client.get_jobs()[-1].id
+        job_id = None
+        if args.job:
+            job_id = args.job
+        else:
+            api_client = ApiClient(host=api_url)
+            client = DefaultApi(api_client)
+            repository = get_repository(get_repo_name())
+            job_id = client.get_repository_jobs(repository.id)[-1].id
 
         res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
@@ -159,6 +165,7 @@ def add_logs_parser(subparsers):
         if res.status_code == 200:
             for buf in res.iter_content(4096):
                 stdout.write(buf)
+                stdout.flush()
 
     parser.set_defaults(run=run)
 
