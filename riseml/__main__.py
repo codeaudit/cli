@@ -246,14 +246,20 @@ def add_init_ssh_parser(subparsers):
 
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
-        user = client.update_user(ssh_key=public_key)[0]
+
+        try:
+            user = client.update_user(ssh_key=public_key)[0]
+        except riseml.rest.ApiException as e:
+            body = json.loads(e.body)
+            handle_error(body['message'], e.status)
 
         proc = subprocess.Popen(['git', 'remote', 'remove', 'riseml'],
             stdout=dev_null,
             stderr=dev_null,
             cwd=get_repo_root())
 
-        proc = subprocess.Popen(['git', 'remote', 'add', 'riseml', 'git@git.riseml.com:%s' % get_repo_name()],
+        repo_url = 'git@git.riseml.com:%s' % get_repo_name()
+        proc = subprocess.Popen(['git', 'remote', 'add', 'riseml', repo_url],
             stdout=dev_null,
             stderr=dev_null,
             cwd=get_repo_root())
