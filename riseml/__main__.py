@@ -92,7 +92,7 @@ def handle_http_error(res):
 
 
 def add_create_parser(subparsers):
-    parser = subparsers.add_parser('create')
+    parser = subparsers.add_parser('create', help="create repository")
     def run(args):
         repository = create_repository(get_repo_name())
         print("repository created: %s (%s)" % (repository.name, repository.id))
@@ -101,9 +101,9 @@ def add_create_parser(subparsers):
 
 
 def add_register_parser(subparsers):
-    parser = subparsers.add_parser('register')
-    parser.add_argument('--username', required=True)
-    parser.add_argument('--email', required=True)
+    parser = subparsers.add_parser('register', help="register user (only admin)")
+    parser.add_argument('--username', help="a person's username", required=True)
+    parser.add_argument('--email', help="a person's email", required=True)
     def run(args):
         api_client = ApiClient(host=api_url)
         client = AdminApi(api_client)
@@ -119,11 +119,11 @@ def add_register_parser(subparsers):
 
 
 def add_ls_parser(subparsers):
-    parser = subparsers.add_parser('ls')
-    parser.add_argument('name', nargs='?', default='')
+    parser = subparsers.add_parser('ls', help="list directory from scratch")
+    parser.add_argument('file', help="scratch file path", nargs='?', default='')
     def run(args):
         repository = get_repository(get_repo_name())
-        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.name))
+        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file))
         if res.status_code == 200 and res.headers['content-type'] == 'application/json':
             for entry in res.json():
                 print(entry['name'])
@@ -132,9 +132,9 @@ def add_ls_parser(subparsers):
 
 
 def add_cp_parser(subparsers):
-    parser = subparsers.add_parser('cp')
-    parser.add_argument('src')
-    parser.add_argument('dst')
+    parser = subparsers.add_parser('cp', help="cp file from scratch")
+    parser.add_argument('src', help="scratch file path")
+    parser.add_argument('dst', help="local file path")
     def run(args):
         repository = get_repository(get_repo_name())
         res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.src), stream=True)
@@ -147,11 +147,11 @@ def add_cp_parser(subparsers):
 
 
 def add_cat_parser(subparsers):
-    parser = subparsers.add_parser('cat')
-    parser.add_argument('name')
+    parser = subparsers.add_parser('cat', help="print file contents from scratch")
+    parser.add_argument('file', help="scratch file path")
     def run(args):
         repository = get_repository(get_repo_name())
-        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.name), stream=True)
+        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file), stream=True)
         if res.status_code == 200:
             for buf in res.iter_content(4096):
                 stdout.write(buf)
@@ -160,7 +160,7 @@ def add_cat_parser(subparsers):
 
 
 def add_clean_parser(subparsers):
-    parser = subparsers.add_parser('clean')
+    parser = subparsers.add_parser('clean', help="remove all data from scratch")
     def run(args):
         clean_scratch()
 
@@ -168,7 +168,7 @@ def add_clean_parser(subparsers):
 
 
 def add_whoami_parser(subparsers):
-    parser = subparsers.add_parser('whoami')
+    parser = subparsers.add_parser('whoami', help="show currently logged in user")
     def run(args):
         user = get_user()
         print("%s (%s)" % (user.username, user.id))
@@ -177,8 +177,8 @@ def add_whoami_parser(subparsers):
 
 
 def add_logs_parser(subparsers):
-    parser = subparsers.add_parser('logs')
-    parser.add_argument('job', nargs='?', default='')
+    parser = subparsers.add_parser('logs', help="show logs")
+    parser.add_argument('job', help="job identifier (optional)", nargs='?', default='')
     def run(args):
         job_id = None
         if args.job:
@@ -203,7 +203,7 @@ def add_logs_parser(subparsers):
 
 
 def add_push_parser(subparsers):
-    parser = subparsers.add_parser('push')
+    parser = subparsers.add_parser('push', help="run new job")
     def run(args):
         proc = subprocess.Popen(['git', 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
@@ -236,10 +236,11 @@ def add_push_parser(subparsers):
 
 
 def add_init_ssh_parser(subparsers):
-    parser = subparsers.add_parser('init-ssh')
-    parser.add_argument('path', nargs='?', default='')
+    parser = subparsers.add_parser('init-ssh', help="initialize setup for push via git")
+    parser.add_argument('ssh_key', help="path to ssh key (default: ~/.ssh/id_(rsa|dsa).pub",
+        metavar='ssh-key', nargs='?', default='')
     def run(args):
-        public_key_path, public_key = get_key(args.path)
+        public_key_path, public_key = get_key(args.ssh_key)
         if not public_key:
             print("no key found")
             sys.exit(1)
@@ -271,8 +272,9 @@ def add_init_ssh_parser(subparsers):
 
 
 def add_ps_parser(subparsers):
-    parser = subparsers.add_parser('ps')
-    parser.add_argument('-a', action='store_const', const=True)
+    parser = subparsers.add_parser('ps', help="show jobs")
+    parser.add_argument('-a', help="show all jobs",
+        action='store_const', const=True)
     def run(args):
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
@@ -292,20 +294,27 @@ def add_ps_parser(subparsers):
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', action='store_const', const=True)
+    parser.add_argument('-v', help="show endpoints",
+        action='store_const', const=True)
 
     subparsers = parser.add_subparsers()
-    add_create_parser(subparsers)
+
+    # user ops
     add_register_parser(subparsers)
+    add_whoami_parser(subparsers)
+    add_init_ssh_parser(subparsers)
+
+    # worklow ops
+    add_create_parser(subparsers)
+    add_push_parser(subparsers)
+    add_logs_parser(subparsers)
+
+    # scratch ops
+    add_ps_parser(subparsers)
     add_ls_parser(subparsers)
     add_cp_parser(subparsers)
     add_cat_parser(subparsers)
     add_clean_parser(subparsers)
-    add_whoami_parser(subparsers)
-    add_logs_parser(subparsers)
-    add_push_parser(subparsers)
-    add_init_ssh_parser(subparsers)
-    add_ps_parser(subparsers)
 
     return parser
 
@@ -313,8 +322,8 @@ def get_parser():
 parser = get_parser()
 args = parser.parse_args(sys.argv[1:])
 if args.v:
-    print('api_url: %s' % api_url)
-    print('scratch_url: %s' % scratch_url)
+    print('RISEML_API_ENDPOINT: %s' % api_url)
+    print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
 if hasattr(args, 'run'):
     args.run(args)
 else:
