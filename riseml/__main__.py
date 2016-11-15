@@ -133,7 +133,10 @@ def add_ls_parser(subparsers):
         res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file))
         if res.status_code == 200 and res.headers['content-type'] == 'application/json':
             for entry in res.json():
-                print(entry['name'])
+                if entry['type'] == 'directory':
+                    print(" " * 11 + " %s" % (entry['name']))
+                else:
+                    print("%11d %s" % (entry['size'], entry['name']))
 
     parser.set_defaults(run=run)
 
