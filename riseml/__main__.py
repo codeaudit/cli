@@ -82,8 +82,11 @@ def clean_scratch():
     client.delete_scratch(repository.id)
 
 
-def handle_error(message, status_code):
-    print('ERROR: %s (%d)' % (message, status_code))
+def handle_error(message, status_code=None):
+    if status_code:
+        print('ERROR: %s (%d)' % (message, status_code))
+    else:
+        print('ERROR: %s' % message)
     sys.exit(1)
 
 
@@ -122,7 +125,11 @@ def add_ls_parser(subparsers):
     parser = subparsers.add_parser('ls', help="list directory from scratch")
     parser.add_argument('file', help="scratch file path", nargs='?', default='')
     def run(args):
-        repository = get_repository(get_repo_name())
+        repo_name = get_repo_name()
+        repository = get_repository(repo_name)
+        if not repository:
+            handle_error("repository not found: %s" % repo_name)
+            return
         res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file))
         if res.status_code == 200 and res.headers['content-type'] == 'application/json':
             for entry in res.json():
