@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import argparse
@@ -5,6 +6,7 @@ import subprocess
 
 import requests
 
+import riseml
 from riseml import DefaultApi, AdminApi, ApiClient
 
 
@@ -73,9 +75,13 @@ def clean_scratch():
     client.delete_scratch(repository.id)
 
 
-def handle_http_error(res):
-    print('ERROR: %s (%d)' % (res.json()['message'], res.status_code))
+def handle_error(message, status_code):
+    print('ERROR: %s (%d)' % (message, status_code))
     sys.exit(1)
+
+
+def handle_http_error(res):
+    handle_error(res.json()['message'], res.status_code)
 
 
 def add_create_parser(subparsers):
@@ -94,7 +100,12 @@ def add_register_parser(subparsers):
     def run(args):
         api_client = ApiClient(host=api_url)
         client = AdminApi(api_client)
-        user = client.create_user(username=args.username, email=args.email)[0]
+        user = None
+        try:
+            user = client.create_user(username=args.username, email=args.email)[0]
+        except riseml.rest.ApiException as e:
+            body = json.loads(e.body)
+            handle_error(body['message'], e.status)
         print(user)
 
     parser.set_defaults(run=run)
