@@ -5,7 +5,7 @@ import subprocess
 
 import requests
 
-from riseml import DefaultApi, ApiClient
+from riseml import DefaultApi, AdminApi, ApiClient
 
 
 try:
@@ -14,8 +14,8 @@ except AttributeError:
     stdout = sys.stdout
 
 
-scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
+scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
 
 
 def get_repo_root(cwd=None):
@@ -83,6 +83,19 @@ def add_create_parser(subparsers):
     def run(args):
         repository = create_repository(get_repo_name())
         print("repository created: %s (%s)" % (repository.name, repository.id))
+
+    parser.set_defaults(run=run)
+
+
+def add_register_parser(subparsers):
+    parser = subparsers.add_parser('register')
+    parser.add_argument('--username', required=True)
+    parser.add_argument('--email', required=True)
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = AdminApi(api_client)
+        user = client.create_user(username=args.username, email=args.email)[0]
+        print(user)
 
     parser.set_defaults(run=run)
 
@@ -242,8 +255,11 @@ def add_ps_parser(subparsers):
 
 def get_parser():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-v', action='store_const', const=True)
+
     subparsers = parser.add_subparsers()
     add_create_parser(subparsers)
+    add_register_parser(subparsers)
     add_ls_parser(subparsers)
     add_cp_parser(subparsers)
     add_cat_parser(subparsers)
@@ -253,11 +269,15 @@ def get_parser():
     add_push_parser(subparsers)
     add_update_key_parser(subparsers)
     add_ps_parser(subparsers)
+
     return parser
 
 
 parser = get_parser()
 args = parser.parse_args(sys.argv[1:])
+if args.v:
+    print('api_url: %s' % api_url)
+    print('scratch_url: %s' % scratch_url)
 if hasattr(args, 'run'):
     args.run(args)
 else:
