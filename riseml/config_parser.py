@@ -23,45 +23,32 @@ def chdir(new_dir):
 
 
 class Config(object):
-    data = None
-    script = None
-
-    def download(self):
-        filename = os.path.basename(self.data)
-        if os.path.exists(filename):
-            return
-
-        with open(filename, 'wb') as f:
-            r = requests.get(self.data, stream=True)
-            if not r.ok:
-                assert False
-            for buf in r.iter_content(4096):
-                f.write(buf)
-
-    def run(self, work_dir='.'):
-        with chdir(work_dir):
-            proc = subprocess.Popen(self.script,
-                shell=True,
-                bufsize=1)
-            proc.communicate()
-            if work_dir:
-                tmp_dir = os.getcwd()
-                os.chdir(work_dir)
+    image = None
+    commands = None
 
 
 def parse(f):
+    config = Config()
     tmp = yaml.load(f)
     if not 'image' in tmp:
         raise ConfigException(u'missing key: image')
     elif not 'script' in tmp:
         raise ConfigException(u'missing key: script')
 
-    config = Config()
-    if 'data' in tmp:
-        config.data = tmp['data'][0]
-    config.image = tmp['image'][0]
-    config.script = tmp['script'][0]
+    if isinstance(tmp['image'], list):
+        if len(tmp['image']) > 1:
+            raise ConfigException(u"you can only specify a single image")
+        config.image = tmp['image'][0]
+    else:
+        config.image = tmp['image']
+
+    if isinstance(tmp['script'], list):
+        config.commands = tmp['script']
+    else:
+        config.commands = [tmp['script']]
+
     return config
+
 
 def parse_file(filename):
     with open(filename) as f:
