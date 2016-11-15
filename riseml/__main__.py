@@ -209,6 +209,22 @@ def add_logs_parser(subparsers):
     parser.set_defaults(run=run)
 
 
+def add_kill_parser(subparsers):
+    parser = subparsers.add_parser('kill', help="kill job")
+    parser.add_argument('job', help="job identifier")
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        try:
+            job = client.kill_job(args.job)[0]
+        except riseml.rest.ApiException as e:
+            body = json.loads(e.body)
+            handle_error(body['message'], e.status)
+        print("job killed (%s)" % (job.id))
+
+    parser.set_defaults(run=run)
+
+
 def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     def run(args):
@@ -315,6 +331,7 @@ def get_parser():
     add_create_parser(subparsers)
     add_push_parser(subparsers)
     add_logs_parser(subparsers)
+    add_kill_parser(subparsers)
 
     # scratch ops
     add_ps_parser(subparsers)
