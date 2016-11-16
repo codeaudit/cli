@@ -70,7 +70,7 @@ def get_repository(name):
     for repository in client.get_repositories():
         if repository.name == name:
             return repository
-
+    handle_error("repository not found: %s" % name)
 
 def create_repository(name):
     api_client = ApiClient(host=api_url)
@@ -130,9 +130,6 @@ def add_ls_parser(subparsers):
     def run(args):
         repo_name = get_repo_name()
         repository = get_repository(repo_name)
-        if not repository:
-            handle_error("repository not found: %s" % repo_name)
-            return
         res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file))
         if res.status_code == 200 and res.headers['content-type'] == 'application/json':
             for entry in res.json():
@@ -234,6 +231,8 @@ def add_kill_parser(subparsers):
 def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     def run(args):
+        repository = get_repository(get_repo_name())
+
         proc = subprocess.Popen(['git', 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
