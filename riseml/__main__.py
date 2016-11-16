@@ -33,11 +33,14 @@ def get_repo_root(cwd=None):
     if os.path.exists(os.path.join(cwd, '.git')):
         return cwd
     elif cwd != '/':
-        return get_repo_name(os.path.dirname(cwd))
+        return get_repo_root(os.path.dirname(cwd))
 
 
 def get_repo_name():
-    return os.path.basename(get_repo_root())
+    repo_root = get_repo_root()
+    if not repo_root:
+        handle_error("no git repository found")
+    return os.path.basename(repo_root)
 
 
 def get_key(path=None):
@@ -233,12 +236,14 @@ def add_push_parser(subparsers):
     def run(args):
         proc = subprocess.Popen(['git', 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
-            stdout=subprocess.PIPE)
+            stdout=subprocess.PIPE,
+            stderr=dev_null)
         revision = proc.stdout.read().strip()
 
         proc = subprocess.Popen(['/usr/bin/git', 'archive', '--format=tgz', 'HEAD'],
             cwd=get_repo_root(),
-            stdout=subprocess.PIPE)
+            stdout=subprocess.PIPE,
+            stderr=dev_null)
 
         res = requests.post('%s/changesets' % api_url,
             data={
@@ -302,18 +307,37 @@ def add_ps_parser(subparsers):
     parser.add_argument('-a', help="show all jobs",
         action='store_const', const=True)
     def run(args):
+        def filter_jobs(jobs):
+            res = []
+            for job in jobs:
+                if args.a:
+                    status = job.status
+                    if job.reason:
+                        status += ': ' + job.reason
+                    res.append("%s (%s)" % (job.id, status))
+                else:
+                    if job.status == 'TASK_RUNNING':
+                        res.append(job.id)
+            return res
+
+        repo_name = get_repo_name()
+
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
-        for job in client.get_jobs():
-            if args.a:
-                status = job.status
-                if job.reason:
-                    status += ': ' + job.reason
-                print("%s (%s)" % (job.id, status))
-            else:
-                if job.status == 'TASK_RUNNING':
-                    print(job.id)
+        all_jobs = client.get_jobs()
 
+        if repo_name:
+            repository = get_repository(repo_name)
+            my_jobs = client.get_repository_jobs(repository.id)
+            filtered_jobs = filter_jobs(my_jobs)
+            if filtered_jobs:
+                print("%s jobs" % repo_name)
+                print("\n".join(filtered_jobs))
+
+        filtered_jobs = filter_jobs([job for job in all_jobs if job not in my_jobs])
+        if filtered_jobs:
+            print("other jobs")
+            print("\n".join(filtered_jobs))
 
     parser.set_defaults(run=run)
 
