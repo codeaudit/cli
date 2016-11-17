@@ -24,7 +24,7 @@ except ImportError:
 
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
-scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
+git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'git@git.riseml.com')
 
 
 def get_repo_root(cwd=None):
@@ -296,7 +296,7 @@ def add_init_ssh_parser(subparsers):
             stderr=dev_null,
             cwd=get_repo_root())
 
-        repo_url = 'git@git.riseml.com:%s' % get_repo_name()
+        repo_url = git_url + ':' + get_repo_name()
         proc = subprocess.Popen(['git', 'remote', 'add', 'riseml', repo_url],
             stdout=dev_null,
             stderr=dev_null,
@@ -380,7 +380,7 @@ parser = get_parser()
 args = parser.parse_args(sys.argv[1:])
 if args.v:
     print('RISEML_API_ENDPOINT: %s' % api_url)
-    print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
+    print('RISEML_GIT_ENDPOINT: %s' % git_url)
 if hasattr(args, 'run'):
     args.run(args)
 else:
