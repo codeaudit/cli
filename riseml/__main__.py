@@ -78,13 +78,6 @@ def create_repository(name):
     return client.create_repository(name)[0]
 
 
-def clean_scratch():
-    repository = get_repository(get_repo_name())
-    api_client = ApiClient(host=api_url)
-    client = DefaultApi(api_client)
-    client.delete_scratch(repository.id)
-
-
 def handle_error(message, status_code=None):
     if status_code:
         print('ERROR: %s (%d)' % (message, status_code))
@@ -181,8 +174,12 @@ def add_cat_parser(subparsers):
 
 def add_clean_parser(subparsers):
     parser = subparsers.add_parser('clean', help="remove all data from scratch")
+    parser.add_argument('file', help="scratch file path", nargs='?', default='')
     def run(args):
-        clean_scratch()
+        repository = get_repository(get_repo_name())
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        client.delete_scratch_object(repository.id, args.file)
 
     parser.set_defaults(run=run)
 
