@@ -130,13 +130,15 @@ def add_ls_parser(subparsers):
     def run(args):
         repo_name = get_repo_name()
         repository = get_repository(repo_name)
-        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file))
-        if res.status_code == 200 and res.headers['content-type'] == 'application/json':
-            for entry in res.json():
-                if entry['type'] == 'directory':
-                    print(" " * 11 + " %s" % (entry['name']))
-                else:
-                    print("%11d %s" % (entry['size'], entry['name']))
+
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        entries = client.get_scratch_meta(repository.id, args.file)
+        for entry in entries:
+            if entry.is_dir:
+                print(" " * 11 + " %s" % (entry.name))
+            else:
+                print("%11d %s" % (entry.size, entry.name))
 
     parser.set_defaults(run=run)
 
@@ -147,7 +149,9 @@ def add_cp_parser(subparsers):
     parser.add_argument('dst', help="local file path")
     def run(args):
         repository = get_repository(get_repo_name())
-        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.src), stream=True)
+        res = requests.get('%s/scratches/%s/%s' % (api_url, repository.id, args.src),
+            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            stream=True)
         if res.status_code == 200:
             with open(args.dst, 'wb') as f:
                 for buf in res.iter_content(4096):
@@ -161,7 +165,13 @@ def add_cat_parser(subparsers):
     parser.add_argument('file', help="scratch file path")
     def run(args):
         repository = get_repository(get_repo_name())
-        res = requests.get('%s/%s/%s' % (scratch_url, repository.id, args.file), stream=True)
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        entry = client.get_scratch_object(repository.id, args.file)
+
+        res = requests.get('%s/scratches/%s/%s' % (api_url, repository.id, args.file),
+            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            stream=True)
         if res.status_code == 200:
             for buf in res.iter_content(4096):
                 stdout.write(buf)
