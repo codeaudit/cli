@@ -138,17 +138,33 @@ def add_ls_parser(subparsers):
 
 def add_cp_parser(subparsers):
     parser = subparsers.add_parser('cp', help="cp file from scratch")
-    parser.add_argument('src', help="scratch file path")
-    parser.add_argument('dst', help="local file path")
+    parser.add_argument('src', help="local or scratch file path")
+    parser.add_argument('dst', help="local or scratch file path")
     def run(args):
         repository = get_repository(get_repo_name())
-        res = requests.get('%s/scratches/%s/%s' % (api_url, repository.id, args.src),
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            stream=True)
-        if res.status_code == 200:
+        local_prefix = ['~', '/', '.']
+
+        # upload
+        if args.src[0] in local_prefix and args.dst[0] not in local_prefix:
+            res = requests.put('%s/scratches/%s/%s' % (api_url, repository.id, args.dst),
+                headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+                files={'file': open(args.src, 'rb')})
+            if res.status_code != 200:
+                handle_http_error(res)
+
+        # download
+        elif args.src[0] not in local_prefix and args.dst[0] in local_prefix:
+            res = requests.get('%s/scratches/%s/%s' % (api_url, repository.id, args.src),
+                headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+                stream=True)
+            if res.status_code != 200:
+                handle_http_error(res)
+
             with open(args.dst, 'wb') as f:
                 for buf in res.iter_content(4096):
                     f.write(buf)
+        else:
+            handle_error("copy operation not supported")
 
     parser.set_defaults(run=run)
 
