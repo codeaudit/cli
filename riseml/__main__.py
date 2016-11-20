@@ -333,12 +333,12 @@ def add_ps_parser(subparsers):
             res = []
             for job in jobs:
                 if args.a:
-                    status = job.status
+                    status = job.state
                     if job.reason:
                         status += ': ' + job.reason
                     res.append("%s (%s)" % (job.id, status))
                 else:
-                    if job.status == 'TASK_RUNNING':
+                    if job.state == 'TASK_RUNNING':
                         res.append(job.id)
             return res
 
