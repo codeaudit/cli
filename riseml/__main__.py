@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import subprocess
+import platform
 
 import requests
 
@@ -26,6 +27,21 @@ except ImportError:
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'git@git.riseml.com')
+
+
+def resolve_path(binary):
+    paths = os.environ.get('PATH', '').split(os.pathsep)
+    exts = ['']
+    if platform.system == 'Windows':
+        path_exts = os.environ.get('PATHEXT', '.exe;.bat;.cmd').split(';')
+        has_ext = os.path.splitext(binary)[1] in path_exts
+        if not has_ext:
+            exts = path_exts
+    for path in paths:
+        for ext in exts:
+            loc = os.path.join(path, binary + ext)
+            if os.path.isfile(loc):
+                return loc
 
 
 def get_repo_root(cwd=None):
@@ -253,13 +269,13 @@ def add_push_parser(subparsers):
     def run(args):
         repository = get_repository(get_repo_name())
 
-        proc = subprocess.Popen(['git', 'rev-parse', '--verify', 'HEAD'],
+        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=dev_null)
         revision = proc.stdout.read().strip()
 
-        proc = subprocess.Popen(['/usr/bin/git', 'archive', '--format=tgz', 'HEAD'],
+        proc = subprocess.Popen([resolve_path('git'), 'archive', '--format=tgz', 'HEAD'],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=dev_null)
@@ -304,13 +320,13 @@ def add_init_ssh_parser(subparsers):
             body = json.loads(e.body)
             handle_error(body['message'], e.status)
 
-        proc = subprocess.Popen(['git', 'remote', 'remove', 'riseml'],
+        proc = subprocess.Popen([resolve_path('git'), 'remote', 'remove', 'riseml'],
             stdout=dev_null,
             stderr=dev_null,
             cwd=get_repo_root())
 
         repo_url = git_url + ':' + get_repo_name()
-        proc = subprocess.Popen(['git', 'remote', 'add', 'riseml', repo_url],
+        proc = subprocess.Popen([resolve_path('git'), 'remote', 'add', 'riseml', repo_url],
             stdout=dev_null,
             stderr=dev_null,
             cwd=get_repo_root())
