@@ -7,7 +7,7 @@ import subprocess
 import requests
 
 import riseml
-from riseml import DefaultApi, AdminApi, ApiClient
+from riseml import DefaultApi, AdminApi, ScratchApi, ApiClient
 
 
 try:
@@ -24,6 +24,7 @@ except ImportError:
 
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
+scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'git@git.riseml.com')
 
 
@@ -124,8 +125,8 @@ def add_ls_parser(subparsers):
         repo_name = get_repo_name()
         repository = get_repository(repo_name)
 
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
+        api_client = ApiClient(host=scratch_url)
+        client = ScratchApi(api_client)
         entries = client.get_scratch_meta(repository.id, args.file)
         for entry in entries:
             if entry.is_dir:
@@ -146,7 +147,7 @@ def add_cp_parser(subparsers):
 
         # upload
         if args.src[0] in local_prefix and args.dst[0] not in local_prefix:
-            res = requests.put('%s/scratches/%s/%s' % (api_url, repository.id, args.dst),
+            res = requests.put('%s/scratches/%s/%s' % (scratch_url, repository.id, args.dst),
                 headers={'Authorization': os.environ.get('RISEML_APIKEY')},
                 files={'file': open(args.src, 'rb')})
             if res.status_code != 200:
@@ -154,7 +155,7 @@ def add_cp_parser(subparsers):
 
         # download
         elif args.src[0] not in local_prefix and args.dst[0] in local_prefix:
-            res = requests.get('%s/scratches/%s/%s' % (api_url, repository.id, args.src),
+            res = requests.get('%s/scratches/%s/%s' % (scratch_url, repository.id, args.src),
                 headers={'Authorization': os.environ.get('RISEML_APIKEY')},
                 stream=True)
             if res.status_code != 200:
@@ -174,11 +175,7 @@ def add_cat_parser(subparsers):
     parser.add_argument('file', help="scratch file path")
     def run(args):
         repository = get_repository(get_repo_name())
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
-        entry = client.get_scratch_object(repository.id, args.file)
-
-        res = requests.get('%s/scratches/%s/%s' % (api_url, repository.id, args.file),
+        res = requests.get('%s/scratches/%s/%s' % (scratch_url, repository.id, args.file),
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             stream=True)
         if res.status_code == 200:
@@ -193,8 +190,8 @@ def add_clean_parser(subparsers):
     parser.add_argument('file', help="scratch file path", nargs='?', default='')
     def run(args):
         repository = get_repository(get_repo_name())
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
+        api_client = ApiClient(host=scratch_url)
+        client = ScratchApi(api_client)
         client.delete_scratch_object(repository.id, args.file)
 
     parser.set_defaults(run=run)
@@ -396,6 +393,7 @@ parser = get_parser()
 args = parser.parse_args(sys.argv[1:])
 if args.v:
     print('RISEML_API_ENDPOINT: %s' % api_url)
+    print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
     print('RISEML_GIT_ENDPOINT: %s' % git_url)
 if hasattr(args, 'run'):
     args.run(args)
