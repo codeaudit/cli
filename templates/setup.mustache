@@ -20,6 +20,11 @@ setup(
     author_email="{{infoEmail}}",
     url="{{packageUrl}}",
     keywords=["RiseML"],
+    entry_points={
+        'console_scripts': [
+            'riseml = {{packageName}}.__main__:main'
+        ]
+    },
     install_requires=REQUIRES,
     packages=find_packages(),
     include_package_data=True,

@@ -405,13 +405,18 @@ def get_parser():
     return parser
 
 
-parser = get_parser()
-args = parser.parse_args(sys.argv[1:])
-if args.v:
-    print('RISEML_API_ENDPOINT: %s' % api_url)
-    print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
-    print('RISEML_GIT_ENDPOINT: %s' % git_url)
-if hasattr(args, 'run'):
-    args.run(args)
-else:
-    parser.print_usage()
+def main():
+    parser = get_parser()
+    args = parser.parse_args(sys.argv[1:])
+    if args.v:
+        print('RISEML_API_ENDPOINT: %s' % api_url)
+        print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
+        print('RISEML_GIT_ENDPOINT: %s' % git_url)
+    if hasattr(args, 'run'):
+        args.run(args)
+    else:
+        parser.print_usage()
+
+
+if __name__ == '__main__':
+    main()

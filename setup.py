@@ -13,7 +13,7 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "riseml"
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 
 REQUIRES = ["urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil"]
@@ -27,6 +27,11 @@ setup(
     author_email="support@riseml.com",
     url="",
     keywords=["RiseML"],
+    entry_points={
+        'console_scripts': [
+            'riseml = riseml.__main__:main'
+        ]
+    },
     install_requires=REQUIRES,
     packages=find_packages(),
     include_package_data=True,
