@@ -27,9 +27,9 @@ class Config(object):
     commands = None
 
 
-def parse(f):
+def parse_text(text):
     config = Config()
-    tmp = yaml.load(f)
+    tmp = yaml.load(text)
     if not 'image' in tmp:
         raise ConfigException(u'missing key: image')
     elif not 'script' in tmp:
@@ -48,6 +48,10 @@ def parse(f):
         config.commands = [tmp['script']]
 
     return config
+
+
+def parse(f):
+    return parse_text(f.read())
 
 
 def parse_file(filename):

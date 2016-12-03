@@ -4,6 +4,11 @@ import sys
 import argparse
 import subprocess
 import platform
+from netrc import netrc
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 import requests
 
@@ -26,7 +31,7 @@ except ImportError:
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
-git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'git@git.riseml.com')
+git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
 
 
 def resolve_path(binary):
@@ -58,20 +63,6 @@ def get_repo_name():
     if not repo_root:
         handle_error("no git repository found")
     return os.path.basename(repo_root)
-
-
-def get_key(path=None):
-    if path:
-        loc = os.path.expanduser(filename)
-        if os.path.exists(loc):
-            with open(loc) as f:
-                return (loc, f.read())
-    else:
-        for filename in ['id_rsa.pub', 'id_dsa.pub']:
-            loc = os.path.expanduser(os.path.join('~', '.ssh', filename))
-            if os.path.exists(loc):
-                with open(loc) as f:
-                    return (loc, f.read())
 
 
 def get_user():
@@ -267,7 +258,13 @@ def add_kill_parser(subparsers):
 def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     def run(args):
-        repository = get_repository(get_repo_name())
+        o = urlparse(git_url)
+        if not netrc().authenticators(o.hostname):
+            user = get_user()
+            loc = os.path.expanduser('~/.netrc')
+            with open(loc, 'a') as f:
+                f.write('machine %s\n  login %s\n  password %s\n' %
+                    (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
 
         proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
@@ -275,18 +272,23 @@ def add_push_parser(subparsers):
             stderr=dev_null)
         revision = proc.stdout.read().strip()
 
-        proc = subprocess.Popen([resolve_path('git'), 'archive', '--format=tgz', 'HEAD'],
+        proc = subprocess.Popen([resolve_path('git'), 'push', '%s/%s.git/' % (git_url, get_repo_name())],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
-            stderr=dev_null)
+            stderr=subprocess.STDOUT)
+
+        for buf in proc.stdout:
+            stdout.write(buf)
+            stdout.flush()
+
+        res = proc.wait()
+        if res != 0:
+            sys.exit(res)
 
         res = requests.post('%s/changesets' % api_url,
             data={
                 'revision': revision,
                 'repository': get_repo_name(),
-            },
-            files={
-                'changeset': proc.stdout,
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             stream=True)
@@ -297,42 +299,6 @@ def add_push_parser(subparsers):
             for buf in res.iter_content(4096):
                 stdout.write(buf)
                 stdout.flush()
-
-    parser.set_defaults(run=run)
-
-
-def add_init_ssh_parser(subparsers):
-    parser = subparsers.add_parser('init-ssh', help="initialize setup for push via git")
-    parser.add_argument('ssh_key', help="path to ssh key (default: ~/.ssh/id_(rsa|dsa).pub",
-        metavar='ssh-key', nargs='?', default='')
-    def run(args):
-        public_key_path, public_key = get_key(args.ssh_key)
-        if not public_key:
-            print("no key found")
-            sys.exit(1)
-
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
-
-        try:
-            user = client.update_user(ssh_key=public_key)[0]
-        except riseml.rest.ApiException as e:
-            body = json.loads(e.body)
-            handle_error(body['message'], e.status)
-
-        proc = subprocess.Popen([resolve_path('git'), 'remote', 'remove', 'riseml'],
-            stdout=dev_null,
-            stderr=dev_null,
-            cwd=get_repo_root())
-
-        repo_url = git_url + ':' + get_repo_name()
-        proc = subprocess.Popen([resolve_path('git'), 'remote', 'add', 'riseml', repo_url],
-            stdout=dev_null,
-            stderr=dev_null,
-            cwd=get_repo_root())
-
-        print("added public key %s for %s (%s)" % (public_key_path, user.username, user.fingerprint))
-        print("added riseml remote, use: git push --set-upstream riseml master")
 
     parser.set_defaults(run=run)
 
@@ -387,7 +353,6 @@ def get_parser():
     # user ops
     add_register_parser(subparsers)
     add_whoami_parser(subparsers)
-    add_init_ssh_parser(subparsers)
 
     # worklow ops
     add_create_parser(subparsers)
