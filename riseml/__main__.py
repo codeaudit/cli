@@ -270,6 +270,7 @@ def add_push_parser(subparsers):
             with open(netrc_loc, 'a') as f:
                 f.write('machine %s\n  login %s\n  password %s\n' %
                     (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
+            os.chmod(netrc_loc, 0o600)
 
         proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
