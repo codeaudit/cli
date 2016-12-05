@@ -259,7 +259,7 @@ def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     def run(args):
         netrc_loc = os.path.expanduser('~/.netrc')
-        netrc_loc_update = False
+        netrc_loc_update = True
         o = urlparse(git_url)
 
         if os.path.exists(netrc_loc):
