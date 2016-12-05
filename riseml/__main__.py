@@ -259,13 +259,17 @@ def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     def run(args):
         netrc_loc = os.path.expanduser('~/.netrc')
+        netrc_loc_update = False
+        o = urlparse(git_url)
+
         if os.path.exists(netrc_loc):
-            o = urlparse(git_url)
-            if not netrc().authenticators(o.hostname):
-                user = get_user()
-                with open(netrc_loc, 'a') as f:
-                    f.write('machine %s\n  login %s\n  password %s\n' %
-                        (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
+            netrc_loc_update = not netrc().authenticators(o.hostname)
+
+        if netrc_loc_update:
+            user = get_user()
+            with open(netrc_loc, 'a') as f:
+                f.write('machine %s\n  login %s\n  password %s\n' %
+                    (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
 
         proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', 'HEAD'],
             cwd=get_repo_root(),
