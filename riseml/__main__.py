@@ -323,8 +323,11 @@ def add_ps_parser(subparsers):
                         status += ': ' + job.reason
                     res.append("%s (%s)" % (job.id, status))
                 else:
-                    if job.state == 'TASK_RUNNING':
-                        res.append(job.id)
+                    if job.state in ('PENDING', 'SCHEDULED', 'TASK_RUNNING'):
+                        status = job.state
+                        if job.reason:
+                            status += ': ' + job.reason
+                        res.append("%s (%s)" % (job.id, status))
             return res
 
         repo_name = get_repo_name()
