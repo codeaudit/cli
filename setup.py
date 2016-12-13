@@ -18,7 +18,7 @@ VERSION = "0.2.1"
 
 REQUIRES = ["urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil"]
 
-REQUIRES += ['pyyaml', 'requests']
+REQUIRES += ['pyyaml', 'requests', 'flask', 'flask-cors']
 
 setup(
     name=NAME,
