@@ -38,7 +38,7 @@ class DefaultApi(object):
                 config.api_client = ApiClient()
             self.api_client = config.api_client
 
-    def create_changeset(self, revision, repository, changeset, **kwargs):
+    def create_changeset(self, revision, repository, **kwargs):
         """
         
         
@@ -49,25 +49,24 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_changeset(revision, repository, changeset, callback=callback_function)
+        >>> thread = api.create_changeset(revision, repository, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str revision:  (required)
         :param str repository:  (required)
-        :param file changeset:  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.create_changeset_with_http_info(revision, repository, changeset, **kwargs)
+            return self.create_changeset_with_http_info(revision, repository, **kwargs)
         else:
-            (data) = self.create_changeset_with_http_info(revision, repository, changeset, **kwargs)
+            (data) = self.create_changeset_with_http_info(revision, repository, **kwargs)
             return data
 
-    def create_changeset_with_http_info(self, revision, repository, changeset, **kwargs):
+    def create_changeset_with_http_info(self, revision, repository, **kwargs):
         """
         
         
@@ -78,19 +77,18 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_changeset_with_http_info(revision, repository, changeset, callback=callback_function)
+        >>> thread = api.create_changeset_with_http_info(revision, repository, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str revision:  (required)
         :param str repository:  (required)
-        :param file changeset:  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['revision', 'repository', 'changeset']
+        all_params = ['revision', 'repository']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -110,9 +108,6 @@ class DefaultApi(object):
         # verify the required parameter 'repository' is set
         if ('repository' not in params) or (params['repository'] is None):
             raise ValueError("Missing the required parameter `repository` when calling `create_changeset`")
-        # verify the required parameter 'changeset' is set
-        if ('changeset' not in params) or (params['changeset'] is None):
-            raise ValueError("Missing the required parameter `changeset` when calling `create_changeset`")
 
 
         collection_formats = {}
@@ -130,8 +125,6 @@ class DefaultApi(object):
             form_params.append(('revision', params['revision']))
         if 'repository' in params:
             form_params.append(('repository', params['repository']))
-        if 'changeset' in params:
-            local_var_files['changeset'] = params['changeset']
 
         body_params = None
 
@@ -1125,116 +1118,6 @@ class DefaultApi(object):
                                             post_params=form_params,
                                             files=local_var_files,
                                             response_type='list[Job]',
-                                            auth_settings=auth_settings,
-                                            callback=params.get('callback'),
-                                            _return_http_data_only=params.get('_return_http_data_only'),
-                                            _preload_content=params.get('_preload_content', True),
-                                            collection_formats=collection_formats)
-
-    def update_user(self, ssh_key, **kwargs):
-        """
-        
-        
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please define a `callback` function
-        to be invoked when receiving the response.
-        >>> def callback_function(response):
-        >>>     pprint(response)
-        >>>
-        >>> thread = api.update_user(ssh_key, callback=callback_function)
-
-        :param callback function: The callback function
-            for asynchronous request. (optional)
-        :param str ssh_key:  (required)
-        :return: list[User]
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-        kwargs['_return_http_data_only'] = True
-        if kwargs.get('callback'):
-            return self.update_user_with_http_info(ssh_key, **kwargs)
-        else:
-            (data) = self.update_user_with_http_info(ssh_key, **kwargs)
-            return data
-
-    def update_user_with_http_info(self, ssh_key, **kwargs):
-        """
-        
-        
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please define a `callback` function
-        to be invoked when receiving the response.
-        >>> def callback_function(response):
-        >>>     pprint(response)
-        >>>
-        >>> thread = api.update_user_with_http_info(ssh_key, callback=callback_function)
-
-        :param callback function: The callback function
-            for asynchronous request. (optional)
-        :param str ssh_key:  (required)
-        :return: list[User]
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-
-        all_params = ['ssh_key']
-        all_params.append('callback')
-        all_params.append('_return_http_data_only')
-        all_params.append('_preload_content')
-
-        params = locals()
-        for key, val in iteritems(params['kwargs']):
-            if key not in all_params:
-                raise TypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method update_user" % key
-                )
-            params[key] = val
-        del params['kwargs']
-        # verify the required parameter 'ssh_key' is set
-        if ('ssh_key' not in params) or (params['ssh_key'] is None):
-            raise ValueError("Missing the required parameter `ssh_key` when calling `update_user`")
-
-
-        collection_formats = {}
-
-        resource_path = '/user'.replace('{format}', 'json')
-        path_params = {}
-
-        query_params = {}
-
-        header_params = {}
-
-        form_params = []
-        local_var_files = {}
-        if 'ssh_key' in params:
-            form_params.append(('ssh_key', params['ssh_key']))
-
-        body_params = None
-
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.\
-            select_header_accept(['application/json'])
-        if not header_params['Accept']:
-            del header_params['Accept']
-
-        # HTTP header `Content-Type`
-        header_params['Content-Type'] = self.api_client.\
-            select_header_content_type(['multipart/form-data'])
-
-        # Authentication setting
-        auth_settings = ['api_key']
-
-        return self.api_client.call_api(resource_path, 'PUT',
-                                            path_params,
-                                            query_params,
-                                            header_params,
-                                            body=body_params,
-                                            post_params=form_params,
-                                            files=local_var_files,
-                                            response_type='list[User]',
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),
