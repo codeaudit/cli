@@ -37,7 +37,7 @@ git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
 def resolve_path(binary):
     paths = os.environ.get('PATH', '').split(os.pathsep)
     exts = ['']
-    if platform.system == 'Windows':
+    if platform.system() == 'Windows':
         path_exts = os.environ.get('PATHEXT', '.exe;.bat;.cmd').split(';')
         has_ext = os.path.splitext(binary)[1] in path_exts
         if not has_ext:
@@ -257,6 +257,7 @@ def add_kill_parser(subparsers):
 
 def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
+    parser.add_argument('branch', help="git branch", nargs='?', default='master')
     def run(args):
         netrc_loc = os.path.expanduser('~/.netrc')
         netrc_loc_update = True
@@ -272,13 +273,13 @@ def add_push_parser(subparsers):
                     (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
             os.chmod(netrc_loc, 0o600)
 
-        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', 'HEAD'],
+        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', args.branch],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=dev_null)
         revision = proc.stdout.read().strip()
 
-        proc = subprocess.Popen([resolve_path('git'), 'push', '%s/%s.git/' % (git_url, get_repo_name())],
+        proc = subprocess.Popen([resolve_path('git'), 'push', '%s/%s.git/' % (git_url, get_repo_name()), args.branch],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
