@@ -49,6 +49,13 @@ def resolve_path(binary):
                 return loc
 
 
+def netrc_file():
+    if platform.system() == 'Windows':
+        return os.path.expanduser('~/_netrc')
+    else:
+        return os.path.expanduser('~/.netrc')
+
+
 def get_repo_root(cwd=None):
     if cwd is None:
         cwd = os.getcwd()
@@ -259,7 +266,7 @@ def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     parser.add_argument('branch', help="git branch", nargs='?', default='master')
     def run(args):
-        netrc_loc = os.path.expanduser('~/.netrc')
+        netrc_loc = netrc_file()
         netrc_loc_update = True
         o = urlparse(git_url)
 
