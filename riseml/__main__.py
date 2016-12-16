@@ -34,6 +34,11 @@ scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
 
 
+class NoAuth(object):
+    def __call__(self, request):
+        return request
+
+
 def resolve_path(binary):
     paths = os.environ.get('PATH', '').split(os.pathsep)
     exts = ['']
@@ -163,6 +168,7 @@ def add_cp_parser(subparsers):
         if args.src[0] in local_prefix and args.dst[0] not in local_prefix:
             res = requests.put('%s/scratches/%s/%s' % (scratch_url, repository.id, args.dst),
                 headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+                auth=NoAuth(),
                 files={'file': open(args.src, 'rb')})
             if res.status_code != 200:
                 handle_http_error(res)
@@ -171,6 +177,7 @@ def add_cp_parser(subparsers):
         elif args.src[0] not in local_prefix and args.dst[0] in local_prefix:
             res = requests.get('%s/scratches/%s/%s' % (scratch_url, repository.id, args.src),
                 headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+                auth=NoAuth(),
                 stream=True)
             if res.status_code != 200:
                 handle_http_error(res)
@@ -191,6 +198,7 @@ def add_cat_parser(subparsers):
         repository = get_repository(get_repo_name())
         res = requests.get('%s/scratches/%s/%s' % (scratch_url, repository.id, args.file),
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            auth=NoAuth(),
             stream=True)
         if res.status_code == 200:
             for buf in res.iter_content(4096):
@@ -231,10 +239,14 @@ def add_logs_parser(subparsers):
             api_client = ApiClient(host=api_url)
             client = DefaultApi(api_client)
             repository = get_repository(get_repo_name())
-            job_id = client.get_repository_jobs(repository.id)[-1].id
+            jobs = client.get_repository_jobs(repository.id)
+            if not jobs:
+                return
+            job_id = [-1].id
 
         res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            auth=NoAuth(),
             stream=True)
 
         if res.status_code == 200:
@@ -305,6 +317,7 @@ def add_push_parser(subparsers):
                 'repository': get_repo_name(),
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            auth=NoAuth(),
             stream=True)
 
         if res.status_code != 200:
