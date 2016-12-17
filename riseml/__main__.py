@@ -242,7 +242,7 @@ def add_logs_parser(subparsers):
             jobs = client.get_repository_jobs(repository.id)
             if not jobs:
                 return
-            job_id = [-1].id
+            job_id = jobs[-1].id
 
         res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
