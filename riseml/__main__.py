@@ -230,7 +230,7 @@ def add_whoami_parser(subparsers):
 
 def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs', help="show logs")
-    parser.add_argument('job', help="job identifier (optional)", nargs='?', default='')
+    parser.add_argument('job', help="job identifier (optional)", nargs='?')
     def run(args):
         job_id = None
         if args.job:
@@ -260,12 +260,25 @@ def add_logs_parser(subparsers):
 
 def add_kill_parser(subparsers):
     parser = subparsers.add_parser('kill', help="kill job")
-    parser.add_argument('job', help="job identifier")
+    parser.add_argument('job', help="job identifier (optional)", nargs='?')
     def run(args):
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
+
+        job_id = None
+        if args.job:
+            job_id = args.job
+        else:
+            repository = get_repository(get_repo_name())
+            jobs = client.get_repository_jobs(repository.id)
+            if not jobs:
+                return
+            if jobs[-1].state != 'TASK_RUNNING':
+                return
+            job_id = jobs[-1].id
+
         try:
-            job = client.kill_job(args.job)[0]
+            job = client.kill_job(job_id)[0]
         except riseml.rest.ApiException as e:
             body = json.loads(e.body)
             handle_error(body['message'], e.status)
@@ -276,8 +289,9 @@ def add_kill_parser(subparsers):
 
 def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
-    parser.add_argument('branch', help="git branch", nargs='?', default='master')
+    parser.add_argument('branch', help="git branch (optional)", nargs='?')
     def run(args):
+        repo_name = get_repo_name()
         netrc_loc = netrc_file()
         netrc_loc_update = True
         o = urlparse(git_url)
@@ -292,13 +306,21 @@ def add_push_parser(subparsers):
                     (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
             os.chmod(netrc_loc, 0o600)
 
-        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', args.branch],
+        branch = args.branch
+        if not branch:
+            proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
+                cwd=get_repo_root(),
+                stdout=subprocess.PIPE,
+                stderr=dev_null)
+            branch = proc.stdout.read().strip()
+
+        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', branch],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=dev_null)
         revision = proc.stdout.read().strip()
 
-        proc = subprocess.Popen([resolve_path('git'), 'push', '%s/%s.git/' % (git_url, get_repo_name()), args.branch],
+        proc = subprocess.Popen([resolve_path('git'), 'push', '%s/%s.git/' % (git_url, repo_name), branch],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
@@ -314,7 +336,7 @@ def add_push_parser(subparsers):
         res = requests.post('%s/changesets' % api_url,
             data={
                 'revision': revision,
-                'repository': get_repo_name(),
+                'repository': repo_name,
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             auth=NoAuth(),
