@@ -4,7 +4,6 @@ import sys
 import argparse
 import subprocess
 import platform
-from netrc import netrc
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -52,13 +51,6 @@ def resolve_path(binary):
             loc = os.path.join(path, binary + ext)
             if os.path.isfile(loc):
                 return loc
-
-
-def netrc_file():
-    if platform.system() == 'Windows':
-        return os.path.expanduser('~/_netrc')
-    else:
-        return os.path.expanduser('~/.netrc')
 
 
 def get_repo_root(cwd=None):
@@ -291,21 +283,6 @@ def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     parser.add_argument('branch', help="git branch (optional)", nargs='?')
     def run(args):
-        repo_name = get_repo_name()
-        netrc_loc = netrc_file()
-        netrc_loc_update = True
-        o = urlparse(git_url)
-
-        if os.path.exists(netrc_loc):
-            netrc_loc_update = not netrc().authenticators(o.hostname)
-
-        if netrc_loc_update:
-            user = get_user()
-            with open(netrc_loc, 'a') as f:
-                f.write('machine %s\n  login %s\n  password %s\n' %
-                    (o.hostname, user.username, os.environ.get('RISEML_APIKEY')))
-            os.chmod(netrc_loc, 0o600)
-
         branch = args.branch
         if not branch:
             proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
@@ -320,7 +297,15 @@ def add_push_parser(subparsers):
             stderr=dev_null)
         revision = proc.stdout.read().strip()
 
-        proc = subprocess.Popen([resolve_path('git'), 'push', '%s/%s.git/' % (git_url, repo_name), branch],
+        repo_name = get_repo_name()
+        user = get_user()
+
+        o = urlparse(git_url)
+        auth_git_url = '%s://%s:%s@%s/%s.git' % (
+            o.scheme, user.username, os.environ.get('RISEML_APIKEY'),
+            o.netloc, repo_name)
+
+        proc = subprocess.Popen([resolve_path('git'), 'push', auth_git_url, branch],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
