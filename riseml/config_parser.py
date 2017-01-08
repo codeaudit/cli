@@ -25,6 +25,7 @@ def chdir(new_dir):
 class Config(object):
     image = None
     commands = None
+    template = None
 
 
 def parse_text(text):
@@ -46,6 +47,9 @@ def parse_text(text):
         config.commands = tmp['script']
     else:
         config.commands = [tmp['script']]
+
+    if 'template' in tmp:
+        config.template = tmp['template']
 
     return config
 
