@@ -120,7 +120,7 @@ def add_register_parser(subparsers):
         client = AdminApi(api_client)
         user = None
         try:
-            user = client.create_user(username=args.username, email=args.email)[0]
+            user = client.update_or_create_user(username=args.username, email=args.email)[0]
         except riseml.rest.ApiException as e:
             body = json.loads(e.body)
             handle_error(body['message'], e.status)
