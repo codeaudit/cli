@@ -281,7 +281,8 @@ def add_kill_parser(subparsers):
 
 def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
-    parser.add_argument('branch', help="git branch (optional)", nargs='?')
+    parser.add_argument('name', help="service name (optional)", nargs='?')
+    parser.add_argument('--branch', help="git branch")
     def run(args):
         branch = args.branch
         if not branch:
@@ -322,6 +323,7 @@ def add_push_parser(subparsers):
             data={
                 'revision': revision,
                 'repository': repo_name,
+                'service_name': args.name,
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             auth=NoAuth(),

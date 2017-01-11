@@ -55,6 +55,7 @@ class DefaultApi(object):
             for asynchronous request. (optional)
         :param str revision:  (required)
         :param str repository:  (required)
+        :param str service_name: 
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -83,12 +84,13 @@ class DefaultApi(object):
             for asynchronous request. (optional)
         :param str revision:  (required)
         :param str repository:  (required)
+        :param str service_name: 
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['revision', 'repository']
+        all_params = ['revision', 'repository', 'service_name']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -125,6 +127,8 @@ class DefaultApi(object):
             form_params.append(('revision', params['revision']))
         if 'repository' in params:
             form_params.append(('repository', params['repository']))
+        if 'service_name' in params:
+            form_params.append(('service_name', params['service_name']))
 
         body_params = None
 
