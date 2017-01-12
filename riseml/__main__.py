@@ -265,7 +265,7 @@ def add_kill_parser(subparsers):
             jobs = client.get_repository_jobs(repository.id)
             if not jobs:
                 return
-            if jobs[-1].state != 'TASK_RUNNING':
+            if jobs[-1].state not in ('PENDING', 'SCHEDULED', 'TASK_RUNNING'):
                 return
             job_id = jobs[-1].id
 
