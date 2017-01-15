@@ -4,6 +4,8 @@ import sys
 import argparse
 import subprocess
 import platform
+import webbrowser
+import re
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -31,8 +33,10 @@ except ImportError:
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
+user_url = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 
 
+# avoid using ~.netrc
 class NoAuth(object):
     def __call__(self, request):
         return request
@@ -283,7 +287,12 @@ def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="run new job")
     parser.add_argument('name', help="service name (optional)", nargs='?')
     parser.add_argument('--branch', help="git branch")
+    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser.set_defaults(notebook=False)
     def run(args):
+        if not args.name and args.notebook:
+            handle_error("notebook requires name")
+
         branch = args.branch
         if not branch:
             proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
@@ -324,6 +333,7 @@ def add_push_parser(subparsers):
                 'revision': revision,
                 'repository': repo_name,
                 'service_name': args.name,
+                'notebook': args.notebook and '1' or '0',
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             auth=NoAuth(),
@@ -331,6 +341,23 @@ def add_push_parser(subparsers):
 
         if res.status_code != 200:
             handle_http_error(res)
+        elif args.notebook:
+            content = b''
+            pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)\n'
+            url = user_url % args.name
+            search = True
+
+            for buf in res.iter_content(4096):
+                content += buf
+                stdout.write(buf)
+                stdout.flush()
+                if search:
+                    match = re.search(pattern, content)
+                    if match:
+                        token = match.group(1)
+                        print('notebook url: %s' % url + token)
+                        webbrowser.open(url + token)
+                        search = False
         else:
             for buf in res.iter_content(4096):
                 stdout.write(buf)
