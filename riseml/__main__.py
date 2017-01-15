@@ -443,6 +443,7 @@ def main():
         print('RISEML_API_ENDPOINT: %s' % api_url)
         print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
         print('RISEML_GIT_ENDPOINT: %s' % git_url)
+        print('RISEML_USER_ENDPOINT: %s' % user_url)
     if hasattr(args, 'run'):
         args.run(args)
     else:
