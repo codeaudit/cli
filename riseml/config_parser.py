@@ -23,9 +23,23 @@ def chdir(new_dir):
 
 
 class Config(object):
+    title = None
+    description = None
+    github_repo = None
     image = None
-    commands = None
-    template = None
+    build_commands = None
+    build_include = None
+    batch_commands = None
+    service_commands = None
+    service_input = None
+    service_output = None
+    service_demo = None
+
+
+def parse_list(l):
+    if isinstance(l, list):
+        return l
+    return l
 
 
 def parse_text(text):
@@ -33,24 +47,18 @@ def parse_text(text):
     tmp = yaml.load(text)
     if not 'image' in tmp:
         raise ConfigException(u'missing key: image')
-    elif not 'script' in tmp:
-        raise ConfigException(u'missing key: script')
 
-    if isinstance(tmp['image'], list):
-        if len(tmp['image']) > 1:
-            raise ConfigException(u"you can only specify a single image")
-        config.image = tmp['image'][0]
-    else:
-        config.image = tmp['image']
-
-    if isinstance(tmp['script'], list):
-        config.commands = tmp['script']
-    else:
-        config.commands = [tmp['script']]
-
-    if 'template' in tmp:
-        config.template = tmp['template']
-
+    config.title = tmp['title']
+    config.description = tmp['description']
+    config.github_repo = tmp['github_repo']
+    config.image = tmp['image']
+    config.build_commands = parse_list(tmp['build']['commands'])
+    config.build_include = parse_list(tmp['build']['options']['include'])
+    config.batch_commands = parse_list(tmp['batch']['commands'])
+    config.service_commands = parse_list(tmp['service']['commands'])
+    config.service_input = tmp['service']['input']
+    config.service_output = tmp['service']['output']
+    config.service_demo = tmp['service']['options']['demo']
     return config
 
 
