@@ -343,7 +343,7 @@ def add_push_parser(subparsers):
             handle_http_error(res)
         elif args.notebook:
             content = b''
-            pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)\n'
+            pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)?\n'
             url = user_url % args.name
             search = True
 
@@ -354,7 +354,7 @@ def add_push_parser(subparsers):
                 if search:
                     match = re.search(pattern, content)
                     if match:
-                        token = match.group(1)
+                        token = match.group(1) or ''
                         print('notebook url: %s' % url + token)
                         webbrowser.open(url + token)
                         search = False
