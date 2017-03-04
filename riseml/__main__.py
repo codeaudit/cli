@@ -31,7 +31,7 @@ except ImportError:
 
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
-scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com')
+scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
 user_url = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 
