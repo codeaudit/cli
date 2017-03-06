@@ -55,8 +55,6 @@ class DefaultApi(object):
             for asynchronous request. (optional)
         :param str revision:  (required)
         :param str repository:  (required)
-        :param str service_name: 
-        :param bool notebook: 
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
@@ -85,14 +83,12 @@ class DefaultApi(object):
             for asynchronous request. (optional)
         :param str revision:  (required)
         :param str repository:  (required)
-        :param str service_name: 
-        :param bool notebook: 
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['revision', 'repository', 'service_name', 'notebook']
+        all_params = ['revision', 'repository']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -129,10 +125,6 @@ class DefaultApi(object):
             form_params.append(('revision', params['revision']))
         if 'repository' in params:
             form_params.append(('repository', params['repository']))
-        if 'service_name' in params:
-            form_params.append(('service_name', params['service_name']))
-        if 'notebook' in params:
-            form_params.append(('notebook', params['notebook']))
 
         body_params = None
 
@@ -289,6 +281,8 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str name:  (required)
+        :param str description: 
+        :param str username: 
         :return: list[Repository]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -316,12 +310,14 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str name:  (required)
+        :param str description: 
+        :param str username: 
         :return: list[Repository]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['name']
+        all_params = ['name', 'description', 'username']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -353,6 +349,10 @@ class DefaultApi(object):
         local_var_files = {}
         if 'name' in params:
             form_params.append(('name', params['name']))
+        if 'description' in params:
+            form_params.append(('description', params['description']))
+        if 'username' in params:
+            form_params.append(('username', params['username']))
 
         body_params = None
 
@@ -377,6 +377,116 @@ class DefaultApi(object):
                                             post_params=form_params,
                                             files=local_var_files,
                                             response_type='list[Repository]',
+                                            auth_settings=auth_settings,
+                                            callback=params.get('callback'),
+                                            _return_http_data_only=params.get('_return_http_data_only'),
+                                            _preload_content=params.get('_preload_content', True),
+                                            collection_formats=collection_formats)
+
+    def delete_repository(self, repository_id, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.delete_repository(repository_id, callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str repository_id:  (required)
+        :return: None
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('callback'):
+            return self.delete_repository_with_http_info(repository_id, **kwargs)
+        else:
+            (data) = self.delete_repository_with_http_info(repository_id, **kwargs)
+            return data
+
+    def delete_repository_with_http_info(self, repository_id, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.delete_repository_with_http_info(repository_id, callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str repository_id:  (required)
+        :return: None
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['repository_id']
+        all_params.append('callback')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+
+        params = locals()
+        for key, val in iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method delete_repository" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'repository_id' is set
+        if ('repository_id' not in params) or (params['repository_id'] is None):
+            raise ValueError("Missing the required parameter `repository_id` when calling `delete_repository`")
+
+
+        collection_formats = {}
+
+        resource_path = '/repositories/{repository_id}'.replace('{format}', 'json')
+        path_params = {}
+        if 'repository_id' in params:
+            path_params['repository_id'] = params['repository_id']
+
+        query_params = {}
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.\
+            select_header_accept(['application/json'])
+        if not header_params['Accept']:
+            del header_params['Accept']
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.\
+            select_header_content_type(['application/json'])
+
+        # Authentication setting
+        auth_settings = ['api_key']
+
+        return self.api_client.call_api(resource_path, 'DELETE',
+                                            path_params,
+                                            query_params,
+                                            header_params,
+                                            body=body_params,
+                                            post_params=form_params,
+                                            files=local_var_files,
+                                            response_type=None,
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),
@@ -721,6 +831,8 @@ class DefaultApi(object):
 
         :param callback function: The callback function
             for asynchronous request. (optional)
+        :param str name: 
+        :param str username: 
         :return: list[Repository]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -747,12 +859,14 @@ class DefaultApi(object):
 
         :param callback function: The callback function
             for asynchronous request. (optional)
+        :param str name: 
+        :param str username: 
         :return: list[Repository]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = []
+        all_params = ['name', 'username']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -774,6 +888,10 @@ class DefaultApi(object):
         path_params = {}
 
         query_params = {}
+        if 'name' in params:
+            query_params['name'] = params['name']
+        if 'username' in params:
+            query_params['username'] = params['username']
 
         header_params = {}
 

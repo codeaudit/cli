@@ -53,9 +53,8 @@ class AdminApi(object):
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str username: 
-        :param str fingerprint: 
         :param str github_access_token: 
+        :param int github_id: 
         :return: list[User]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -82,15 +81,14 @@ class AdminApi(object):
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str username: 
-        :param str fingerprint: 
         :param str github_access_token: 
+        :param int github_id: 
         :return: list[User]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['username', 'fingerprint', 'github_access_token']
+        all_params = ['github_access_token', 'github_id']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -112,12 +110,10 @@ class AdminApi(object):
         path_params = {}
 
         query_params = {}
-        if 'username' in params:
-            query_params['username'] = params['username']
-        if 'fingerprint' in params:
-            query_params['fingerprint'] = params['fingerprint']
         if 'github_access_token' in params:
             query_params['github_access_token'] = params['github_access_token']
+        if 'github_id' in params:
+            query_params['github_id'] = params['github_id']
 
         header_params = {}
 
@@ -171,6 +167,7 @@ class AdminApi(object):
         :param str username:  (required)
         :param str email:  (required)
         :param str github_access_token: 
+        :param int github_id: 
         :return: list[User]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -200,12 +197,13 @@ class AdminApi(object):
         :param str username:  (required)
         :param str email:  (required)
         :param str github_access_token: 
+        :param int github_id: 
         :return: list[User]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['username', 'email', 'github_access_token']
+        all_params = ['username', 'email', 'github_access_token', 'github_id']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -244,6 +242,8 @@ class AdminApi(object):
             form_params.append(('email', params['email']))
         if 'github_access_token' in params:
             form_params.append(('github_access_token', params['github_access_token']))
+        if 'github_id' in params:
+            form_params.append(('github_id', params['github_id']))
 
         body_params = None
 
