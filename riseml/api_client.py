@@ -73,7 +73,7 @@ class ApiClient(object):
             self.host = host
         self.cookie = cookie
         # Set default User-Agent.
-        self.user_agent = 'RiseML/0.2.13/python'
+        self.user_agent = 'RiseML/0.2.14/python'
 
     @property
     def user_agent(self):
