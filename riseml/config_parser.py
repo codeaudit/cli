@@ -6,11 +6,20 @@ import yaml
 
 class ConfigException(Exception): pass
 
-class Config(object):
+class Base(object):
+    @classmethod
+    def parse(cls, obj):
+        if not obj:
+            raise ConfigException('missing section: %s' % cls.__name__.lower())
+        if not isinstance(obj, dict):
+            raise ConfigException('section must be a dict: %s' % cls.__name__.lower())
+        return cls._parse(obj)
+
+class Config(Base):
     deploy = None
 
     @classmethod
-    def parse(cls, obj):
+    def _parse(cls, obj):
         config = cls()
         config.deploy = Deploy.parse(obj.get('deploy'))
         return config
@@ -18,12 +27,12 @@ class Config(object):
     def to_dict(self):
         return {'deploy': self.deploy.to_dict()}
 
-class Image(object):
+class Image(Base):
     name = None
     install = []
 
     @classmethod
-    def parse(cls, obj):
+    def _parse(cls, obj):
         image = cls()
         image.name = parse_value(parse_one(obj.get('name')))
         image.install = parse_list(obj.get('install'))
@@ -34,7 +43,7 @@ class Image(object):
             'name': self.name,
             'install': self.install}
 
-class Deploy(object):
+class Deploy(Base):
     image = None
     run = []
     input = []
@@ -43,14 +52,16 @@ class Deploy(object):
     demo = None
 
     @classmethod
-    def parse(cls, obj):
+    def _parse(cls, obj):
         deploy = cls()
         deploy.image = Image.parse(obj.get('image'))
         deploy.run = parse_list(obj.get('run'))
         deploy.input = parse_list(obj.get('input'))
         deploy.output = parse_list(obj.get('output'))
         deploy.parameters = parse_list(obj.get('parameters'), cls=Parameter.parse)
-        deploy.demo = Demo.parse(obj.get('demo'))
+        demo = obj.get('demo')
+        if demo:
+            deploy.demo = Demo.parse()
         return deploy
 
     def to_dict(self):
@@ -62,14 +73,14 @@ class Deploy(object):
             'parameters': [v.to_dict() for v in self.parameters or []],
             'demo': self.demo.to_dict()}
 
-class Parameter(object):
+class Parameter(Base):
     name = None
     type = None
     display_name = None
     default = None
 
     @classmethod
-    def parse(cls, obj):
+    def _parse(cls, obj):
         parameter = cls()
         parameter.name = parse_value(obj.get('name'))
         parameter.type = parse_value(obj.get('type'))
@@ -84,13 +95,13 @@ class Parameter(object):
             'display_name': self.display_name,
             'default': self.default}
 
-class Demo(object):
+class Demo(Base):
     title = None
     description = None
     samples = []
 
     @classmethod
-    def parse(cls, obj):
+    def _parse(cls, obj):
         demo = cls()
         demo.title = obj.get('title')
         demo.description = obj.get('description')
