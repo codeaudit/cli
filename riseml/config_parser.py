@@ -39,9 +39,11 @@ class Image(Base):
         return image
 
     def to_dict(self):
-        return {
-            'name': self.name,
-            'install': self.install}
+        res = {
+            'name': self.name}
+        if self.install:
+            res['install'] = self.install
+        return res
 
 class Deploy(Base):
     image = None
@@ -61,17 +63,22 @@ class Deploy(Base):
         deploy.parameters = parse_list(obj.get('parameters'), cls=Parameter.parse)
         demo = obj.get('demo')
         if demo:
-            deploy.demo = Demo.parse()
+            deploy.demo = Demo.parse(obj.get('demo'))
         return deploy
 
     def to_dict(self):
-        return {
+        res = {
             'image': self.image.to_dict(),
-            'run': self.run,
-            'input': self.input,
-            'output': self.output,
-            'parameters': [v.to_dict() for v in self.parameters or []],
-            'demo': self.demo.to_dict()}
+            'run': self.run}
+        if self.input:
+            res['input'] = self.input
+        if self.output:
+            res['output'] = self.output
+        if self.parameters:
+            res['parameters'] = [v.to_dict() for v in self.parameters or []]
+        if self.demo:
+            res['demo'] = self.demo.to_dict()
+        return res
 
 class Parameter(Base):
     name = None
@@ -109,10 +116,14 @@ class Demo(Base):
         return demo
 
     def to_dict(self):
-        return {
-            'title': self.title,
-            'description': self.description,
-            'samples': self.samples}
+        res = {}
+        if self.title:
+            res['title'] = self.title
+        if self.description:
+            res['description'] = self.description
+        if self.samples:
+            res['samples'] = self.samples
+        return res
 
 def parse_value(v):
     if isinstance(v, list) or isinstance(v, dict):
