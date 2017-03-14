@@ -6,7 +6,7 @@ from flask_cors import CORS
 from riseml.config_parser import parse_file
 
 
-def serve(func, host='0.0.0.0', port=3000):
+def serve(func, host='0.0.0.0', port=os.environ.get('PORT')):
     app = Flask(__name__)
     CORS(app, max_age=3600)
     riseml_yml = 'riseml.yml'
