@@ -36,6 +36,9 @@ class Image(Base):
         image = cls()
         image.name = parse_value(parse_one(obj.get('name')))
         image.install = parse_list(obj.get('install'))
+
+        if not image.name:
+            raise ConfigException('missing field: image')
         return image
 
     def to_dict(self):
@@ -56,7 +59,12 @@ class Deploy(Base):
     @classmethod
     def _parse(cls, obj):
         deploy = cls()
-        deploy.image = Image.parse(obj.get('image'))
+
+        image_dict = obj.get('image')
+        if not isinstance(image_dict, dict):
+            image_dict = dict(name=image_dict)
+
+        deploy.image = Image.parse(image_dict)
         deploy.run = parse_list(obj.get('run'))
         deploy.input = parse_list(obj.get('input'))
         deploy.output = parse_list(obj.get('output'))
@@ -64,6 +72,8 @@ class Deploy(Base):
         demo = obj.get('demo')
         if demo:
             deploy.demo = Demo.parse(obj.get('demo'))
+        if not deploy.run:
+            raise ConfigException('missing field: run')
         return deploy
 
     def to_dict(self):
@@ -138,7 +148,9 @@ def parse_list(l, cls=lambda x:x):
     return [cls(l)]
 
 def parse_one(record):
-    return parse_list(record)[0]
+    res = parse_list(record)
+    if res:
+        return res[0]
 
 def parse_text(text):
     return Config.parse(yaml.load(text))
