@@ -13,9 +13,8 @@ except ImportError:
 
 import requests
 
-import riseml
-from riseml import DefaultApi, AdminApi, ScratchApi, ApiClient
-
+from riseml.client import DefaultApi, AdminApi, ScratchApi, ApiClient
+from riseml.client.rest import ApiException
 
 try:
     stdout = sys.stdout.buffer
@@ -125,7 +124,7 @@ def add_register_parser(subparsers):
         user = None
         try:
             user = client.update_or_create_user(username=args.username, email=args.email)[0]
-        except riseml.rest.ApiException as e:
+        except ApiException as e:
             body = json.loads(e.body)
             handle_error(body['message'], e.status)
         print(user)
@@ -275,7 +274,7 @@ def add_kill_parser(subparsers):
 
         try:
             job = client.kill_job(job_id)[0]
-        except riseml.rest.ApiException as e:
+        except ApiException as e:
             body = json.loads(e.body)
             handle_error(body['message'], e.status)
         print("job killed (%s)" % (job.id))

@@ -499,7 +499,7 @@ class ScratchApi(object):
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
-    def put_scratch_object(self, scratch_id, path, **kwargs):
+    def put_scratch_object(self, scratch_id, path, file, **kwargs):
         """
         
         
@@ -510,24 +510,25 @@ class ScratchApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.put_scratch_object(scratch_id, path, callback=callback_function)
+        >>> thread = api.put_scratch_object(scratch_id, path, file, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str scratch_id:  (required)
         :param str path:  (required)
+        :param file file:  (required)
         :return: ScratchEntry
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.put_scratch_object_with_http_info(scratch_id, path, **kwargs)
+            return self.put_scratch_object_with_http_info(scratch_id, path, file, **kwargs)
         else:
-            (data) = self.put_scratch_object_with_http_info(scratch_id, path, **kwargs)
+            (data) = self.put_scratch_object_with_http_info(scratch_id, path, file, **kwargs)
             return data
 
-    def put_scratch_object_with_http_info(self, scratch_id, path, **kwargs):
+    def put_scratch_object_with_http_info(self, scratch_id, path, file, **kwargs):
         """
         
         
@@ -538,18 +539,19 @@ class ScratchApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.put_scratch_object_with_http_info(scratch_id, path, callback=callback_function)
+        >>> thread = api.put_scratch_object_with_http_info(scratch_id, path, file, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str scratch_id:  (required)
         :param str path:  (required)
+        :param file file:  (required)
         :return: ScratchEntry
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['scratch_id', 'path']
+        all_params = ['scratch_id', 'path', 'file']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -569,6 +571,9 @@ class ScratchApi(object):
         # verify the required parameter 'path' is set
         if ('path' not in params) or (params['path'] is None):
             raise ValueError("Missing the required parameter `path` when calling `put_scratch_object`")
+        # verify the required parameter 'file' is set
+        if ('file' not in params) or (params['file'] is None):
+            raise ValueError("Missing the required parameter `file` when calling `put_scratch_object`")
 
 
         collection_formats = {}
@@ -586,6 +591,8 @@ class ScratchApi(object):
 
         form_params = []
         local_var_files = {}
+        if 'file' in params:
+            local_var_files['file'] = params['file']
 
         body_params = None
 
@@ -597,7 +604,7 @@ class ScratchApi(object):
 
         # HTTP header `Content-Type`
         header_params['Content-Type'] = self.api_client.\
-            select_header_content_type(['application/json'])
+            select_header_content_type(['multipart/form-data'])
 
         # Authentication setting
         auth_settings = ['api_key']

@@ -618,6 +618,7 @@ class DefaultApi(object):
 
         :param callback function: The callback function
             for asynchronous request. (optional)
+        :param str state: 
         :return: list[Job]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -644,12 +645,13 @@ class DefaultApi(object):
 
         :param callback function: The callback function
             for asynchronous request. (optional)
+        :param str state: 
         :return: list[Job]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = []
+        all_params = ['state']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -671,6 +673,8 @@ class DefaultApi(object):
         path_params = {}
 
         query_params = {}
+        if 'state' in params:
+            query_params['state'] = params['state']
 
         header_params = {}
 
@@ -797,12 +801,12 @@ class DefaultApi(object):
 
         # HTTP header `Content-Type`
         header_params['Content-Type'] = self.api_client.\
-            select_header_content_type(['multipart/form-data'])
+            select_header_content_type(['application/json'])
 
         # Authentication setting
         auth_settings = ['api_key']
 
-        return self.api_client.call_api(resource_path, 'POST',
+        return self.api_client.call_api(resource_path, 'GET',
                                             path_params,
                                             query_params,
                                             header_params,
