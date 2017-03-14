@@ -1,84 +1,128 @@
 import sys
 import os
-import subprocess
-import contextlib
 
 import yaml
-import requests
 
 
 class ConfigException(Exception): pass
 
-
-@contextlib.contextmanager
-def chdir(new_dir):
-    old_dir = os.getcwd()
-    try:
-        os.chdir(new_dir)
-        sys.path.insert(0, new_dir)
-        yield
-    finally:
-        del sys.path[0]
-        os.chdir(old_dir)
-
-
 class Config(object):
+    deploy = None
+
+    @classmethod
+    def parse(cls, obj):
+        config = cls()
+        config.deploy = Deploy.parse(obj.get('deploy'))
+        return config
+
+    def to_dict(self):
+        return {'deploy': self.deploy.to_dict()}
+
+class Image(object):
+    name = None
+    install = []
+
+    @classmethod
+    def parse(cls, obj):
+        image = cls()
+        image.name = parse_value(parse_one(obj.get('name')))
+        image.install = parse_list(obj.get('install'))
+        return image
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'install': self.install}
+
+class Deploy(object):
+    image = None
+    run = []
+    input = []
+    output = []
+    parameters = []
+    demo = None
+
+    @classmethod
+    def parse(cls, obj):
+        deploy = cls()
+        deploy.image = Image.parse(obj.get('image'))
+        deploy.run = parse_list(obj.get('run'))
+        deploy.input = parse_list(obj.get('input'))
+        deploy.output = parse_list(obj.get('output'))
+        deploy.parameters = parse_list(obj.get('parameters'), cls=Parameter.parse)
+        deploy.demo = Demo.parse(obj.get('demo'))
+        return deploy
+
+    def to_dict(self):
+        return {
+            'image': self.image.to_dict(),
+            'run': self.run,
+            'input': self.input,
+            'output': self.output,
+            'parameters': [v.to_dict() for v in self.parameters or []],
+            'demo': self.demo.to_dict()}
+
+class Parameter(object):
+    name = None
+    type = None
+    display_name = None
+    default = None
+
+    @classmethod
+    def parse(cls, obj):
+        parameter = cls()
+        parameter.name = parse_value(obj.get('name'))
+        parameter.type = parse_value(obj.get('type'))
+        parameter.display_name = parse_value(obj.get('display_name'))
+        parameter.default = parse_value(obj.get('default'))
+        return parameter
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'type': self.type,
+            'display_name': self.display_name,
+            'default': self.default}
+
+class Demo(object):
     title = None
     description = None
-    github_repo = None
-    image = None
-    build_commands = []
-    build_include = None
-    batch_commands = []
-    service_commands = []
-    service_input = None
-    service_output = None
-    service_demo = None
+    samples = []
 
+    @classmethod
+    def parse(cls, obj):
+        demo = cls()
+        demo.title = obj.get('title')
+        demo.description = obj.get('description')
+        demo.samples = parse_list(obj.get('samples'))
+        return demo
 
-def parse_list(l):
+    def to_dict(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            'samples': self.samples}
+
+def parse_value(v):
+    if isinstance(v, list) or isinstance(v, dict):
+        raise ConfigException('value must be str: %s' % v)
+    return v
+
+def parse_list(l, cls=lambda x:x):
     if l is None:
         return
     if isinstance(l, list):
-        return l
-    return [l]
-
+        return [cls(v) for v in l]
+    return [cls(l)]
 
 def parse_one(record):
     return parse_list(record)[0]
 
-
 def parse_text(text):
-    config = Config()
-    tmp = yaml.load(text)
-
-    config.title = tmp.get('title')
-    config.description = tmp.get('description')
-    config.github_repo = tmp.get('github_repo')
-
-    config.image = parse_one(tmp['image'])
-
-    if tmp.get('build'):
-        config.build_commands = parse_list(tmp['build']['commands']) or []
-        if tmp['build'].get('options'):
-            config.build_include = parse_list(tmp['build']['options'].get('include'))
-
-    if tmp.get('batch'):
-        config.batch_commands = parse_list(tmp['batch']['commands']) or []
-
-    if tmp.get('service'):
-        config.service_commands = parse_list(tmp['service']['commands']) or []
-        config.service_input = tmp['service'].get('input')
-        config.service_output = tmp['service'].get('output')
-        if tmp['service'].get('options'):
-            config.service_demo = tmp['service']['options'].get('demo')
-
-    return config
-
+    return Config.parse(yaml.load(text))
 
 def parse(f):
     return parse_text(f.read())
-
 
 def parse_file(filename):
     with open(filename) as f:
