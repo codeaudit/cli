@@ -55,6 +55,7 @@ class Deploy(Base):
     output = []
     parameters = []
     demo = None
+    gpu = False
 
     @classmethod
     def _parse(cls, obj):
@@ -69,6 +70,7 @@ class Deploy(Base):
         deploy.input = parse_list(obj.get('input'))
         deploy.output = parse_list(obj.get('output'))
         deploy.parameters = parse_list(obj.get('parameters'), cls=Parameter.parse)
+        deploy.gpu = obj.get('gpu') == True
         demo = obj.get('demo')
         if demo:
             deploy.demo = Demo.parse(obj.get('demo'))
@@ -88,6 +90,8 @@ class Deploy(Base):
             res['parameters'] = [v.to_dict() for v in self.parameters or []]
         if self.demo:
             res['demo'] = self.demo.to_dict()
+        if self.gpu:
+            res['gpu'] = self.gpu
         return res
 
 class Parameter(Base):
