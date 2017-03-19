@@ -1,29 +1,60 @@
 import os
+import mimetypes
 
-from flask import Flask, request, Response, jsonify, send_file, abort
+from flask import Flask, request, Response, jsonify, send_file, abort, render_template_string
 from flask_cors import CORS
 
 from riseml.config_parser import parse_file
 
 
-def serve(func, host='0.0.0.0', port=os.environ.get('PORT')):
+template = '''<!DOCTYPE html>
+<html>
+<body>
+<p>This host is running an API endpoint at <code>/predict</code>.</p>
+
+{% if deploy.input %}
+<p>input: <code>{{ ', '.join(deploy.input) }}</code></p>
+{% endif %}
+
+{% if deploy.output %}
+<p>output: <code>{{ ', '.join(deploy.output) }}</code></p>
+{% endif %}
+
+</body>
+</html>'''
+
+def serve(func,
+          host=os.environ.get('HOST', '0.0.0.0'),
+          port=os.environ.get('PORT')):
+
+    def get_mimetype(value):
+        if value:
+            if value in mimetypes.types_map.values():
+                return value
+            return 'application/vnd.riseml+%s' % value
+        return 'application/octet-stream'
+
     app = Flask(__name__)
     CORS(app, max_age=3600)
-    riseml_yml = 'riseml.yml'
+    config = parse_file('riseml.yml')
+
+    @app.route('/')
+    def _root():
+        return render_template_string(template,
+            deploy=config.deploy)
 
     @app.route('/predict', methods=['POST'])
-    def predict():
+    def _predict():
         return Response(
             func(request.files['image'].read()),
-            mimetype='image/jpeg')
+            mimetype=get_mimetype(config.deploy.output[0]))
 
     @app.route('/config', methods=['GET'])
-    def config():
-        return jsonify(parse_file(riseml_yml).to_dict())
+    def _config():
+        return jsonify(config.to_dict())
 
     @app.route('/samples/<path:path>', methods=['GET'])
-    def samples(path):
-        config = parse_file(riseml_yml)
+    def _samples(path):
         if (config.deploy and config.deploy.demo and
             config.deploy.demo.samples and
             path in config.deploy.demo.samples):
