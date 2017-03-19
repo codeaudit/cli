@@ -38,7 +38,7 @@ class DefaultApi(object):
                 config.api_client = ApiClient()
             self.api_client = config.api_client
 
-    def create_changeset(self, revision, repository, **kwargs):
+    def create_changeset(self, repository, **kwargs):
         """
         
         
@@ -49,24 +49,24 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_changeset(revision, repository, callback=callback_function)
+        >>> thread = api.create_changeset(repository, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str revision:  (required)
         :param str repository:  (required)
+        :param str revision: 
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.create_changeset_with_http_info(revision, repository, **kwargs)
+            return self.create_changeset_with_http_info(repository, **kwargs)
         else:
-            (data) = self.create_changeset_with_http_info(revision, repository, **kwargs)
+            (data) = self.create_changeset_with_http_info(repository, **kwargs)
             return data
 
-    def create_changeset_with_http_info(self, revision, repository, **kwargs):
+    def create_changeset_with_http_info(self, repository, **kwargs):
         """
         
         
@@ -77,18 +77,18 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_changeset_with_http_info(revision, repository, callback=callback_function)
+        >>> thread = api.create_changeset_with_http_info(repository, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str revision:  (required)
         :param str repository:  (required)
+        :param str revision: 
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['revision', 'repository']
+        all_params = ['repository', 'revision']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -102,9 +102,6 @@ class DefaultApi(object):
                 )
             params[key] = val
         del params['kwargs']
-        # verify the required parameter 'revision' is set
-        if ('revision' not in params) or (params['revision'] is None):
-            raise ValueError("Missing the required parameter `revision` when calling `create_changeset`")
         # verify the required parameter 'repository' is set
         if ('repository' not in params) or (params['repository'] is None):
             raise ValueError("Missing the required parameter `repository` when calling `create_changeset`")
@@ -121,10 +118,10 @@ class DefaultApi(object):
 
         form_params = []
         local_var_files = {}
-        if 'revision' in params:
-            form_params.append(('revision', params['revision']))
         if 'repository' in params:
             form_params.append(('repository', params['repository']))
+        if 'revision' in params:
+            form_params.append(('revision', params['revision']))
 
         body_params = None
 
