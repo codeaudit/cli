@@ -16,13 +16,11 @@ from .models.changeset import Changeset
 from .models.error import Error
 from .models.job import Job
 from .models.repository import Repository
-from .models.scratch_entry import ScratchEntry
 from .models.user import User
 
 # import apis into sdk package
 from .apis.admin_api import AdminApi
 from .apis.default_api import DefaultApi
-from .apis.scratch_api import ScratchApi
 
 # import ApiClient
 from .api_client import ApiClient

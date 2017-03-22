@@ -163,5 +163,5 @@ def parse(f):
     return parse_text(f.read())
 
 def parse_file(filename):
-    with open(filename) as f:
+    with open(filename, 'rb') as f:
         return parse(f)
