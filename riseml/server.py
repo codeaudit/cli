@@ -1,8 +1,11 @@
 import os
 import mimetypes
+import json
 
 from flask import Flask, request, Response, jsonify, send_file, abort, render_template_string
 from flask_cors import CORS
+import yaml
+from jsonschema import validate, ValidationError
 
 from riseml.config_parser import parse_file
 
@@ -30,13 +33,33 @@ def serve(func,
     def get_mimetype(value):
         if value:
             if value in mimetypes.types_map.values():
-                return value
-            return 'application/vnd.riseml+%s' % value
-        return 'application/octet-stream'
+                return value, None
+            return 'application/vnd.riseml+%s' % value, value
+        return 'application/octet-stream', None
 
     app = Flask(__name__)
     CORS(app, max_age=3600)
     config = parse_file('riseml.yml')
+
+    schema = None
+    output_mimetype = None
+    schema_name = None
+
+    if config and config.deploy and config.deploy.output and config.deploy.output[0]:
+        output_mimetype, schema_name = get_mimetype(config.deploy.output[0])
+        if schema_name:
+            root = os.path.abspath(os.path.dirname(__file__))
+            loc = os.path.join(root, 'schemas', schema_name + '.yml')
+            if not os.path.isfile(loc):
+                raise Exception('schema %s not found' % schema_name)
+            with open(loc, 'rb') as f:
+                schema = yaml.load(f.read())
+
+    def _validate(obj):
+        if schema:
+            validate(obj, schema)
+            return json.dumps(obj)
+        return obj
 
     @app.route('/')
     def _root():
@@ -45,9 +68,12 @@ def serve(func,
 
     @app.route('/predict', methods=['POST'])
     def _predict():
-        return Response(
-            func(request.files['image'].read()),
-            mimetype=get_mimetype(config.deploy.output[0]))
+        try:
+            return Response(
+                _validate(func(request.files['image'].read())),
+                mimetype=output_mimetype)
+        except ValidationError as e:
+            return jsonify({'error': 'invalid %s: %s' % (schema_name, e.message)})
 
     @app.route('/config', methods=['GET'])
     def _config():

@@ -1,0 +1,22 @@
+type: array
+items: 
+ type: object
+ properties: 
+  x_min: 
+   type: integer
+  x_max: 
+   type: integer
+  y_min: 
+   type: integer
+  y_max: 
+   type: integer
+  score:
+   type: number
+  label:
+   type: string
+   maxLength: 255
+ required: 
+  - x_min
+  - x_max
+  - y_min
+  - y_max
