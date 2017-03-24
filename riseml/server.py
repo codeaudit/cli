@@ -14,15 +14,22 @@ template = '''<!DOCTYPE html>
 <html>
 <body>
 <p>This host is running an API endpoint at <code>/predict</code>.</p>
-
+<p>Input</p>
+<ul>
 {% if deploy.input %}
-<p>input: <code>{{ ', '.join(deploy.input) }}</code></p>
+{% for name, schema_name in deploy.input.items() %}
+<li>{{ name }}: <code>{{ schema_name }}</code></li>
+{% endfor %}
 {% endif %}
-
+</ul>
+<p>Output</p>
+<ul>
 {% if deploy.output %}
-<p>output: <code>{{ ', '.join(deploy.output) }}</code></p>
+{% for name, schema_name in deploy.output.items() %}
+<li>{{ name }}: <code>{{ schema_name }}</code></li>
+{% endfor %}
 {% endif %}
-
+</ul>
 </body>
 </html>'''
 
@@ -41,23 +48,21 @@ def serve(func,
     CORS(app, max_age=3600)
     config = parse_file('riseml.yml')
 
-    schema = None
-    output_mimetype = None
-    schema_name = None
+    schemas = {}
+    if config and config.deploy and config.deploy.output and config.deploy.output:
+        for name, schema_name in config.deploy.output.items():
+            if get_mimetype(schema_name)[1]:
+                root = os.path.abspath(os.path.dirname(__file__))
+                loc = os.path.join(root, 'schemas', schema_name + '.yml')
+                if not os.path.isfile(loc):
+                    raise Exception('schema %s not found' % schema_name)
+                with open(loc, 'rb') as f:
+                    schemas[schema_name] = yaml.load(f.read())
 
-    if config and config.deploy and config.deploy.output and config.deploy.output[0]:
-        output_mimetype, schema_name = get_mimetype(config.deploy.output[0])
-        if schema_name:
-            root = os.path.abspath(os.path.dirname(__file__))
-            loc = os.path.join(root, 'schemas', schema_name + '.yml')
-            if not os.path.isfile(loc):
-                raise Exception('schema %s not found' % schema_name)
-            with open(loc, 'rb') as f:
-                schema = yaml.load(f.read())
-
-    def _validate(obj):
-        if schema:
-            validate(obj, schema)
+    def _validate(obj, schema_name):
+        print(obj)
+        if schemas.has_key(schema_name):
+            validate(obj, schemas[schema_name])
             return json.dumps(obj)
         return obj
 
@@ -68,12 +73,13 @@ def serve(func,
 
     @app.route('/predict', methods=['POST'])
     def _predict():
-        try:
-            return Response(
-                _validate(func(request.files['image'].read())),
-                mimetype=output_mimetype)
-        except ValidationError as e:
-            return jsonify({'error': 'invalid %s: %s' % (schema_name, e.message)})
+        for name, schema_name in config.deploy.output.items():
+            try:
+                return Response(
+                    _validate(func(request.files[name].read()), schema_name),
+                    mimetype=get_mimetype(schema_name)[0])
+            except ValidationError as e:
+                return jsonify({'error': 'invalid %s: %s' % (schema_name, e.message)})
 
     @app.route('/config', methods=['GET'])
     def _config():

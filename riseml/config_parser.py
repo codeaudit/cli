@@ -67,13 +67,13 @@ class Deploy(Base):
 
         deploy.image = Image.parse(image_dict)
         deploy.run = parse_list(obj.get('run'))
-        deploy.input = parse_list(obj.get('input'))
-        deploy.output = parse_list(obj.get('output'))
+        deploy.input = parse_dict(obj.get('input'), str)
+        deploy.output = parse_dict(obj.get('output'), str)
         deploy.parameters = parse_list(obj.get('parameters'), cls=Parameter.parse)
         deploy.gpu = obj.get('gpu') == True
         demo = obj.get('demo')
         if demo:
-            deploy.demo = Demo.parse(obj.get('demo'))
+            deploy.demo = Demo.parse(demo)
         if not deploy.run:
             raise ConfigException('missing field: run')
         return deploy
@@ -120,6 +120,7 @@ class Demo(Base):
     title = None
     description = None
     samples = []
+    readme = None
 
     @classmethod
     def _parse(cls, obj):
@@ -127,6 +128,9 @@ class Demo(Base):
         demo.title = obj.get('title')
         demo.description = obj.get('description')
         demo.samples = parse_list(obj.get('samples'))
+        demo.readme = obj.get('readme')
+        if demo.readme:
+            demo.readme = Readme.parse(demo.readme)
         return demo
 
     def to_dict(self):
@@ -137,6 +141,23 @@ class Demo(Base):
             res['description'] = self.description
         if self.samples:
             res['samples'] = self.samples
+        if self.readme:
+            res['readme'] = self.readme.to_dict()
+        return res
+
+class Readme(Base):
+    content = None
+
+    @classmethod
+    def _parse(cls, obj):
+        readme = cls()
+        readme.content = obj.get('content')
+        return readme
+
+    def to_dict(self):
+        res = {}
+        if self.content:
+            res['content'] = self.content
         return res
 
 def parse_value(v):
@@ -150,6 +171,15 @@ def parse_list(l, cls=lambda x:x):
     if isinstance(l, list):
         return [cls(v) for v in l]
     return [cls(l)]
+
+def parse_dict(d, klass):
+    if isinstance(d, dict):
+        res = {}
+        for k, v in d.items():
+            if not isinstance(v, klass):
+                raise ConfigException('value %s not of type %s' % (v, klass))
+            res[k] = v
+        return res
 
 def parse_one(record):
     res = parse_list(record)
