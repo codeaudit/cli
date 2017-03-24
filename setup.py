@@ -4,12 +4,12 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "riseml"
-VERSION = "0.3.4"
+VERSION = "0.3.5"
 
 
 REQUIRES = ["urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil"]
 
-REQUIRES += ['pyyaml', 'requests', 'flask', 'flask-cors']
+REQUIRES += ['pyyaml', 'requests', 'flask', 'flask-cors', 'jsonschema']
 
 setup(
     name=NAME,
