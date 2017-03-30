@@ -60,8 +60,7 @@ def serve(func,
                     schemas[schema_name] = yaml.load(f.read())
 
     def _validate(obj, schema_name):
-        print(obj)
-        if schemas.has_key(schema_name):
+        if schema_name in schemas:
             validate(obj, schemas[schema_name])
             return json.dumps(obj)
         return obj
