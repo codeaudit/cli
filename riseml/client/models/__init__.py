@@ -16,4 +16,5 @@ from .changeset import Changeset
 from .error import Error
 from .job import Job
 from .repository import Repository
+from .scratch_entry import ScratchEntry
 from .user import User

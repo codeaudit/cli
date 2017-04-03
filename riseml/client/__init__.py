@@ -16,6 +16,7 @@ from .models.changeset import Changeset
 from .models.error import Error
 from .models.job import Job
 from .models.repository import Repository
+from .models.scratch_entry import ScratchEntry
 from .models.user import User
 
 # import apis into sdk package
