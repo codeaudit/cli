@@ -280,6 +280,7 @@ class DefaultApi(object):
         :param str name:  (required)
         :param str description: 
         :param str username: 
+        :param str default_branch: 
         :return: list[Repository]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -309,12 +310,13 @@ class DefaultApi(object):
         :param str name:  (required)
         :param str description: 
         :param str username: 
+        :param str default_branch: 
         :return: list[Repository]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['name', 'description', 'username']
+        all_params = ['name', 'description', 'username', 'default_branch']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -350,6 +352,8 @@ class DefaultApi(object):
             form_params.append(('description', params['description']))
         if 'username' in params:
             form_params.append(('username', params['username']))
+        if 'default_branch' in params:
+            form_params.append(('default_branch', params['default_branch']))
 
         body_params = None
 
