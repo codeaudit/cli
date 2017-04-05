@@ -100,4 +100,4 @@ def serve(func,
 
         abort(404)
 
-    app.run(host=host, port=port, threaded=True)
+    app.run(host=host, port=port, threaded=False)
