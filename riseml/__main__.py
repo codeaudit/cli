@@ -31,7 +31,7 @@ except ImportError:
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
-git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
+sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://sync.riseml.com')
 user_url = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 
 
@@ -292,29 +292,38 @@ def add_push_parser(subparsers):
         if not args.name and args.notebook:
             handle_error("notebook requires name")
 
-        branch = args.branch
-        if not branch:
-            proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
-                cwd=get_repo_root(),
-                stdout=subprocess.PIPE,
-                stderr=dev_null)
-            branch = proc.stdout.read().strip()
+        #branch = args.branch
+        #if not branch:
+        #    proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
+        #        cwd=get_repo_root(),
+        #        stdout=subprocess.PIPE,
+        #        stderr=dev_null)
+        #    branch = proc.stdout.read().strip()
 
-        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', branch],
-            cwd=get_repo_root(),
-            stdout=subprocess.PIPE,
-            stderr=dev_null)
-        revision = proc.stdout.read().strip()
+        #proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', branch],
+        #    cwd=get_repo_root(),
+        #    stdout=subprocess.PIPE,
+        #    stderr=dev_null)
+        #revision = proc.stdout.read().strip()
 
         repo_name = get_repo_name()
         user = get_user()
 
-        o = urlparse(git_url)
-        auth_git_url = '%s://%s:%s@%s/%s.git' % (
-            o.scheme, user.username, os.environ.get('RISEML_APIKEY'),
-            o.netloc, repo_name)
+        #o = urlparse(git_url)
+        #auth_git_url = '%s://%s:%s@%s/%s.git' % (
+        #    o.scheme, user.username, os.environ.get('RISEML_APIKEY'),
+        #    o.netloc, repo_name)
 
-        proc = subprocess.Popen([resolve_path('git'), 'push', auth_git_url, branch],
+        #proc = subprocess.Popen([resolve_path('git'), 'push', auth_git_url, branch],
+        #    cwd=get_repo_root(),
+        #    stdout=subprocess.PIPE,
+        #    stderr=subprocess.STDOUT)
+
+        o = urlparse(sync_url)
+        rsync_url = '%s://%s/sync/%s/%s.git' % (
+            o.scheme, o.netloc, user.id, repo_name)
+        print(rsync_url)
+        proc = subprocess.Popen([resolve_path('rsync'), '-rlptD', './', rsync_url],
             cwd=get_repo_root(),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT)
