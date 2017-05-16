@@ -13,7 +13,7 @@ except ImportError:
 
 import requests
 
-from riseml.client import DefaultApi, AdminApi, ScratchApi, ApiClient
+from riseml.client import DefaultApi, AdminApi, ScratchEntry, ApiClient
 from riseml.client.rest import ApiException
 
 try:
@@ -327,7 +327,7 @@ def add_push_parser(subparsers):
         if res != 0:
             sys.exit(res)
 
-        res = requests.post('%s/changesets' % api_url,
+        res = requests.post('%s/jobs' % api_url,
             data={
                 'revision': revision,
                 'repository': repo_name,
@@ -358,6 +358,12 @@ def add_push_parser(subparsers):
                         webbrowser.open(url + token)
                         search = False
         else:
+            job_id = res.json()[0]['id']
+            res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
+            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            auth=NoAuth(),
+            stream=True)
+
             for buf in res.iter_content(4096):
                 stdout.write(buf)
                 stdout.flush()
