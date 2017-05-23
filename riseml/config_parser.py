@@ -17,15 +17,31 @@ class Base(object):
 
 class Config(Base):
     deploy = None
+    train = None
+    repository = None
 
     @classmethod
     def _parse(cls, obj):
         config = cls()
-        config.deploy = Deploy.parse(obj.get('deploy'))
+        repository = parse_value(parse_one(obj.get('repository')))
+        if not repository:
+            raise ConfigException('missing field: repository')
+        config.repository = repository
+        deploy = obj.get('deploy')
+        train = obj.get('train')
+        if deploy:
+            config.deploy = Deploy.parse(deploy)
+        if train:
+            config.train = Train.parse(train)
         return config
 
     def to_dict(self):
-        return {'deploy': self.deploy.to_dict()}
+        res = {}
+        if self.deploy:
+            res['deploy'] = self.deploy.to_dict()
+        if self.train:
+            res['train'] = self.train.to_dict()
+        return res
 
 class Image(Base):
     name = None
@@ -93,6 +109,35 @@ class Deploy(Base):
         if self.gpu:
             res['gpu'] = self.gpu
         return res
+
+
+class Train(Base):
+    image = None
+    run = []
+    gpus = 0
+
+    @classmethod
+    def _parse(cls, obj):
+        train = cls()
+
+        image_dict = obj.get('image')
+        if not isinstance(image_dict, dict):
+            image_dict = dict(name=image_dict)
+
+        train.image = Image.parse(image_dict)
+        train.run = parse_list(obj.get('run'))
+        if obj.get('gpus'):
+            train.gpus = int(obj.get('gpus'))
+        return train
+
+    def to_dict(self):
+        res = {
+            'image': self.image.to_dict(),
+            'run': self.run}
+        if self.gpus:
+            res['gpus'] = self.gpus
+        return res
+
 
 class Parameter(Base):
     name = None

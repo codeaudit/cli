@@ -15,6 +15,7 @@ import requests
 
 from riseml.client import DefaultApi, AdminApi, ScratchEntry, ApiClient
 from riseml.client.rest import ApiException
+from riseml.config_parser import parse_file
 
 try:
     stdout = sys.stdout.buffer
@@ -29,9 +30,10 @@ except ImportError:
     dev_null = open(os.devnull, 'wb')
 
 
-api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
+api_url = os.environ.get('RISEML_API_ENDPOINT', 'http://127.0.0.1:3000')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
-sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://sync.riseml.com')
+sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://192.168.99.100:31876/sync')
+git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'http://192.168.99.100:31888')
 user_url = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 
 
@@ -59,7 +61,7 @@ def resolve_path(binary):
 def get_repo_root(cwd=None):
     if cwd is None:
         cwd = os.getcwd()
-    if os.path.exists(os.path.join(cwd, '.git')):
+    if os.path.exists(os.path.join(cwd, 'riseml.yml')):
         return cwd
     elif cwd != '/':
         return get_repo_root(os.path.dirname(cwd))
@@ -68,8 +70,9 @@ def get_repo_root(cwd=None):
 def get_repo_name():
     repo_root = get_repo_root()
     if not repo_root:
-        handle_error("no git repository found")
-    return os.path.basename(repo_root)
+        handle_error("no riseml repository found")
+    config = parse_file(os.path.join(repo_root, 'riseml.yml'))
+    return config.repository
 
 
 def get_user():
@@ -86,6 +89,7 @@ def get_repository(name):
         if repository.name == name:
             return repository
     handle_error("repository not found: %s" % name)
+
 
 def create_repository(name):
     api_client = ApiClient(host=api_url)
@@ -108,9 +112,13 @@ def handle_http_error(res):
 def add_create_parser(subparsers):
     parser = subparsers.add_parser('create', help="create repository")
     def run(args):
+        cwd = os.getcwd()
+        if not os.path.exists(os.path.join(cwd, 'riseml.yml')):
+            repo_name = os.path.basename(cwd)
+            with open('riseml.yml', 'a') as f:
+                f.write("repository: %s\n" % repo_name)
         repository = create_repository(get_repo_name())
         print("repository created: %s (%s)" % (repository.name, repository.id))
-
     parser.set_defaults(run=run)
 
 
@@ -283,65 +291,93 @@ def add_kill_parser(subparsers):
 
 
 def add_push_parser(subparsers):
-    parser = subparsers.add_parser('push', help="run new job")
-    parser.add_argument('name', help="service name (optional)", nargs='?')
-    parser.add_argument('--branch', help="git branch")
-    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser = subparsers.add_parser('push', help="push current code")
     parser.set_defaults(notebook=False)
     def run(args):
-        if not args.name and args.notebook:
-            handle_error("notebook requires name")
-
-        #branch = args.branch
-        #if not branch:
-        #    proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
-        #        cwd=get_repo_root(),
-        #        stdout=subprocess.PIPE,
-        #        stderr=dev_null)
-        #    branch = proc.stdout.read().strip()
-
-        #proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', branch],
-        #    cwd=get_repo_root(),
-        #    stdout=subprocess.PIPE,
-        #    stderr=dev_null)
-        #revision = proc.stdout.read().strip()
-
         repo_name = get_repo_name()
         user = get_user()
+        revision = push_repo(user, repo_name)
+        print("new revision: %s" % revision)
+    parser.set_defaults(run=run)
 
-        #o = urlparse(git_url)
-        #auth_git_url = '%s://%s:%s@%s/%s.git' % (
-        #    o.scheme, user.username, os.environ.get('RISEML_APIKEY'),
-        #    o.netloc, repo_name)
 
-        #proc = subprocess.Popen([resolve_path('git'), 'push', auth_git_url, branch],
-        #    cwd=get_repo_root(),
-        #    stdout=subprocess.PIPE,
-        #    stderr=subprocess.STDOUT)
+def push_repo(user, repo_name):
+    o = urlparse(git_url)
+    prepare_url = '%s://%s/users/%s/repositories/%s/sync/prepare' % (
+        o.scheme, o.netloc, user.id, repo_name)
+    done_url = '%s://%s/users/%s/repositories/%s/sync/done' % (
+        o.scheme, o.netloc, user.id, repo_name)
+    res = requests.post(prepare_url)
+    if res.status_code != 200:
+        handle_http_error(res)
+    sync_path = res.json()['path']
+    o = urlparse(sync_url)
+    rsync_url = '%s://%s%s/%s' % (
+        o.scheme, o.netloc, o.path, sync_path)
+    repo_root = os.path.join(get_repo_root(), '')
+    exclude_file = os.path.join(repo_root, '.riseml-exclude')
+    sys.stderr.write("Pushing code...")
+    sync_cmd = [resolve_path('rsync'),
+                '-rlpt',
+                '--exclude=.git',
+                '--delete-during',
+                repo_root,
+                rsync_url]
+    if os.path.exists(exclude_file):
+        sync_cmd.insert(2, '--exclude-from=%s' % exclude_file)
+    proc = subprocess.Popen(sync_cmd,
+                            cwd=repo_root,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    for buf in proc.stdout:
+        stdout.write(buf)
+        stdout.flush()
 
-        o = urlparse(sync_url)
-        rsync_url = '%s://%s/sync/%s/%s.git' % (
-            o.scheme, o.netloc, user.id, repo_name)
-        print(rsync_url)
-        proc = subprocess.Popen([resolve_path('rsync'), '-rlptD', './', rsync_url],
-            cwd=get_repo_root(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+    res = proc.wait()
+    if res != 0:
+        sys.exit(res)
+    res = requests.post(done_url, params={'path': sync_path})
+    if res.status_code != 200:
+        handle_http_error(res)
+    revision = res.json()['sha']
+    print("done")
+    return revision
 
-        for buf in proc.stdout:
-            stdout.write(buf)
-            stdout.flush()
 
-        res = proc.wait()
-        if res != 0:
-            sys.exit(res)
+def add_run_parser(subparsers):
+    parser = subparsers.add_parser('run', help="run new job")   
+    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser.add_argument('--image', help="docker image to use")
+    parser.add_argument('--gpus', help="number of GPUs", type=int)
+    parser.add_argument('--mem', help="RAM in megabytes", type=int)
+    parser.add_argument('--cpus', help="number of CPUs", type=int)
+    parser.add_argument('--section', '-s', help="riseml.yml config section")
+    parser.add_argument('command', help="command with optional arguments", nargs='*')
 
+    parser.set_defaults(notebook=False)
+    def run(args):
+        repo_name = get_repo_name()
+        user = get_user()
+        revision = push_repo(user, repo_name)
+        ad_hoc = {
+        }
+        if args.gpus:
+            ad_hoc['gpus'] = args.gpus
+        if args.cpus:
+            ad_hoc['cpus'] = args.cpus
+        if args.mem:
+            ad_hoc['mem'] = args.mem
+        if args.command:
+            ad_hoc['run'] = [' '.join(args.command)]
+        if args.image:
+            ad_hoc['image'] = args.image
         res = requests.post('%s/jobs' % api_url,
             data={
                 'revision': revision,
                 'repository': repo_name,
-                'service_name': args.name,
                 'notebook': args.notebook and '1' or '0',
+                'ad_hoc_config': json.dumps(ad_hoc),
+                'config_section': args.section or 'ad-hoc',
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             auth=NoAuth(),
@@ -369,9 +405,9 @@ def add_push_parser(subparsers):
         else:
             job_id = res.json()[0]['id']
             res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            auth=NoAuth(),
-            stream=True)
+                               headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+                               auth=NoAuth(),
+                               stream=True)
 
             for buf in res.iter_content(4096):
                 stdout.write(buf)
@@ -437,6 +473,7 @@ def get_parser():
     # worklow ops
     add_create_parser(subparsers)
     add_push_parser(subparsers)
+    add_run_parser(subparsers)    
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
 
