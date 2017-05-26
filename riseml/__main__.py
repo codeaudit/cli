@@ -399,7 +399,7 @@ def add_run_parser(subparsers):
                         webbrowser.open(url + token)
                         search = False
         else:
-            print(json.dumps(res.json(), indent=2))
+            #print(json.dumps(res.json(), indent=2))
             job_id = res.json()[0]['id']
             res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
                                headers={'Authorization': os.environ.get('RISEML_APIKEY')},
