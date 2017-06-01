@@ -347,11 +347,12 @@ def push_repo(user, repo_name):
 def add_run_parser(subparsers):
     parser = subparsers.add_parser('run', help="run new job")   
     parser.add_argument('--notebook', help="run notebook", action='store_true')
-    parser.add_argument('--image', help="docker image to use")
+    parser.add_argument('--image', help="docker image to use", type=str)
     parser.add_argument('--gpus', help="number of GPUs", type=int)
     parser.add_argument('--mem', help="RAM in megabytes", type=int)
     parser.add_argument('--cpus', help="number of CPUs", type=int)
     parser.add_argument('--section', '-s', help="riseml.yml config section")
+    parser.add_argument('--kind', '-k', choices=['train', 'deploy'], help="riseml.yml config section")
     parser.add_argument('command', help="command with optional arguments", nargs='*')
 
     parser.set_defaults(notebook=False)
@@ -359,25 +360,20 @@ def add_run_parser(subparsers):
         repo_name = get_repo_name()
         user = get_user()
         revision = push_repo(user, repo_name)
-        ad_hoc = {
-        }
-        if args.gpus:
-            ad_hoc['gpus'] = args.gpus
-        if args.cpus:
-            ad_hoc['cpus'] = args.cpus
-        if args.mem:
-            ad_hoc['mem'] = args.mem
-        if args.command:
-            ad_hoc['run'] = [' '.join(args.command)]
-        if args.image:
-            ad_hoc['image'] = args.image
+        if not args.section and not args.kind:
+            args.kind = 'train'
         res = requests.post('%s/jobs' % api_url,
             data={
                 'revision': revision,
                 'repository': repo_name,
                 'notebook': args.notebook and '1' or '0',
-                'ad_hoc_config': json.dumps(ad_hoc),
-                'config_section': args.section or 'ad-hoc',
+                'config_section': args.section or 'adhoc',
+                'gpus': args.gpus,
+                'cpus': args.cpus,
+                'mem': args.mem,
+                'command': ' '.join(args.command),
+                'image': args.image,
+                'kind': args.kind,
             },
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             auth=NoAuth(),
@@ -403,6 +399,7 @@ def add_run_parser(subparsers):
                         webbrowser.open(url + token)
                         search = False
         else:
+            #print(json.dumps(res.json(), indent=2))
             job_id = res.json()[0]['id']
             res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
                                headers={'Authorization': os.environ.get('RISEML_APIKEY')},
