@@ -318,7 +318,7 @@ def push_repo(user, repo_name):
     rsync_url = '%s://%s%s/%s' % (
         o.scheme, o.netloc, o.path, sync_path)
     repo_root = os.path.join(get_repo_root(), '')
-    exclude_file = os.path.join(repo_root, '.riseml-exclude')
+    exclude_file = os.path.join(repo_root, '.risemlignore')
     sys.stderr.write("Pushing code...")
     sync_cmd = [resolve_path('rsync'),
                 '-rlpt',
