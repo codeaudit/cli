@@ -1,11 +1,15 @@
 import json
 import os
 import sys
+import time
 import argparse
 import subprocess
 import platform
 import webbrowser
+from threading import Thread
+from Queue import Queue, Empty
 import re
+import util
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -31,8 +35,7 @@ except ImportError:
 
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'http://127.0.0.1:3000')
-api_url = os.environ.get('RISEML_STREAM_ENDPOINT', 'http://127.0.0.1:3000')
-
+stream_url = os.environ.get('RISEML_STREAM_ENDPOINT', 'http://127.0.0.1:3200')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
 sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://192.168.99.100:31876/sync')
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'http://192.168.99.100:31888')
@@ -109,6 +112,73 @@ def handle_error(message, status_code=None):
 
 def handle_http_error(res):
     handle_error(res.json()['message'], res.status_code)
+
+
+def stream_log(job):
+
+    def stream_from_url(url, queue):
+        res = requests.get(url,
+            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+            auth=NoAuth(),
+            stream=True)
+        if res.status_code == 200:
+            for buf in res.iter_lines():
+                queue.put(json.loads(buf))
+
+    def stream_logs(job_id, queue):
+        url = '%s/jobs/%s/logs' % (stream_url, job_id)
+        stream_from_url(url, queue)
+
+    def stream_status(job_id, queue):
+        url = '%s/jobs/%s/states' % (stream_url, job_id)
+        stream_from_url(url, queue)
+
+    def print_log_message(msg):
+        for line in msg['log_lines']:
+            output = "%s%s" % (message_prefix(msg), line)
+            print(output)
+
+    def print_state_message(msg):
+        state = "--> %s" % msg['new_state']
+        output = "%s%s" % (message_prefix(msg),
+                           util.color_string("bold_white", state))
+        print(output)
+
+    def message_prefix(msg):
+        job_name = job_ids[msg['job_id']].name
+        color = job_ids_color[msg['job_id']]
+        prefix = "{:<12}| ".format(job_name)
+        return util.color_string(color, prefix)
+
+    def flatten_jobs(job):
+        for c in job.children:
+            for j in flatten_jobs(c):
+                yield j
+        yield job
+
+    jobs = list(flatten_jobs(job))
+    job_ids = {j.id: j for j in jobs}
+
+    job_ids_color = {j.id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
+                     for i, j in enumerate(jobs)}
+    job_ids_color[job.id] = 'white'
+    queue = Queue()
+    threads = [Thread(target=stream_logs, args=(j.id, queue)) for j in jobs]
+    threads.extend([Thread(target=stream_status, args=(j.id, queue)) for j in jobs])
+    for t in threads:
+        t.daemon = True
+        t.start()
+    while threads:
+        try:
+            msg = queue.get(timeout=0.2)
+            msg_type = msg['type']
+            if msg_type == 'log':
+                print_log_message(msg)
+            elif msg_type == 'state':
+                print_state_message(msg)
+        except Empty:
+            pass
+        threads = [t for t in threads if t.isAlive()]
 
 
 def add_create_parser(subparsers):
@@ -250,18 +320,7 @@ def add_logs_parser(subparsers):
                 return
             job = jobs[-1]
 
-        print(job.id)
-        res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            auth=NoAuth(),
-            stream=True)
-
-        if res.status_code == 200:
-            print("logs for job %s" % job_id)
-            for buf in res.iter_content(4096):
-                stdout.write(buf)
-                stdout.flush()
-
+        stream_log(job)
     parser.set_defaults(run=run)
 
 
@@ -401,17 +460,7 @@ def add_run_parser(subparsers):
                         webbrowser.open(url + token)
                         search = False
         else:
-            #print(json.dumps(res.json(), indent=2))
-            job_id = jobs[0].id
-            res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
-                               headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-                               auth=NoAuth(),
-                               stream=True)
-
-            for buf in res.iter_content(4096):
-                stdout.write(buf)
-                stdout.flush()
-
+            stream_log(jobs[0])
     parser.set_defaults(run=run)
 
 
@@ -429,7 +478,7 @@ def add_ps_parser(subparsers):
                 return '\033[1m{}\033[0m'.format(s)
             header = ''
             for i, w in enumerate(widths):
-                header += '{:%s{widths[%s]}} ' % ('<' if i % 2 else '>', i)
+                header += '{:%s{widths[%s]}} ' % ('<', i)
             return bold(header.format(*columns,
                                       widths=widths))
 
@@ -437,11 +486,11 @@ def add_ps_parser(subparsers):
             line = '{:>{widths[0]}} {:<{widths[1]}} {:>{widths[2]}} {:<{widths[3]}}'
             line = ''
             for i, w in enumerate(widths):
-                line += '{:%s{widths[%s]}} ' % ('<' if i % 2 else '>', i)
+                line += '{:%s{widths[%s]}} ' % ('<', i)
             return line.format(*columns,
                                widths=widths)
 
-        def order_sequence(children):
+        def order_children(children):
             next_c = {}
             first_c = None
             for c in children:
@@ -455,13 +504,35 @@ def add_ps_parser(subparsers):
                 seq.append(first_c)
             return seq
 
-        def get_values(job, repo, name, cols):
+        def get_since_str(timestamp):
+            if not timestamp:
+                return '-'
+            now = int(time.time() * 1000)
+            since_ms = now - timestamp
+            days, since_ms = divmod(since_ms, 24 * 60 * 60 * 1000)
+            hours, since_ms = divmod(since_ms, 60 * 60 * 1000)
+            minutes, since_ms = divmod(since_ms, 60 * 1000)
+            seconds, since_ms = divmod(since_ms, 1000)
+            if days > 0:
+                return "%s day(s)" % days
+            elif hours > 0:
+                return "%s hour(s)" % hours
+            elif minutes > 0:
+                return "%s minute(s)" % minutes
+            elif seconds > 0:
+                return "%s second(s)" % seconds
+            else:
+                return "just now"
+
+        def get_column_values(job, repo, name, cols):
             vals = []
             for c in cols:
                 if c == 'repo':
                     vals.append(repo)
                 elif c == 'name':
                     vals.append(name)
+                elif c == 'since':
+                    vals.append(get_since_str(job.state_changed_at))
                 else:
                     v = getattr(job, c)
                     vals.append(v or '-')
@@ -470,10 +541,10 @@ def add_ps_parser(subparsers):
         def print_job(j, repo, cols, depth=0, siblings_at=[],
                       format_line=format_line):
             name = get_indent(depth, siblings_at) + j.name
-            values = get_values(j, repo, name, cols)
+            values = get_column_values(j, repo, name, cols)
             print(format_line(values))
             if j.name == 'sequence':
-                j.children = order_sequence(j.children)
+                j.children = order_children(j.children)
             if j.children:
                 siblings_at.append(depth)
                 depth += 1
@@ -546,13 +617,13 @@ def add_ps_parser(subparsers):
         all_jobs = filter_jobs(client.get_jobs(only_root=True))
 
         header = ['ID', 'REPO', 'STATE', 'SINCE', 'NAME']
-        widths = (4, 10, 9, 8)
-        columns = ['short_id', 'repo', 'state', 'state_changed_at', 'name']
+        widths = (4, 10, 9, 13, 8)
+        columns = ['short_id', 'repo', 'state', 'since', 'name']
 
         if args.l:
-            header = ['ID', 'UUID', 'REPO', 'CPUS', 'GPUS', 'MEM', 'STATE', 'NAME']
-            widths = (4, 36, 10, 4, 4, 4, 9, 8)
-            columns = ['short_id', 'id', 'repo', 'cpus', 'gpus', 'mem', 'state', 'name']
+            header = ['ID', 'UUID', 'REPO', 'CPUS', 'GPUS', 'MEM', 'STATE', 'SINCE', 'NAME']
+            widths = (4, 36, 10, 4, 4, 4, 9, 12, 8)
+            columns = ['short_id', 'id', 'repo', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
 
         print(format_header(header, widths=widths))
         for j in all_jobs:
