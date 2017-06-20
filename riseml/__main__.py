@@ -116,23 +116,6 @@ def handle_http_error(res):
 
 def stream_log(job):
 
-    def stream_from_url(url, queue):
-        res = requests.get(url,
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            auth=NoAuth(),
-            stream=True)
-        if res.status_code == 200:
-            for buf in res.iter_lines():
-                queue.put(json.loads(buf))
-
-    def stream_logs(job_id, queue):
-        url = '%s/jobs/%s/logs' % (stream_url, job_id)
-        stream_from_url(url, queue)
-
-    def stream_status(job_id, queue):
-        url = '%s/jobs/%s/states' % (stream_url, job_id)
-        stream_from_url(url, queue)
-
     def print_log_message(msg):
         for line in msg['log_lines']:
             output = "%s%s" % (message_prefix(msg), line)
@@ -158,27 +141,26 @@ def stream_log(job):
 
     jobs = list(flatten_jobs(job))
     job_ids = {j.id: j for j in jobs}
-
     job_ids_color = {j.id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
                      for i, j in enumerate(jobs)}
     job_ids_color[job.id] = 'white'
-    queue = Queue()
-    threads = [Thread(target=stream_logs, args=(j.id, queue)) for j in jobs]
-    threads.extend([Thread(target=stream_status, args=(j.id, queue)) for j in jobs])
-    for t in threads:
-        t.daemon = True
-        t.start()
-    while threads:
-        try:
-            msg = queue.get(timeout=0.2)
+    url = '%s/jobs/%s/stream' % (stream_url, job.id)
+
+    res = requests.get(url,
+        headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+        auth=NoAuth(),
+        stream=True)
+    if res.status_code == 200:
+        for line in res.iter_lines():
+            msg = json.loads(line)
             msg_type = msg['type']
-            if msg_type == 'log':
+            if msg_type == 'log':   
                 print_log_message(msg)
             elif msg_type == 'state':
                 print_state_message(msg)
-        except Empty:
-            pass
-        threads = [t for t in threads if t.isAlive()]
+    else:
+        handle_http_error(res)
+
 
 
 def add_create_parser(subparsers):
@@ -538,9 +520,18 @@ def add_ps_parser(subparsers):
                     vals.append(v or '-')
             return vals
 
+        def get_job_name(job):
+            if job.root is None:
+                if job.role == 'sequence':
+                    return job.changeset.config_section
+                else:
+                    return '%s (%s)' % (job.name, job.changeset.config_section)
+            else:
+                return job.name
+
         def print_job(j, repo, cols, depth=0, siblings_at=[],
                       format_line=format_line):
-            name = get_indent(depth, siblings_at) + j.name
+            name = get_indent(depth, siblings_at) + get_job_name(j)
             values = get_column_values(j, repo, name, cols)
             print(format_line(values))
             if j.name == 'sequence':
