@@ -1,4 +1,5 @@
 import json
+import re
 import os
 import sys
 import time
@@ -6,16 +7,22 @@ import argparse
 import subprocess
 import platform
 import webbrowser
+import requests
+
 from threading import Thread
-from Queue import Queue, Empty
-import re
-import util
+
+try:
+    from queue import Queue, Empty
+except ImportError:
+    from Queue import Queue, Empty
+
 try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
 
-import requests
+from . import util
+
 
 from riseml.client import DefaultApi, AdminApi, ScratchEntry, ApiClient
 from riseml.client.rest import ApiException
