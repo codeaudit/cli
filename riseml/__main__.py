@@ -156,7 +156,8 @@ def stream_log(job):
     res = requests.get(url,
         headers={'Authorization': os.environ.get('RISEML_APIKEY')},
         auth=NoAuth(),
-        stream=True)
+        stream=True,
+        timeout=(9.9, None))
     if res.status_code == 200:
         for line in res.iter_lines():
             msg = json.loads(line)
