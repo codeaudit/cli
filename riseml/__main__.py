@@ -302,13 +302,13 @@ def add_logs_parser(subparsers):
         client = DefaultApi(api_client)
         if args.job:
             jobs = client.get_job(args.job)
-            job = jobs[-1]
+            job = jobs[0]
         else:
             repository = get_repository(get_repo_name())
             jobs = client.get_repository_jobs(repository.id)
             if not jobs:
                 return
-            job = jobs[-1]
+            job = jobs[0]
 
         stream_log(job)
     parser.set_defaults(run=run)
