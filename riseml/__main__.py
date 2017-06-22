@@ -489,8 +489,12 @@ def add_ps_parser(subparsers):
                 else:
                     first_c = c
             seq = [first_c]
+            first_c.index = 1
+            index = 2
             while first_c.id in next_c:
                 first_c = next_c[first_c.id]
+                first_c.index = index
+                index += 1
                 seq.append(first_c)
             return seq
 
@@ -530,7 +534,8 @@ def add_ps_parser(subparsers):
 
         def print_job(j, repo, cols, depth=0, siblings_at=[],
                       format_line=format_line):
-            name = get_indent(depth, siblings_at) + util.get_job_name(j)
+            index = index = getattr(j, 'index', None)
+            name = get_indent(depth, siblings_at, index=index) + util.get_job_name(j)
             values = get_column_values(j, repo, name, cols)
             print(format_line(values))
             if j.name == 'sequence':
@@ -544,11 +549,11 @@ def add_ps_parser(subparsers):
                     print_job(c, repo, cols, depth, siblings_at,
                               format_line=format_line)
 
-        def get_indent(depth, siblings_at):
+        def get_indent(depth, siblings_at, index=None):
             indent = ""
             for i in range(0, depth):
                 if i == depth - 1:
-                    indent += ' {:<3}'.format('\_')
+                    indent += ' {:<3}'.format('\_%s ' % ('' if index is None else index))
                 elif i in siblings_at:
                     indent += ' {:<3}'.format('|')
                 else:
