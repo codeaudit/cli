@@ -328,9 +328,9 @@ def add_kill_parser(subparsers):
             jobs = client.get_repository_jobs(repository.id)
             if not jobs:
                 return
-            if jobs[-1].state in ('FINISHED', 'FAILED', 'KILLED'):
+            if jobs[0].state in ('FINISHED', 'FAILED', 'KILLED'):
                 return
-            jobs = [jobs[-1].id]
+            jobs = [jobs[0].id]
         for job_id in jobs:
             try:
                 job = client.kill_job(job_id)[0]
