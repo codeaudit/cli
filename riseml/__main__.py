@@ -615,7 +615,8 @@ def add_ps_parser(subparsers):
             widths = (4, 36, 10, 4, 4, 4, 9, 12, 8)
             columns = ['short_id', 'id', 'repo', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
 
-        print(format_header(header, widths=widths))
+        if all_jobs:
+            print(format_header(header, widths=widths))
         for j in all_jobs:
             print_job(j, j.changeset.repository.name, columns,
                       format_line=lambda x: format_line(x, widths=widths))
