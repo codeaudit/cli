@@ -16,7 +16,7 @@ colors = {}
 def get_job_name(job):
     if job.root is None:
         if job.role == 'sequence':
-            return "* (%s)" % job.changeset.config_section
+            return "+ (%s)" % job.changeset.config_section
         elif job.role in ('deploy', 'train'):
             return "%s:run" % job.changeset.config_section
         else:
