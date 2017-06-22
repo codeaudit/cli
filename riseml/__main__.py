@@ -135,7 +135,7 @@ def stream_log(job):
         print(output)
 
     def message_prefix(msg):
-        job_name = job_ids[msg['job_id']].name
+        job_name = util.get_job_name(job_ids[msg['job_id']])
         color = job_ids_color[msg['job_id']]
         prefix = "{:<12}| ".format(job_name)
         return util.color_string(color, prefix)
@@ -528,18 +528,9 @@ def add_ps_parser(subparsers):
                     vals.append(v or '-')
             return vals
 
-        def get_job_name(job):
-            if job.root is None:
-                if job.role == 'sequence':
-                    return job.changeset.config_section
-                else:
-                    return '%s (%s)' % (job.name, job.changeset.config_section)
-            else:
-                return job.name
-
         def print_job(j, repo, cols, depth=0, siblings_at=[],
                       format_line=format_line):
-            name = get_indent(depth, siblings_at) + get_job_name(j)
+            name = get_indent(depth, siblings_at) + util.get_job_name(j)
             values = get_column_values(j, repo, name, cols)
             print(format_line(values))
             if j.name == 'sequence':

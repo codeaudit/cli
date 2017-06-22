@@ -13,6 +13,14 @@ COLOR_NAMES = [
 
 colors = {}
 
+def get_job_name(job):
+    if job.root is None:
+        if job.role == 'sequence':
+            return job.changeset.config_section
+        else:
+            return '%s (%s)' % (job.name, job.changeset.config_section)
+    else:
+        return job.name
 
 def get_color_pairs():
     for i, name in enumerate(COLOR_NAMES):
