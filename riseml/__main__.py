@@ -8,6 +8,7 @@ import subprocess
 import platform
 import webbrowser
 import requests
+import websocket
 
 from threading import Thread
 
@@ -42,7 +43,7 @@ except ImportError:
 
 
 api_url = os.environ.get('RISEML_API_ENDPOINT', 'http://127.0.0.1:3000')
-stream_url = os.environ.get('RISEML_STREAM_ENDPOINT', 'http://127.0.0.1:3200')
+stream_url = os.environ.get('RISEML_STREAM_ENDPOINT', 'ws://127.0.0.1:3200')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
 sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://192.168.99.100:31876/sync')
 git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'http://192.168.99.100:31888')
@@ -153,22 +154,31 @@ def stream_log(job):
     job_ids_color[job.id] = 'white'
     url = '%s/jobs/%s/stream' % (stream_url, job.id)
 
-    res = requests.get(url,
-        headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-        auth=NoAuth(),
-        stream=True,
-        timeout=(9.9, None))
-    if res.status_code == 200:
-        for line in res.iter_lines():
-            msg = json.loads(line)
-            msg_type = msg['type']
-            if msg_type == 'log':   
-                print_log_message(msg)
-            elif msg_type == 'state':
-                print_state_message(msg)
-    else:
-        handle_http_error(res)
+    def on_message(ws, message):
+        msg = json.loads(message)
 
+        msg_type = msg['type']
+        if msg_type == 'log':
+            print_log_message(msg)
+        elif msg_type == 'state':
+            print_state_message(msg)
+
+    def on_error(ws, error):
+        handle_error(error)
+
+    def on_close(ws):
+        # print("Stream closed")
+        sys.exit(0)
+
+    ws = websocket.WebSocketApp(
+        url,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close
+    )
+
+    # FIXME: {'Authorization': os.environ.get('RISEML_APIKEY')}
+    ws.run_forever()
 
 
 def add_create_parser(subparsers):
