@@ -23,6 +23,8 @@ def get_job_name(job):
             return '%s (%s)' % (job.name, job.changeset.config_section)
     elif job.role in ('deploy', 'train'):
         return 'run'
+    elif job.role == 'tensorboard':
+        return 'tensorboard (service: %s)' % job.service_name 
     else:
         return job.name
 
