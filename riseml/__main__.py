@@ -152,7 +152,7 @@ def stream_log(job):
     job_ids_color = {j.id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
                      for i, j in enumerate(jobs)}
     job_ids_color[job.id] = 'white'
-    url = '%s/jobs/%s/stream' % (stream_url, job.id)
+    url = '%s/ws/jobs/%s/stream' % (stream_url, job.id)
 
     def on_message(ws, message):
         msg = json.loads(message)
