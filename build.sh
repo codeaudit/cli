@@ -6,7 +6,7 @@ else
     url=https://api.riseml.com/spec
 fi
 
-swagger-codegen generate -i $url -l python -o tmp -t templates/ -c swagger-codegen.json
+java -jar swagger-codegen-cli.jar generate -i $url -l python -o tmp -t templates/ -c swagger-codegen.json
 
 rm -rf riseml/client
 mv tmp/riseml riseml/client

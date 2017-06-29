@@ -1,20 +1,32 @@
 import json
+import re
 import os
 import sys
+import time
 import argparse
 import subprocess
 import platform
 import webbrowser
-import re
+import requests
+
+from threading import Thread
+
+try:
+    from queue import Queue, Empty
+except ImportError:
+    from Queue import Queue, Empty
+
 try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
 
-import requests
+from . import util
 
-from riseml.client import DefaultApi, AdminApi, ScratchApi, ApiClient
+
+from riseml.client import DefaultApi, AdminApi, ScratchEntry, ApiClient
 from riseml.client.rest import ApiException
+from riseml.config_parser import parse_file
 
 try:
     stdout = sys.stdout.buffer
@@ -29,9 +41,11 @@ except ImportError:
     dev_null = open(os.devnull, 'wb')
 
 
-api_url = os.environ.get('RISEML_API_ENDPOINT', 'https://api.riseml.com')
+api_url = os.environ.get('RISEML_API_ENDPOINT', 'http://127.0.0.1:3000')
+stream_url = os.environ.get('RISEML_STREAM_ENDPOINT', 'http://127.0.0.1:3200')
 scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
-git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'https://git.riseml.com')
+sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://192.168.99.100:31876/sync')
+git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'http://192.168.99.100:31888')
 user_url = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 
 
@@ -59,7 +73,7 @@ def resolve_path(binary):
 def get_repo_root(cwd=None):
     if cwd is None:
         cwd = os.getcwd()
-    if os.path.exists(os.path.join(cwd, '.git')):
+    if os.path.exists(os.path.join(cwd, 'riseml.yml')):
         return cwd
     elif cwd != '/':
         return get_repo_root(os.path.dirname(cwd))
@@ -68,8 +82,9 @@ def get_repo_root(cwd=None):
 def get_repo_name():
     repo_root = get_repo_root()
     if not repo_root:
-        handle_error("no git repository found")
-    return os.path.basename(repo_root)
+        handle_error("no riseml repository found")
+    config = parse_file(os.path.join(repo_root, 'riseml.yml'))
+    return config.repository
 
 
 def get_user():
@@ -86,6 +101,7 @@ def get_repository(name):
         if repository.name == name:
             return repository
     handle_error("repository not found: %s" % name)
+
 
 def create_repository(name):
     api_client = ApiClient(host=api_url)
@@ -105,12 +121,66 @@ def handle_http_error(res):
     handle_error(res.json()['message'], res.status_code)
 
 
+def stream_log(job):
+
+    def print_log_message(msg):
+        for line in msg['log_lines']:
+            output = "%s%s" % (message_prefix(msg), line)
+            print(output)
+
+    def print_state_message(msg):
+        state = "--> %s" % msg['new_state']
+        output = "%s%s" % (message_prefix(msg),
+                           util.color_string("bold_white", state))
+        print(output)
+
+    def message_prefix(msg):
+        job_name = util.get_job_name(job_ids[msg['job_id']])
+        color = job_ids_color[msg['job_id']]
+        prefix = "{:<12}| ".format(job_name)
+        return util.color_string(color, prefix)
+
+    def flatten_jobs(job):
+        for c in job.children:
+            for j in flatten_jobs(c):
+                yield j
+        yield job
+
+    jobs = list(flatten_jobs(job))
+    job_ids = {j.id: j for j in jobs}
+    job_ids_color = {j.id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
+                     for i, j in enumerate(jobs)}
+    job_ids_color[job.id] = 'white'
+    url = '%s/jobs/%s/stream' % (stream_url, job.id)
+
+    res = requests.get(url,
+        headers={'Authorization': os.environ.get('RISEML_APIKEY')},
+        auth=NoAuth(),
+        stream=True,
+        timeout=(9.9, None))
+    if res.status_code == 200:
+        for line in res.iter_lines():
+            msg = json.loads(line)
+            msg_type = msg['type']
+            if msg_type == 'log':   
+                print_log_message(msg)
+            elif msg_type == 'state':
+                print_state_message(msg)
+    else:
+        handle_http_error(res)
+
+
+
 def add_create_parser(subparsers):
     parser = subparsers.add_parser('create', help="create repository")
     def run(args):
+        cwd = os.getcwd()
+        if not os.path.exists(os.path.join(cwd, 'riseml.yml')):
+            repo_name = os.path.basename(cwd)
+            with open('riseml.yml', 'a') as f:
+                f.write("repository: %s\n" % repo_name)
         repository = create_repository(get_repo_name())
         print("repository created: %s (%s)" % (repository.name, repository.id))
-
     parser.set_defaults(run=run)
 
 
@@ -227,120 +297,142 @@ def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs', help="show logs")
     parser.add_argument('job', help="job identifier (optional)", nargs='?')
     def run(args):
-        job_id = None
+        job = None
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
         if args.job:
-            job_id = args.job
+            jobs = client.get_job(args.job)
+            job = jobs[0]
         else:
-            api_client = ApiClient(host=api_url)
-            client = DefaultApi(api_client)
             repository = get_repository(get_repo_name())
             jobs = client.get_repository_jobs(repository.id)
             if not jobs:
                 return
-            job_id = jobs[-1].id
+            job = jobs[0]
 
-        res = requests.get('%s/jobs/%s/logs' % (api_url, job_id),
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            auth=NoAuth(),
-            stream=True)
-
-        if res.status_code == 200:
-            print("logs for job %s" % job_id)
-            for buf in res.iter_content(4096):
-                stdout.write(buf)
-                stdout.flush()
-
+        stream_log(job)
     parser.set_defaults(run=run)
 
 
 def add_kill_parser(subparsers):
     parser = subparsers.add_parser('kill', help="kill job")
-    parser.add_argument('job', help="job identifier (optional)", nargs='?')
+    parser.add_argument('jobs', help="job identifier (optional)", nargs='*')
     def run(args):
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
 
-        job_id = None
-        if args.job:
-            job_id = args.job
-        else:
+        jobs = args.jobs
+
+        if not jobs:
             repository = get_repository(get_repo_name())
             jobs = client.get_repository_jobs(repository.id)
             if not jobs:
                 return
-            if jobs[-1].state not in ('PENDING', 'SCHEDULED', 'TASK_RUNNING'):
+            if jobs[0].state in ('FINISHED', 'FAILED', 'KILLED'):
                 return
-            job_id = jobs[-1].id
-
-        try:
-            job = client.kill_job(job_id)[0]
-        except ApiException as e:
-            body = json.loads(e.body)
-            handle_error(body['message'], e.status)
-        print("job killed (%s)" % (job.id))
-
+            jobs = [jobs[0].id]
+        for job_id in jobs:
+            try:
+                job = client.kill_job(job_id)[0]
+                print("killed %s job %s (%s)" % (job.name, job.short_id, job.id))
+            except ApiException as e:
+                body = json.loads(e.body)
+                print('ERROR: %s (%s)' % (body['message'], e.status))
+            
     parser.set_defaults(run=run)
 
 
 def add_push_parser(subparsers):
-    parser = subparsers.add_parser('push', help="run new job")
-    parser.add_argument('name', help="service name (optional)", nargs='?')
-    parser.add_argument('--branch', help="git branch")
-    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser = subparsers.add_parser('push', help="push current code")
     parser.set_defaults(notebook=False)
     def run(args):
-        if not args.name and args.notebook:
-            handle_error("notebook requires name")
-
-        branch = args.branch
-        if not branch:
-            proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--abbrev-ref', 'HEAD'],
-                cwd=get_repo_root(),
-                stdout=subprocess.PIPE,
-                stderr=dev_null)
-            branch = proc.stdout.read().strip()
-
-        proc = subprocess.Popen([resolve_path('git'), 'rev-parse', '--verify', branch],
-            cwd=get_repo_root(),
-            stdout=subprocess.PIPE,
-            stderr=dev_null)
-        revision = proc.stdout.read().strip()
-
         repo_name = get_repo_name()
         user = get_user()
+        revision = push_repo(user, repo_name)
+        print("new revision: %s" % revision)
+    parser.set_defaults(run=run)
 
-        o = urlparse(git_url)
-        auth_git_url = '%s://%s:%s@%s/%s.git' % (
-            o.scheme, user.username, os.environ.get('RISEML_APIKEY'),
-            o.netloc, repo_name)
 
-        proc = subprocess.Popen([resolve_path('git'), 'push', auth_git_url, branch],
-            cwd=get_repo_root(),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT)
+def push_repo(user, repo_name):
+    o = urlparse(git_url)
+    prepare_url = '%s://%s/users/%s/repositories/%s/sync/prepare' % (
+        o.scheme, o.netloc, user.id, repo_name)
+    done_url = '%s://%s/users/%s/repositories/%s/sync/done' % (
+        o.scheme, o.netloc, user.id, repo_name)
+    res = requests.post(prepare_url)
+    if res.status_code != 200:
+        handle_http_error(res)
+    sync_path = res.json()['path']
+    o = urlparse(sync_url)
+    rsync_url = '%s://%s%s/%s' % (
+        o.scheme, o.netloc, o.path, sync_path)
+    repo_root = os.path.join(get_repo_root(), '')
+    exclude_file = os.path.join(repo_root, '.risemlignore')
+    sys.stderr.write("Pushing code...")
+    sync_cmd = [resolve_path('rsync'),
+                '-rlpt',
+                '--exclude=.git',
+                '--delete-during',
+                repo_root,
+                rsync_url]
+    if os.path.exists(exclude_file):
+        sync_cmd.insert(2, '--exclude-from=%s' % exclude_file)
+    proc = subprocess.Popen(sync_cmd,
+                            cwd=repo_root,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    for buf in proc.stdout:
+        stdout.write(buf)
+        stdout.flush()
 
-        for buf in proc.stdout:
-            stdout.write(buf)
-            stdout.flush()
+    res = proc.wait()
+    if res != 0:
+        sys.exit(res)
+    res = requests.post(done_url, params={'path': sync_path})
+    if res.status_code != 200:
+        handle_http_error(res)
+    revision = res.json()['sha']
+    print("done")
+    return revision
 
-        res = proc.wait()
-        if res != 0:
-            sys.exit(res)
 
-        res = requests.post('%s/changesets' % api_url,
-            data={
-                'revision': revision,
-                'repository': repo_name,
-                'service_name': args.name,
-                'notebook': args.notebook and '1' or '0',
-            },
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            auth=NoAuth(),
-            stream=True)
+def add_run_parser(subparsers):
+    parser = subparsers.add_parser('run', help="run new job")   
+    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser.add_argument('--image', help="docker image to use", type=str)
+    parser.add_argument('--gpus', help="number of GPUs", type=int)
+    parser.add_argument('--mem', help="RAM in megabytes", type=int)
+    parser.add_argument('--cpus', help="number of CPUs", type=int)
+    parser.add_argument('--section', '-s', help="riseml.yml config section")
+    parser.add_argument('--kind', '-k', choices=['train', 'deploy'], help="riseml.yml config section")
+    parser.add_argument('command', help="command with optional arguments", nargs='*')
 
-        if res.status_code != 200:
-            handle_http_error(res)
-        elif args.notebook:
+    parser.set_defaults(notebook=False)
+    def run(args):
+        repo_name = get_repo_name()
+        user = get_user()
+        revision = push_repo(user, repo_name)
+        if not args.section and not args.kind:
+            args.kind = 'train'
+
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+
+        arg_list = [
+            ('notebook', args.notebook and '1' or '0'),
+            ('gpus', args.gpus),
+            ('cpus', args.cpus),
+            ('mem', args.mem),
+            ('command', ' '.join(args.command)),
+            ('image', args.image),
+            ('kind', args.kind),
+        ]
+        kwargs = {k: v for k, v in arg_list if v not in (None, [], '')}
+        
+        jobs = client.create_job(repo_name, revision, args.section or 'adhoc', 
+                                 **kwargs)
+        
+        if args.notebook:
             content = b''
             pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)?\n'
             url = user_url % args.name
@@ -358,10 +450,7 @@ def add_push_parser(subparsers):
                         webbrowser.open(url + token)
                         search = False
         else:
-            for buf in res.iter_content(4096):
-                stdout.write(buf)
-                stdout.flush()
-
+            stream_log(jobs[0])
     parser.set_defaults(run=run)
 
 
@@ -369,41 +458,174 @@ def add_ps_parser(subparsers):
     parser = subparsers.add_parser('ps', help="show jobs")
     parser.add_argument('-a', help="show all jobs",
         action='store_const', const=True)
+    parser.add_argument('-l', help="show more info",
+        action='store_const', const=True)
+
     def run(args):
+
+        def format_header(columns,  widths=(4, 10, 9, 8)):
+            def bold(s):
+                return '\033[1m{}\033[0m'.format(s)
+            header = ''
+            for i, w in enumerate(widths):
+                header += '{:%s{widths[%s]}} ' % ('<', i)
+            return bold(header.format(*columns,
+                                      widths=widths))
+
+        def format_line(columns, widths=(4, 10, 9, 8)):
+            line = '{:>{widths[0]}} {:<{widths[1]}} {:>{widths[2]}} {:<{widths[3]}}'
+            line = ''
+            for i, w in enumerate(widths):
+                line += '{:%s{widths[%s]}} ' % ('<', i)
+            return line.format(*columns,
+                               widths=widths)
+
+        def order_children(children):
+            next_c = {}
+            first_c = None
+            for c in children:
+                if c.previous_job:
+                    next_c[c.previous_job] = c
+                else:
+                    first_c = c
+            seq = [first_c]
+            first_c.index = 1
+            index = 2
+            while first_c.id in next_c:
+                first_c = next_c[first_c.id]
+                first_c.index = index
+                index += 1
+                seq.append(first_c)
+            return seq
+
+        def get_since_str(timestamp):
+            if not timestamp:
+                return '-'
+            now = int(time.time() * 1000)
+            since_ms = now - timestamp
+            days, since_ms = divmod(since_ms, 24 * 60 * 60 * 1000)
+            hours, since_ms = divmod(since_ms, 60 * 60 * 1000)
+            minutes, since_ms = divmod(since_ms, 60 * 1000)
+            seconds, since_ms = divmod(since_ms, 1000)
+            if days > 0:
+                return "%s day(s)" % days
+            elif hours > 0:
+                return "%s hour(s)" % hours
+            elif minutes > 0:
+                return "%s minute(s)" % minutes
+            elif seconds > 0:
+                return "%s second(s)" % seconds
+            else:
+                return "just now"
+
+        def get_column_values(job, repo, name, cols):
+            vals = []
+            for c in cols:
+                if c == 'repo':
+                    vals.append(repo)
+                elif c == 'name':
+                    vals.append(name)
+                elif c == 'since':
+                    vals.append(get_since_str(job.state_changed_at))
+                else:
+                    v = getattr(job, c)
+                    vals.append(v or '-')
+            return vals
+
+        def print_job(j, repo, cols, depth=0, siblings_at=[],
+                      format_line=format_line):
+            index = index = getattr(j, 'index', None)
+            name = get_indent(depth, siblings_at, index=index) + util.get_job_name(j)
+            values = get_column_values(j, repo, name, cols)
+            print(format_line(values))
+            if j.name == 'sequence':
+                j.children = order_children(j.children)
+            if j.children:
+                siblings_at.append(depth)
+                depth += 1
+                for i, c in enumerate(j.children):
+                    if i == len(j.children) - 1:
+                        siblings_at.pop()
+                    print_job(c, repo, cols, depth, siblings_at,
+                              format_line=format_line)
+
+        def get_indent(depth, siblings_at, index=None):
+            indent = ""
+            for i in range(0, depth):
+                if i == depth - 1:
+                    indent += ' {:<3}'.format('\_%s ' % ('' if index is None else index))
+                elif i in siblings_at:
+                    indent += ' {:<3}'.format('|')
+                else:
+                    indent += ' {:<3}'.format(' ')
+            return indent
+
+        #def print_test(t, depth=0, siblings_at=[]):
+        #    name = get_indent(depth, siblings_at) + t['name']
+        #    print(format_line([t['name'], t['name'], t['name'], name], widths=(10, 10, 12, 10)))
+        #    if 'children' in t:
+        #        siblings_at.append(depth)
+        #        depth += 1
+        #        for i, c in enumerate(t['children']):
+        #            if i == len(t['children']) - 1:
+        #                siblings_at.pop()
+        #            print_test(c, depth, siblings_at)
+        #t = {
+        #    'name': 'p1',
+        #    'children': [
+        #        {'name': 'p1c1'},
+        #        {'name': 'p1c2'},
+        #        {'name': 'p1c3', 'children': [
+        #            {'name': 'p1c3c1'},
+        #            {'name': 'p1c3c2', 'children': [
+        #                {'name': 'p1c3c2c1'},
+        #                {'name': 'p1c3c2c2'},
+        #            ]},
+        #            {'name': 'p1c3c3'},
+        #        ]},
+        #        {'name': 'p1c4'},
+        #        {'name': 'p1c5', 'children': [
+        #            {'name': 'p1c5c1'},
+        #            {'name': 'p1c5c2', 'children': [
+        #                {'name': 'p1c5c2c1'},
+        #                {'name': 'p1c5c2c2'},
+        #            ]},
+        #            {'name': 'p1c5c3'},
+        #        ]},
+        #    ]
+        #}
+        #print_test(t)
+
         def filter_jobs(jobs):
             res = []
             for job in jobs:
                 if args.a:
-                    status = job.state
-                    if job.reason:
-                        status += ': ' + job.reason
-                    res.append("%s (%s)" % (job.id, status))
+                    res.append(job)
                 else:
-                    if job.state in ('PENDING', 'SCHEDULED', 'TASK_RUNNING'):
-                        status = job.state
-                        if job.reason:
-                            status += ': ' + job.reason
-                        res.append("%s (%s)" % (job.id, status))
+                    if job.state in ('PENDING', 'STARTING', 'RUNNING',
+                                     'BUILDING', 'SERVING'):
+                        res.append(job)
             return res
-
-        repo_name = get_repo_name()
 
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
-        all_jobs = client.get_jobs()
+        all_jobs = filter_jobs(client.get_jobs(only_root=True))
 
-        if repo_name:
-            repository = get_repository(repo_name)
-            my_jobs = client.get_repository_jobs(repository.id)
-            filtered_jobs = filter_jobs(my_jobs)
-            if filtered_jobs:
-                print("%s jobs" % repo_name)
-                print("\n".join(filtered_jobs))
+        header = ['ID', 'REPO', 'STATE', 'SINCE', 'NAME']
+        widths = (4, 10, 9, 13, 8)
+        columns = ['short_id', 'repo', 'state', 'since', 'name']
 
-        filtered_jobs = filter_jobs([job for job in all_jobs if job not in my_jobs])
-        if filtered_jobs:
-            print("other jobs")
-            print("\n".join(filtered_jobs))
+        if args.l:
+            header = ['ID', 'UUID', 'REPO', 'CPUS', 'GPUS', 'MEM', 'STATE', 'SINCE', 'NAME']
+            widths = (4, 36, 10, 4, 4, 4, 9, 12, 8)
+            columns = ['short_id', 'id', 'repo', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
+
+        if all_jobs:
+            print(format_header(header, widths=widths))
+        for j in all_jobs:
+            print_job(j, j.changeset.repository.name, columns,
+                      format_line=lambda x: format_line(x, widths=widths))
+
 
     parser.set_defaults(run=run)
 
@@ -422,6 +644,7 @@ def get_parser():
     # worklow ops
     add_create_parser(subparsers)
     add_push_parser(subparsers)
+    add_run_parser(subparsers)    
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
 
