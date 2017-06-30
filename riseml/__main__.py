@@ -42,13 +42,13 @@ except ImportError:
     dev_null = open(os.devnull, 'wb')
 
 
-api_url = os.environ.get('RISEML_API_ENDPOINT', 'http://127.0.0.1:3000')
-stream_url = os.environ.get('RISEML_STREAM_ENDPOINT', 'ws://127.0.0.1:3200')
-scratch_url = os.environ.get('RISEML_SCRATCH_ENDPOINT', 'https://scratch.riseml.com:8443')
+endpoint_url = os.environ.get('RISEML_ENDPOINT', 'http://127.0.0.1:8080')
 sync_url = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://192.168.99.100:31876/sync')
-git_url = os.environ.get('RISEML_GIT_ENDPOINT', 'http://192.168.99.100:31888')
 user_url = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
-
+api_url = endpoint_url + '/api'
+git_url = endpoint_url + '/git'
+o = urlparse(endpoint_url)
+stream_url = "ws://%s/stream" % o.netloc
 
 # avoid using ~.netrc
 class NoAuth(object):
@@ -365,10 +365,10 @@ def add_push_parser(subparsers):
 
 def push_repo(user, repo_name):
     o = urlparse(git_url)
-    prepare_url = '%s://%s/users/%s/repositories/%s/sync/prepare' % (
-        o.scheme, o.netloc, user.id, repo_name)
-    done_url = '%s://%s/users/%s/repositories/%s/sync/done' % (
-        o.scheme, o.netloc, user.id, repo_name)
+    prepare_url = '%s://%s/%s/users/%s/repositories/%s/sync/prepare' % (
+        o.scheme, o.netloc, o.path, user.id, repo_name)
+    done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
+        o.scheme, o.netloc, o.path, user.id, repo_name)
     res = requests.post(prepare_url)
     if res.status_code != 200:
         handle_http_error(res)
@@ -672,10 +672,11 @@ def main():
     parser = get_parser()
     args = parser.parse_args(sys.argv[1:])
     if args.v:
-        print('RISEML_API_ENDPOINT: %s' % api_url)
-        print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
-        print('RISEML_GIT_ENDPOINT: %s' % git_url)
-        print('RISEML_USER_ENDPOINT: %s' % user_url)
+        print('api_url: %s' % api_url)
+        print('stream_url: %s' % stream_url)
+        #print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
+        print('git_url: %s' % git_url)
+        print('user_url: %s' % user_url)
     if hasattr(args, 'run'):
         args.run(args)
     else:
