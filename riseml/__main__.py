@@ -181,6 +181,51 @@ def stream_log(job):
     ws.run_forever()
 
 
+def run_command(args):
+    repo_name = get_repo_name()
+    user = get_user()
+    revision = push_repo(user, repo_name)
+    if not args.section and not args.kind:
+        args.kind = 'train'
+
+    api_client = ApiClient(host=api_url)
+    client = DefaultApi(api_client)
+
+    arg_list = [
+        ('notebook', args.notebook and '1' or '0'),
+        ('gpus', args.gpus),
+        ('cpus', args.cpus),
+        ('mem', args.mem),
+        ('command', ' '.join(args.command)),
+        ('image', args.image),
+        ('kind', args.kind),
+    ]
+    kwargs = {k: v for k, v in arg_list if v not in (None, [], '')}
+
+    jobs = client.create_job(repo_name, revision, args.section or 'adhoc',
+                             **kwargs)
+
+    if args.notebook:
+        content = b''
+        pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)?\n'
+        url = user_url % args.name
+        search = True
+
+        for buf in res.iter_content(4096):
+            content += buf
+            stdout.write(buf)
+            stdout.flush()
+            if search:
+                match = re.search(pattern, content)
+                if match:
+                    token = match.group(1) or ''
+                    print('notebook url: %s' % url + token)
+                    webbrowser.open(url + token)
+                    search = False
+    else:
+        stream_log(jobs[0])
+
+
 def add_create_parser(subparsers):
     parser = subparsers.add_parser('create', help="create repository")
     def run(args):
@@ -407,7 +452,7 @@ def push_repo(user, repo_name):
 
 
 def add_run_parser(subparsers):
-    parser = subparsers.add_parser('run', help="run new job")   
+    parser = subparsers.add_parser('run', help="run new job")
     parser.add_argument('--notebook', help="run notebook", action='store_true')
     parser.add_argument('--image', help="docker image to use", type=str)
     parser.add_argument('--gpus', help="number of GPUs", type=int)
@@ -416,52 +461,35 @@ def add_run_parser(subparsers):
     parser.add_argument('--section', '-s', help="riseml.yml config section")
     parser.add_argument('--kind', '-k', choices=['train', 'deploy'], help="riseml.yml config section")
     parser.add_argument('command', help="command with optional arguments", nargs='*')
-
     parser.set_defaults(notebook=False)
-    def run(args):
-        repo_name = get_repo_name()
-        user = get_user()
-        revision = push_repo(user, repo_name)
-        if not args.section and not args.kind:
-            args.kind = 'train'
+    parser.set_defaults(run=run_command)
 
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
 
-        arg_list = [
-            ('notebook', args.notebook and '1' or '0'),
-            ('gpus', args.gpus),
-            ('cpus', args.cpus),
-            ('mem', args.mem),
-            ('command', ' '.join(args.command)),
-            ('image', args.image),
-            ('kind', args.kind),
-        ]
-        kwargs = {k: v for k, v in arg_list if v not in (None, [], '')}
-        
-        jobs = client.create_job(repo_name, revision, args.section or 'adhoc', 
-                                 **kwargs)
-        
-        if args.notebook:
-            content = b''
-            pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)?\n'
-            url = user_url % args.name
-            search = True
+def add_train_parser(subparsers):
+    parser = subparsers.add_parser('train', help="run new training job")
+    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser.add_argument('--image', help="docker image to use", type=str)
+    parser.add_argument('--gpus', help="number of GPUs", type=int)
+    parser.add_argument('--mem', help="RAM in megabytes", type=int)
+    parser.add_argument('--cpus', help="number of CPUs", type=int)
+    parser.add_argument('command', help="command with optional arguments", nargs='*')
+    parser.set_defaults(notebook=False)
+    parser.set_defaults(section='train')
+    parser.set_defaults(kind='train')
+    parser.set_defaults(run=run_command)
 
-            for buf in res.iter_content(4096):
-                content += buf
-                stdout.write(buf)
-                stdout.flush()
-                if search:
-                    match = re.search(pattern, content)
-                    if match:
-                        token = match.group(1) or ''
-                        print('notebook url: %s' % url + token)
-                        webbrowser.open(url + token)
-                        search = False
-        else:
-            stream_log(jobs[0])
-    parser.set_defaults(run=run)
+
+def add_deploy_parser(subparsers):
+    parser = subparsers.add_parser('deploy', help="run new deploy job")
+    parser.add_argument('--image', help="docker image to use", type=str)
+    parser.add_argument('--gpus', help="number of GPUs", type=int)
+    parser.add_argument('--mem', help="RAM in megabytes", type=int)
+    parser.add_argument('--cpus', help="number of CPUs", type=int)
+    parser.add_argument('command', help="command with optional arguments", nargs='*')
+    parser.set_defaults(notebook=False)
+    parser.set_defaults(section='deploy')
+    parser.set_defaults(kind='deploy')
+    parser.set_defaults(run=run_command)
 
 
 def add_ps_parser(subparsers):
@@ -654,7 +682,9 @@ def get_parser():
     # worklow ops
     add_create_parser(subparsers)
     add_push_parser(subparsers)
-    add_run_parser(subparsers)    
+    add_train_parser(subparsers)
+    add_run_parser(subparsers)
+    add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
 
