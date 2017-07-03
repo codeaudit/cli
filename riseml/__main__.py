@@ -467,13 +467,12 @@ def add_run_parser(subparsers):
 
 def add_train_parser(subparsers):
     parser = subparsers.add_parser('train', help="run new training job")
-    parser.add_argument('--notebook', help="run notebook", action='store_true')
+    parser.add_argument('--notebook', help="run notebook", action='store_true', default=False)
     parser.add_argument('--image', help="docker image to use", type=str)
     parser.add_argument('--gpus', help="number of GPUs", type=int)
     parser.add_argument('--mem', help="RAM in megabytes", type=int)
     parser.add_argument('--cpus', help="number of CPUs", type=int)
     parser.add_argument('command', help="command with optional arguments", nargs='*')
-    parser.set_defaults(notebook=False)
     parser.set_defaults(section='train')
     parser.set_defaults(kind='train')
     parser.set_defaults(run=run_command)
@@ -481,12 +480,12 @@ def add_train_parser(subparsers):
 
 def add_deploy_parser(subparsers):
     parser = subparsers.add_parser('deploy', help="run new deploy job")
+    parser.add_argument('--notebook', help="run notebook", action='store_true', default=False)
     parser.add_argument('--image', help="docker image to use", type=str)
     parser.add_argument('--gpus', help="number of GPUs", type=int)
     parser.add_argument('--mem', help="RAM in megabytes", type=int)
     parser.add_argument('--cpus', help="number of CPUs", type=int)
     parser.add_argument('command', help="command with optional arguments", nargs='*')
-    parser.set_defaults(notebook=False)
     parser.set_defaults(section='deploy')
     parser.set_defaults(kind='deploy')
     parser.set_defaults(run=run_command)
