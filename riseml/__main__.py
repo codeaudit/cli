@@ -354,10 +354,20 @@ def add_info_parser(subparsers):
         api_client = ApiClient(host=api_url)
         client = AdminApi(api_client)        
         nodes = client.get_nodes()
-        print("RiseML Cluster Nodes:\n")
-        print("{:<18}\t{:<3}\t{:<6}\t{:<3}".format('Hostname', 'CPUs', 'MEM', 'GPUs'))
+        print("RiseML cluster nodes:\n")
+        print("{:<18}  {:>6} {:>6} {:>4}".format('Hostname', 'CPUs', 'MEM', 'GPUs'))
+        width = 18 + 6 + 6 + 2 + 6
+        total_cpus = 0
+        total_mem = 0
+        total_gpus = 0
+        print('-' * width)       
         for n in nodes:
-            print("{:<18}\t{:<3}\t{:<6}\t{:<3}".format(n.hostname, n.cpus, n.mem, n.gpus))
+            print("{:<18}  {:>6} {:>6} {:>4}".format(n.hostname, n.cpus, n.mem, n.gpus))
+            total_cpus += n.cpus
+            total_mem += n.mem
+            total_gpus += n.gpus
+        print('-' * width)
+        print("{:<18}  {:>6} {:>6} {:>4}".format('Total', total_cpus, total_mem, total_gpus))
     parser.set_defaults(run=run)
 
 def add_logs_parser(subparsers):
