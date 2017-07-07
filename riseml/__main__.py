@@ -348,6 +348,29 @@ def add_whoami_parser(subparsers):
     parser.set_defaults(run=run)
 
 
+def add_info_parser(subparsers):
+    parser = subparsers.add_parser('info', help="show cluster info")
+ 
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = AdminApi(api_client)        
+        nodes = client.get_nodes()
+        print("RiseML cluster nodes:\n")
+        print("{:<18}  {:>6} {:>9} {:>4}".format('Hostname', 'CPUs', 'MEM(GiB)', 'GPUs'))
+        width = 18 + 6 + 9 + 2 + 6
+        total_cpus = 0
+        total_mem = 0
+        total_gpus = 0
+        print('-' * width)       
+        for n in nodes:
+            print("{:<18}  {:>6} {:>9} {:>4}".format(n.hostname, n.cpus, "%.1f" % (float(n.mem) / 1024), n.gpus))
+            total_cpus += n.cpus
+            total_mem += n.mem
+            total_gpus += n.gpus
+        print('-' * width)
+        print("{:<18}  {:>6} {:>9} {:>4}".format('Total', total_cpus, "%.1f" % (float(total_mem) / 1024), total_gpus))
+    parser.set_defaults(run=run)
+
 def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs', help="show logs")
     parser.add_argument('job', help="job identifier (optional)", nargs='?')
@@ -677,6 +700,9 @@ def get_parser():
     # user ops
     add_register_parser(subparsers)
     add_whoami_parser(subparsers)
+
+    # info ops
+    add_info_parser(subparsers)
 
     # worklow ops
     add_create_parser(subparsers)
