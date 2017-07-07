@@ -18,7 +18,9 @@ from .models.error import Error
 from .models.job import Job
 from .models.node import Node
 from .models.repository import Repository
+from .models.run import Run
 from .models.scratch_entry import ScratchEntry
+from .models.training import Training
 from .models.user import User
 
 # import apis into sdk package
