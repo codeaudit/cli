@@ -348,8 +348,8 @@ def add_whoami_parser(subparsers):
     parser.set_defaults(run=run)
 
 
-def add_info_parser(subparsers):
-    parser = subparsers.add_parser('info', help="show cluster info")
+def add_clusterinfo_parser(subparsers):
+    parser = subparsers.add_parser('clusterinfo', help="show cluster info")
  
     def run(args):
         api_client = ApiClient(host=api_url)
@@ -691,8 +691,8 @@ def get_parser():
     add_register_parser(subparsers)
     add_whoami_parser(subparsers)
 
-    # info ops
-    add_info_parser(subparsers)
+    # clusterinfo ops
+    add_clusterinfo_parser(subparsers)
 
     # worklow ops
     add_create_parser(subparsers)
