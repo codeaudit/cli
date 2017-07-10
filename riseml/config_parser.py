@@ -18,15 +18,15 @@ class Base(object):
 class Config(Base):
     deploy = None
     train = None
-    repository = None
+    project = None
 
     @classmethod
     def _parse(cls, obj):
         config = cls()
-        repository = parse_value(parse_one(obj.get('repository')))
-        if not repository:
-            raise ConfigException('missing field: repository')
-        config.repository = repository
+        project = parse_value(parse_one(obj.get('project')))
+        if not project:
+            raise ConfigException('missing field: project')
+        config.project = project
         deploy = obj.get('deploy')
         train = obj.get('train')
         if deploy:

@@ -71,21 +71,21 @@ def resolve_path(binary):
                 return loc
 
 
-def get_repo_root(cwd=None):
+def get_project_root(cwd=None):
     if cwd is None:
         cwd = os.getcwd()
     if os.path.exists(os.path.join(cwd, 'riseml.yml')):
         return cwd
     elif cwd != '/':
-        return get_repo_root(os.path.dirname(cwd))
+        return get_project_root(os.path.dirname(cwd))
 
 
-def get_repo_name():
-    repo_root = get_repo_root()
-    if not repo_root:
-        handle_error("no riseml repository found")
-    config = parse_file(os.path.join(repo_root, 'riseml.yml'))
-    return config.repository
+def get_project_name():
+    project_root = get_project_root()
+    if not project_root:
+        handle_error("no riseml project found")
+    config = parse_file(os.path.join(project_root, 'riseml.yml'))
+    return config.project
 
 
 def get_user():
@@ -95,16 +95,16 @@ def get_user():
     return user
 
 
-def get_repository(name):
+def get_project(name):
     api_client = ApiClient(host=api_url)
     client = DefaultApi(api_client)
-    for repository in client.get_repositories():
-        if repository.name == name:
-            return repository
-    handle_error("repository not found: %s" % name)
+    for project in client.get_repositories():
+        if project.name == name:
+            return project
+    handle_error("project not found: %s" % name)
 
 
-def create_repository(name):
+def create_project(name):
     api_client = ApiClient(host=api_url)
     client = DefaultApi(api_client)
     return client.create_repository(name)[0]
@@ -182,9 +182,9 @@ def stream_log(job):
 
 
 def run_command(args):
-    repo_name = get_repo_name()
+    project_name = get_project_name()
     user = get_user()
-    revision = push_repo(user, repo_name)
+    revision = push_project(user, project_name)
     if not args.section and not args.kind:
         args.kind = 'train'
 
@@ -202,7 +202,7 @@ def run_command(args):
     ]
     kwargs = {k: v for k, v in arg_list if v not in (None, [], '')}
 
-    jobs = client.create_job(repo_name, revision, args.section or 'adhoc',
+    jobs = client.create_job(project_name, revision, args.section or 'adhoc',
                              **kwargs)
 
     if args.notebook:
@@ -227,15 +227,15 @@ def run_command(args):
 
 
 def add_create_parser(subparsers):
-    parser = subparsers.add_parser('create', help="create repository")
+    parser = subparsers.add_parser('create', help="create project")
     def run(args):
         cwd = os.getcwd()
         if not os.path.exists(os.path.join(cwd, 'riseml.yml')):
-            repo_name = os.path.basename(cwd)
+            project_name = os.path.basename(cwd)
             with open('riseml.yml', 'a') as f:
-                f.write("repository: %s\n" % repo_name)
-        repository = create_repository(get_repo_name())
-        print("repository created: %s (%s)" % (repository.name, repository.id))
+                f.write("project: %s\n" % project_name)
+        project = create_project(get_project_name())
+        print("project created: %s (%s)" % (project.name, project.id))
     parser.set_defaults(run=run)
 
 
@@ -261,12 +261,12 @@ def add_ls_parser(subparsers):
     parser = subparsers.add_parser('ls', help="list directory from scratch")
     parser.add_argument('file', help="scratch file path", nargs='?', default='')
     def run(args):
-        repo_name = get_repo_name()
-        repository = get_repository(repo_name)
+        project_name = get_project_name()
+        project = get_project(project_name)
 
         api_client = ApiClient(host=scratch_url)
         client = ScratchApi(api_client)
-        entries = client.get_scratch_meta(repository.id, args.file)
+        entries = client.get_scratch_meta(project.id, args.file)
         for entry in entries:
             if entry.is_dir:
                 print(" " * 11 + " %s" % (entry.name))
@@ -281,12 +281,12 @@ def add_cp_parser(subparsers):
     parser.add_argument('src', help="local or scratch file path")
     parser.add_argument('dst', help="local or scratch file path")
     def run(args):
-        repository = get_repository(get_repo_name())
+        project = get_project(get_project_name())
         local_prefix = ['~', '/', '.']
 
         # upload
         if args.src[0] in local_prefix and args.dst[0] not in local_prefix:
-            res = requests.put('%s/scratches/%s/%s' % (scratch_url, repository.id, args.dst),
+            res = requests.put('%s/scratches/%s/%s' % (scratch_url, project.id, args.dst),
                 headers={'Authorization': os.environ.get('RISEML_APIKEY')},
                 auth=NoAuth(),
                 files={'file': open(args.src, 'rb')})
@@ -295,7 +295,7 @@ def add_cp_parser(subparsers):
 
         # download
         elif args.src[0] not in local_prefix and args.dst[0] in local_prefix:
-            res = requests.get('%s/scratches/%s/%s' % (scratch_url, repository.id, args.src),
+            res = requests.get('%s/scratches/%s/%s' % (scratch_url, project.id, args.src),
                 headers={'Authorization': os.environ.get('RISEML_APIKEY')},
                 auth=NoAuth(),
                 stream=True)
@@ -315,8 +315,8 @@ def add_cat_parser(subparsers):
     parser = subparsers.add_parser('cat', help="print file contents from scratch")
     parser.add_argument('file', help="scratch file path")
     def run(args):
-        repository = get_repository(get_repo_name())
-        res = requests.get('%s/scratches/%s/%s' % (scratch_url, repository.id, args.file),
+        project = get_project(get_project_name())
+        res = requests.get('%s/scratches/%s/%s' % (scratch_url, project.id, args.file),
             headers={'Authorization': os.environ.get('RISEML_APIKEY')},
             auth=NoAuth(),
             stream=True)
@@ -331,10 +331,10 @@ def add_clean_parser(subparsers):
     parser = subparsers.add_parser('clean', help="remove all data from scratch")
     parser.add_argument('file', help="scratch file path", nargs='?', default='')
     def run(args):
-        repository = get_repository(get_repo_name())
+        project = get_project(get_project_name())
         api_client = ApiClient(host=scratch_url)
         client = ScratchApi(api_client)
-        client.delete_scratch_object(repository.id, args.file)
+        client.delete_scratch_object(project.id, args.file)
 
     parser.set_defaults(run=run)
 
@@ -382,8 +382,8 @@ def add_logs_parser(subparsers):
             jobs = client.get_job(args.job)
             job = jobs[0]
         else:
-            repository = get_repository(get_repo_name())
-            jobs = client.get_repository_jobs(repository.id)
+            project = get_project(get_project_name())
+            jobs = client.get_repository_jobs(project.id)
             if not jobs:
                 return
             job = jobs[0]
@@ -402,8 +402,8 @@ def add_kill_parser(subparsers):
         jobs = args.jobs
 
         if not jobs:
-            repository = get_repository(get_repo_name())
-            jobs = client.get_repository_jobs(repository.id)
+            project = get_project(get_project_name())
+            jobs = client.get_repository_jobs(project.id)
             if not jobs:
                 return
             if jobs[0].state in ('FINISHED', 'FAILED', 'KILLED'):
@@ -424,19 +424,19 @@ def add_push_parser(subparsers):
     parser = subparsers.add_parser('push', help="push current code")
     parser.set_defaults(notebook=False)
     def run(args):
-        repo_name = get_repo_name()
+        project_name = get_project_name()
         user = get_user()
-        revision = push_repo(user, repo_name)
+        revision = push_project(user, project_name)
         print("new revision: %s" % revision)
     parser.set_defaults(run=run)
 
 
-def push_repo(user, repo_name):
+def push_project(user, project_name):
     o = urlparse(git_url)
     prepare_url = '%s://%s/%s/users/%s/repositories/%s/sync/prepare' % (
-        o.scheme, o.netloc, o.path, user.id, repo_name)
+        o.scheme, o.netloc, o.path, user.id, project_name)
     done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
-        o.scheme, o.netloc, o.path, user.id, repo_name)
+        o.scheme, o.netloc, o.path, user.id, project_name)
     res = requests.post(prepare_url)
     if res.status_code != 200:
         handle_http_error(res)
@@ -444,19 +444,19 @@ def push_repo(user, repo_name):
     o = urlparse(sync_url)
     rsync_url = '%s://%s%s/%s' % (
         o.scheme, o.netloc, o.path, sync_path)
-    repo_root = os.path.join(get_repo_root(), '')
-    exclude_file = os.path.join(repo_root, '.risemlignore')
+    project_root = os.path.join(get_project_root(), '')
+    exclude_file = os.path.join(project_root, '.risemlignore')
     sys.stderr.write("Pushing code...")
     sync_cmd = [resolve_path('rsync'),
                 '-rlpt',
                 '--exclude=.git',
                 '--delete-during',
-                repo_root,
+                project_root,
                 rsync_url]
     if os.path.exists(exclude_file):
         sync_cmd.insert(2, '--exclude-from=%s' % exclude_file)
     proc = subprocess.Popen(sync_cmd,
-                            cwd=repo_root,
+                            cwd=project_root,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
     for buf in proc.stdout:
@@ -603,11 +603,11 @@ def add_ps_parser(subparsers):
                 seq.append(first_c)
             return seq
 
-        def get_column_values(job, repo, name, cols):
+        def get_column_values(job, project, name, cols):
             vals = []
             for c in cols:
-                if c == 'repo':
-                    vals.append(repo)
+                if c == 'project':
+                    vals.append(project)
                 elif c == 'name':
                     vals.append(name)
                 elif c == 'since':
@@ -617,11 +617,11 @@ def add_ps_parser(subparsers):
                     vals.append(v or '-')
             return vals
 
-        def print_job(j, repo, cols, depth=0, siblings_at=[],
+        def print_job(j, project, cols, depth=0, siblings_at=[],
                       format_line=util.format_line):
             index = index = getattr(j, 'index', None)
             name = get_indent(depth, siblings_at, index=index) + util.get_job_name(j)
-            values = get_column_values(j, repo, name, cols)
+            values = get_column_values(j, project, name, cols)
             print(format_line(values))
             if j.name == 'sequence':
                 j.children = order_children(j.children)
@@ -631,7 +631,7 @@ def add_ps_parser(subparsers):
                 for i, c in enumerate(j.children):
                     if i == len(j.children) - 1:
                         siblings_at.pop()
-                    print_job(c, repo, cols, depth, siblings_at,
+                    print_job(c, project, cols, depth, siblings_at,
                               format_line=format_line)
 
         def get_indent(depth, siblings_at, index=None):
@@ -696,14 +696,14 @@ def add_ps_parser(subparsers):
         client = DefaultApi(api_client)
         all_jobs = filter_jobs(client.get_jobs(only_root=True))
 
-        header = ['ID', 'REPO', 'STATE', 'SINCE', 'NAME']
+        header = ['ID', 'PROJECT', 'STATE', 'SINCE', 'NAME']
         widths = (4, 10, 9, 13, 8)
-        columns = ['short_id', 'repo', 'state', 'since', 'name']
+        columns = ['short_id', 'project', 'state', 'since', 'name']
 
         if args.l:
-            header = ['ID', 'UUID', 'REPO', 'CPUS', 'GPUS', 'MEM', 'STATE', 'SINCE', 'NAME']
+            header = ['ID', 'UUID', 'PROJECT', 'CPUS', 'GPUS', 'MEM', 'STATE', 'SINCE', 'NAME']
             widths = (4, 36, 10, 4, 4, 4, 9, 12, 8)
-            columns = ['short_id', 'id', 'repo', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
+            columns = ['short_id', 'id', 'project', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
 
         if all_jobs:
             print(util.format_header(header, widths=widths))
