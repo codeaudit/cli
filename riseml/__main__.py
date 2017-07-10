@@ -558,9 +558,9 @@ def add_info_parser(subparsers):
         print("Image: {}".format(training.image))
         print("Framework: {}".format(training.framework))
         print("Framework Config:")
-        for attribute in training.framework_details.attribute_map:
-            if getattr(training.framework_details, attribute) is not None:
-                print("   {}: {}".format(attribute, getattr(training.framework_details, attribute)))
+        for attribute, value in training.framework_details.to_dict().iteritems():
+            if value is not None:
+                print("   {}: {}".format(attribute, value))
         print("Run Command: {}\n".format(training.run_command))
 
         header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS']
