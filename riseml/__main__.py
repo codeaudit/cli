@@ -541,6 +541,41 @@ def add_ps_next_parser(subparsers):
     
     parser.set_defaults(run=run)
 
+def add_info_parser(subparsers):
+    parser = subparsers.add_parser('info', help="show training details")
+    parser.add_argument('training_id', help="id of trainining")
+
+    def format_job(job):
+        return "{} ({} since {})".format(job.name, job.state, util.get_since_str(job.state_changed_at))
+
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        training = client.get_training(args.training_id)
+        print("ID: {}".format(training.short_id))
+        print("UUID: {}".format(training.id))
+        print("State: {}".format(training.state))
+        print("Image: {}".format(training.image))
+        print("Framework: {}".format(training.framework))
+        print("Framework Config:")
+        for attribute in training.framework_details.attribute_map:
+            if getattr(training.framework_details, attribute) is not None:
+                print("   {}: {}".format(attribute, getattr(training.framework_details, attribute)))
+        print("Run Command: {}\n".format(training.run_command))
+
+        header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS']
+        widths = [4, 9, 13, 13, 40]
+        print(util.format_header(header, widths=widths))
+        for run in training.runs:
+            values = [run.number, run.state, util.get_since_str(run.started_at),
+                      util.get_since_str(run.finished_at),
+                      format_job(run.jobs[0])]
+            print(util.format_line(values, widths=widths))
+            for job in run.jobs[1:]:
+                print(util.format_line([''] * 4 + [format_job(job)], widths=widths))
+    
+    parser.set_defaults(run=run)
+
 def add_ps_parser(subparsers):
     parser = subparsers.add_parser('ps', help="show jobs")
     parser.add_argument('-a', help="show all jobs",
@@ -702,10 +737,11 @@ def get_parser():
     add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
+    add_ps_next_parser(subparsers)
+    add_info_parser(subparsers)
 
     # scratch ops
     add_ps_parser(subparsers)
-    add_ps_next_parser(subparsers)
     add_ls_parser(subparsers)
     add_cp_parser(subparsers)
     add_cat_parser(subparsers)
