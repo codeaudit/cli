@@ -514,9 +514,9 @@ def add_deploy_parser(subparsers):
     parser.set_defaults(run=run_command)
 
 def add_ps_next_parser(subparsers):
-    parser = subparsers.add_parser('ps-next', help = "show trainings")
-    parser.add_argument('-a', help = "show all trainings", action = "store_const", const = True)
-    parser.add_argument('-l', help = "show more info", action = "store_const", const = True)
+    parser = subparsers.add_parser('ps-next', help="show trainings")
+    parser.add_argument('-a', help = "show all trainings", action="store_const", const=True)
+    parser.add_argument('-l', help = "show more info", action="store_const", const=True)
 
     def run(args):
         api_client = ApiClient(host=api_url)
@@ -561,7 +561,8 @@ def add_info_parser(subparsers):
         for attribute, value in training.framework_details.to_dict().iteritems():
             if value is not None:
                 print("   {}: {}".format(attribute, value))
-        print("Run Command: {}\n".format(training.run_command))
+        print("Run Commands:")
+        print(''.join(["  {}\n".format(command) for command in training.run_commands]))
 
         header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS']
         widths = [4, 9, 13, 13, 40]
