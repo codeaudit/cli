@@ -9,8 +9,7 @@ import platform
 import webbrowser
 import requests
 import websocket
-
-from threading import Thread
+import yaml
 
 try:
     from queue import Queue, Empty
@@ -181,49 +180,55 @@ def stream_log(job):
     ws.run_forever()
 
 
-def run_command(args):
-    project_name = get_project_name()
-    user = get_user()
-    revision = push_project(user, project_name)
-    if not args.section and not args.kind:
-        args.kind = 'train'
+def load_config(config_file, config_section):
+    if not os.path.exists(config_file):
+        handle_error("%s does not exist" % config_file)
+    with open(config_file, 'r') as f:
+        config = yaml.load(f.read())
+        if config_section not in config:
+            handle_error("config doesn't contain section for %s" % config_section)
+        return config[config_section]
 
+
+def run_job(project_name, revision, kind, config):
     api_client = ApiClient(host=api_url)
     client = DefaultApi(api_client)
+    try:
+        jobs = client.create_job(project_name, revision, kind=kind, 
+                                 config=config)
+    except ApiException as e:
+        body = json.loads(e.body)
+        handle_error(body['message'], e.status)        
+    stream_log(jobs[0])
 
-    arg_list = [
-        ('notebook', args.notebook and '1' or '0'),
-        ('gpus', args.gpus),
-        ('cpus', args.cpus),
-        ('mem', args.mem),
-        ('command', ' '.join(args.command)),
-        ('image', args.image),
-        ('kind', args.kind),
-    ]
-    kwargs = {k: v for k, v in arg_list if v not in (None, [], '')}
 
-    jobs = client.create_job(project_name, revision, args.section or 'adhoc',
-                             **kwargs)
+def run_section(args):
+    project_name = get_project_name()
+    # TODO: validate config here already
+    config_section = load_config(args.config_file, args.config_section)
+    user = get_user()
+    revision = push_project(user, project_name)
+    run_job(project_name, revision, args.config_section, 
+            json.dumps(config_section))
 
-    if args.notebook:
-        content = b''
-        pattern = r'The Jupyter Notebook is running at: .+(\?token=.+)?\n'
-        url = user_url % args.name
-        search = True
 
-        for buf in res.iter_content(4096):
-            content += buf
-            stdout.write(buf)
-            stdout.flush()
-            if search:
-                match = re.search(pattern, content)
-                if match:
-                    token = match.group(1) or ''
-                    print('notebook url: %s' % url + token)
-                    webbrowser.open(url + token)
-                    search = False
-    else:
-        stream_log(jobs[0])
+def exec_command(args):
+    project_name = get_project_name()
+    config = {
+        'image': {
+            'name': args.image
+        },
+        'resources': {
+            'cpus': args.cpus,
+            'mem': args.mem,
+            'gpus': args.gpus
+        },
+        'run': [' '.join(args.command)]
+    }
+    # TODO: validate config here already
+    user = get_user()
+    revision = push_project(user, project_name)
+    run_job(project_name, revision, 'train', json.dumps(config))
 
 
 def add_create_parser(subparsers):
@@ -474,44 +479,28 @@ def push_project(user, project_name):
     return revision
 
 
-def add_run_parser(subparsers):
-    parser = subparsers.add_parser('run', help="run new job")
-    parser.add_argument('--notebook', help="run notebook", action='store_true')
-    parser.add_argument('--image', help="docker image to use", type=str)
-    parser.add_argument('--gpus', help="number of GPUs", type=int)
-    parser.add_argument('--mem', help="RAM in megabytes", type=int)
-    parser.add_argument('--cpus', help="number of CPUs", type=int)
-    parser.add_argument('--section', '-s', help="riseml.yml config section")
-    parser.add_argument('--kind', '-k', choices=['train', 'deploy'], help="riseml.yml config section")
+def add_exec_parser(subparsers):
+    parser = subparsers.add_parser('exec', help="execute single command")
+    parser.add_argument('image', help="docker image to use", type=str)
+    parser.add_argument('--gpus', help="number of GPUs", type=int, default=0)
+    parser.add_argument('--mem', help="RAM in megabytes", type=int, default=2048)
+    parser.add_argument('--cpus', help="number of CPUs", type=int, default=2)
     parser.add_argument('command', help="command with optional arguments", nargs='*')
-    parser.set_defaults(notebook=False)
-    parser.set_defaults(run=run_command)
+    parser.set_defaults(run=exec_command)
 
 
 def add_train_parser(subparsers):
     parser = subparsers.add_parser('train', help="run new training job")
-    parser.add_argument('--notebook', help="run notebook", action='store_true', default=False)
-    parser.add_argument('--image', help="docker image to use", type=str)
-    parser.add_argument('--gpus', help="number of GPUs", type=int)
-    parser.add_argument('--mem', help="RAM in megabytes", type=int)
-    parser.add_argument('--cpus', help="number of CPUs", type=int)
-    parser.add_argument('command', help="command with optional arguments", nargs='*')
-    parser.set_defaults(section='train')
-    parser.set_defaults(kind='train')
-    parser.set_defaults(run=run_command)
+    parser.add_argument('-f', '--config-file', help="config file to use", type=str, default='riseml.yml') 
+    parser.set_defaults(config_section='train')
+    parser.set_defaults(run=run_section)
 
 
 def add_deploy_parser(subparsers):
     parser = subparsers.add_parser('deploy', help="run new deploy job")
-    parser.add_argument('--notebook', help="run notebook", action='store_true', default=False)
-    parser.add_argument('--image', help="docker image to use", type=str)
-    parser.add_argument('--gpus', help="number of GPUs", type=int)
-    parser.add_argument('--mem', help="RAM in megabytes", type=int)
-    parser.add_argument('--cpus', help="number of CPUs", type=int)
-    parser.add_argument('command', help="command with optional arguments", nargs='*')
-    parser.set_defaults(section='deploy')
-    parser.set_defaults(kind='deploy')
-    parser.set_defaults(run=run_command)
+    parser.add_argument('-f', '--config-file', help="config file to use", type=str, default='riseml.yml')     
+    parser.set_defaults(config_section='deploy')
+    parser.set_defaults(run=run_section)
 
 def add_ps_next_parser(subparsers):
     parser = subparsers.add_parser('ps-next', help="show trainings")
@@ -536,7 +525,7 @@ def add_ps_next_parser(subparsers):
                       '{}/{}'.format(len([run for run in training.runs if run.state == 'FINISHED']),
                                      len(training.runs)),
                       # Active jobs
-                      '{}'.format(len([job for job in training.jobs if job.state in ['PENDING', 'STARTING', 'RUNNING']]))]
+                      '{}'.format(training.active_job_count)]
             print(util.format_line(values, widths=widths))
     
     parser.set_defaults(run=run)
@@ -734,7 +723,7 @@ def get_parser():
     add_create_parser(subparsers)
     add_push_parser(subparsers)
     add_train_parser(subparsers)
-    add_run_parser(subparsers)
+    add_exec_parser(subparsers)
     add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
