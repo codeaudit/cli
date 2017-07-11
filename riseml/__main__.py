@@ -513,6 +513,68 @@ def add_deploy_parser(subparsers):
     parser.set_defaults(kind='deploy')
     parser.set_defaults(run=run_command)
 
+def add_ps_next_parser(subparsers):
+    parser = subparsers.add_parser('ps-next', help = "show trainings")
+    parser.add_argument('-a', help = "show all trainings", action = "store_const", const = True)
+    parser.add_argument('-l', help = "show more info", action = "store_const", const = True)
+
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        trainings = client.get_trainings()
+
+        header = ['ID', 'REPO', 'STATE', 'AGE', 'FINISHED RUNS', 'ACTIVE JOBS']
+        widths = (4, 14, 9, 13, 14, 10)
+        print(util.format_header(header, widths=widths))
+
+        for training in trainings:
+            if not args.a and training.state in ['FINISHED', 'KILLED', 'FAILED']:
+                continue
+            values = [training.short_id, training.changeset.repository.name,
+                      training.state, util.get_since_str(training.created_at),
+                      # Finished runs
+                      '{}/{}'.format(len([run for run in training.runs if run.state == 'FINISHED']),
+                                     len(training.runs)),
+                      # Active jobs
+                      '{}'.format(len([job for job in training.jobs if job.state in ['PENDING', 'STARTING', 'RUNNING']]))]
+            print(util.format_line(values, widths=widths))
+    
+    parser.set_defaults(run=run)
+
+def add_info_parser(subparsers):
+    parser = subparsers.add_parser('info', help="show training details")
+    parser.add_argument('training_id', help="id of trainining")
+
+    def format_job(job):
+        return "{} ({} since {})".format(job.name, job.state, util.get_since_str(job.state_changed_at))
+
+    def run(args):
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        training = client.get_training(args.training_id)
+        print("ID: {}".format(training.short_id))
+        print("UUID: {}".format(training.id))
+        print("State: {}".format(training.state))
+        print("Image: {}".format(training.image))
+        print("Framework: {}".format(training.framework))
+        print("Framework Config:")
+        for attribute, value in training.framework_details.to_dict().iteritems():
+            if value is not None:
+                print("   {}: {}".format(attribute, value))
+        print("Run Command: {}\n".format(training.run_command))
+
+        header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS']
+        widths = [4, 9, 13, 13, 40]
+        print(util.format_header(header, widths=widths))
+        for run in training.runs:
+            values = [run.number, run.state, util.get_since_str(run.started_at),
+                      util.get_since_str(run.finished_at),
+                      format_job(run.jobs[0])]
+            print(util.format_line(values, widths=widths))
+            for job in run.jobs[1:]:
+                print(util.format_line([''] * 4 + [format_job(job)], widths=widths))
+    
+    parser.set_defaults(run=run)
 
 def add_ps_parser(subparsers):
     parser = subparsers.add_parser('ps', help="show jobs")
@@ -522,23 +584,6 @@ def add_ps_parser(subparsers):
         action='store_const', const=True)
 
     def run(args):
-
-        def format_header(columns,  widths=(4, 10, 9, 8)):
-            def bold(s):
-                return '\033[1m{}\033[0m'.format(s)
-            header = ''
-            for i, w in enumerate(widths):
-                header += '{:%s{widths[%s]}} ' % ('<', i)
-            return bold(header.format(*columns,
-                                      widths=widths))
-
-        def format_line(columns, widths=(4, 10, 9, 8)):
-            line = '{:>{widths[0]}} {:<{widths[1]}} {:>{widths[2]}} {:<{widths[3]}}'
-            line = ''
-            for i, w in enumerate(widths):
-                line += '{:%s{widths[%s]}} ' % ('<', i)
-            return line.format(*columns,
-                               widths=widths)
 
         def order_children(children):
             next_c = {}
@@ -558,26 +603,6 @@ def add_ps_parser(subparsers):
                 seq.append(first_c)
             return seq
 
-        def get_since_str(timestamp):
-            if not timestamp:
-                return '-'
-            now = int(time.time() * 1000)
-            since_ms = now - timestamp
-            days, since_ms = divmod(since_ms, 24 * 60 * 60 * 1000)
-            hours, since_ms = divmod(since_ms, 60 * 60 * 1000)
-            minutes, since_ms = divmod(since_ms, 60 * 1000)
-            seconds, since_ms = divmod(since_ms, 1000)
-            if days > 0:
-                return "%s day(s)" % days
-            elif hours > 0:
-                return "%s hour(s)" % hours
-            elif minutes > 0:
-                return "%s minute(s)" % minutes
-            elif seconds > 0:
-                return "%s second(s)" % seconds
-            else:
-                return "just now"
-
         def get_column_values(job, project, name, cols):
             vals = []
             for c in cols:
@@ -586,14 +611,14 @@ def add_ps_parser(subparsers):
                 elif c == 'name':
                     vals.append(name)
                 elif c == 'since':
-                    vals.append(get_since_str(job.state_changed_at))
+                    vals.append(util.get_since_str(job.state_changed_at))
                 else:
                     v = getattr(job, c)
                     vals.append(v or '-')
             return vals
 
         def print_job(j, project, cols, depth=0, siblings_at=[],
-                      format_line=format_line):
+                      format_line=util.format_line):
             index = index = getattr(j, 'index', None)
             name = get_indent(depth, siblings_at, index=index) + util.get_job_name(j)
             values = get_column_values(j, project, name, cols)
@@ -681,10 +706,10 @@ def add_ps_parser(subparsers):
             columns = ['short_id', 'id', 'project', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
 
         if all_jobs:
-            print(format_header(header, widths=widths))
+            print(util.format_header(header, widths=widths))
         for j in all_jobs:
             print_job(j, j.changeset.repository.name, columns,
-                      format_line=lambda x: format_line(x, widths=widths))
+                      format_line=lambda x: util.format_line(x, widths=widths))
 
 
     parser.set_defaults(run=run)
@@ -712,6 +737,8 @@ def get_parser():
     add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
+    add_ps_next_parser(subparsers)
+    add_info_parser(subparsers)
 
     # scratch ops
     add_ps_parser(subparsers)

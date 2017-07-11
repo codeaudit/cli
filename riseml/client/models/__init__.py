@@ -18,5 +18,8 @@ from .error import Error
 from .job import Job
 from .node import Node
 from .repository import Repository
+from .run import Run
 from .scratch_entry import ScratchEntry
+from .training import Training
+from .training_framework_details import TrainingFrameworkDetails
 from .user import User
