@@ -525,7 +525,7 @@ def add_ps_next_parser(subparsers):
                       '{}/{}'.format(len([run for run in training.runs if run.state == 'FINISHED']),
                                      len(training.runs)),
                       # Active jobs
-                      '{}'.format(len([job for job in training.jobs if job.state in ['PENDING', 'STARTING', 'RUNNING']]))]
+                      '{}'.format(training.active_job_count)]
             print(util.format_line(values, widths=widths))
     
     parser.set_defaults(run=run)
