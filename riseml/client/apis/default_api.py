@@ -39,7 +39,7 @@ class DefaultApi(object):
                 config.api_client = ApiClient()
             self.api_client = config.api_client
 
-    def create_job(self, repository, revision, config_section, **kwargs):
+    def create_job(self, repository, revision, kind, config, **kwargs):
         """
         
         
@@ -50,34 +50,26 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_job(repository, revision, config_section, callback=callback_function)
+        >>> thread = api.create_job(repository, revision, kind, config, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str repository:  (required)
         :param str revision:  (required)
-        :param str config_section:  (required)
-        :param bool notebook: 
-        :param int cpus: 
-        :param int gpus: 
-        :param int mem: 
-        :param str image: 
-        :param str command: 
-        :param str kind: 
-        :param str distributed: 
-        :param str command2: 
+        :param str kind:  (required)
+        :param str config:  (required)
         :return: list[Job]
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.create_job_with_http_info(repository, revision, config_section, **kwargs)
+            return self.create_job_with_http_info(repository, revision, kind, config, **kwargs)
         else:
-            (data) = self.create_job_with_http_info(repository, revision, config_section, **kwargs)
+            (data) = self.create_job_with_http_info(repository, revision, kind, config, **kwargs)
             return data
 
-    def create_job_with_http_info(self, repository, revision, config_section, **kwargs):
+    def create_job_with_http_info(self, repository, revision, kind, config, **kwargs):
         """
         
         
@@ -88,28 +80,20 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_job_with_http_info(repository, revision, config_section, callback=callback_function)
+        >>> thread = api.create_job_with_http_info(repository, revision, kind, config, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str repository:  (required)
         :param str revision:  (required)
-        :param str config_section:  (required)
-        :param bool notebook: 
-        :param int cpus: 
-        :param int gpus: 
-        :param int mem: 
-        :param str image: 
-        :param str command: 
-        :param str kind: 
-        :param str distributed: 
-        :param str command2: 
+        :param str kind:  (required)
+        :param str config:  (required)
         :return: list[Job]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['repository', 'revision', 'config_section', 'notebook', 'cpus', 'gpus', 'mem', 'image', 'command', 'kind', 'distributed', 'command2']
+        all_params = ['repository', 'revision', 'kind', 'config']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -129,9 +113,12 @@ class DefaultApi(object):
         # verify the required parameter 'revision' is set
         if ('revision' not in params) or (params['revision'] is None):
             raise ValueError("Missing the required parameter `revision` when calling `create_job`")
-        # verify the required parameter 'config_section' is set
-        if ('config_section' not in params) or (params['config_section'] is None):
-            raise ValueError("Missing the required parameter `config_section` when calling `create_job`")
+        # verify the required parameter 'kind' is set
+        if ('kind' not in params) or (params['kind'] is None):
+            raise ValueError("Missing the required parameter `kind` when calling `create_job`")
+        # verify the required parameter 'config' is set
+        if ('config' not in params) or (params['config'] is None):
+            raise ValueError("Missing the required parameter `config` when calling `create_job`")
 
 
         collection_formats = {}
@@ -149,26 +136,10 @@ class DefaultApi(object):
             form_params.append(('repository', params['repository']))
         if 'revision' in params:
             form_params.append(('revision', params['revision']))
-        if 'config_section' in params:
-            form_params.append(('config_section', params['config_section']))
-        if 'notebook' in params:
-            form_params.append(('notebook', params['notebook']))
-        if 'cpus' in params:
-            form_params.append(('cpus', params['cpus']))
-        if 'gpus' in params:
-            form_params.append(('gpus', params['gpus']))
-        if 'mem' in params:
-            form_params.append(('mem', params['mem']))
-        if 'image' in params:
-            form_params.append(('image', params['image']))
-        if 'command' in params:
-            form_params.append(('command', params['command']))
         if 'kind' in params:
             form_params.append(('kind', params['kind']))
-        if 'distributed' in params:
-            form_params.append(('distributed', params['distributed']))
-        if 'command2' in params:
-            form_params.append(('command', params['command2']))
+        if 'config' in params:
+            form_params.append(('config', params['config']))
 
         body_params = None
 
