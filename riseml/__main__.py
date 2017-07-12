@@ -502,8 +502,8 @@ def add_deploy_parser(subparsers):
     parser.set_defaults(config_section='deploy')
     parser.set_defaults(run=run_section)
 
-def add_ps_next_parser(subparsers):
-    parser = subparsers.add_parser('ps-next', help="show trainings")
+def add_ps_parser(subparsers):
+    parser = subparsers.add_parser('ps', help="show trainings")
     parser.add_argument('-a', help = "show all trainings", action="store_const", const=True)
     parser.add_argument('-l', help = "show more info", action="store_const", const=True)
 
@@ -512,7 +512,7 @@ def add_ps_next_parser(subparsers):
         client = DefaultApi(api_client)
         trainings = client.get_trainings()
 
-        header = ['ID', 'REPO', 'STATE', 'AGE', 'FINISHED RUNS', 'ACTIVE JOBS']
+        header = ['ID', 'PROJECT', 'STATE', 'AGE', 'FINISHED RUNS', 'ACTIVE JOBS']
         widths = (4, 14, 9, 13, 14, 10)
         print(util.format_header(header, widths=widths))
 
@@ -566,8 +566,8 @@ def add_info_parser(subparsers):
     
     parser.set_defaults(run=run)
 
-def add_ps_parser(subparsers):
-    parser = subparsers.add_parser('ps', help="show jobs")
+def add_ps_old_parser(subparsers):
+    parser = subparsers.add_parser('ps-old', help="show jobs")
     parser.add_argument('-a', help="show all jobs",
         action='store_const', const=True)
     parser.add_argument('-l', help="show more info",
@@ -727,11 +727,11 @@ def get_parser():
     add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
-    add_ps_next_parser(subparsers)
+    add_ps_old_parser(subparsers)
+    add_ps_parser(subparsers)
     add_info_parser(subparsers)
 
     # scratch ops
-    add_ps_parser(subparsers)
     add_ls_parser(subparsers)
     add_cp_parser(subparsers)
     add_cat_parser(subparsers)
