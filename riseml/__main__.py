@@ -121,7 +121,7 @@ def handle_http_error(res):
     handle_error(res.json()['message'], res.status_code)
 
 
-def stream_log(job):
+def stream_log(url, jobs):
 
     def print_log_message(msg):
         for line in msg['log_lines']:
@@ -140,18 +140,10 @@ def stream_log(job):
         prefix = "{:<12}| ".format(job_name)
         return util.color_string(color, prefix)
 
-    def flatten_jobs(job):
-        for c in job.children:
-            for j in flatten_jobs(c):
-                yield j
-        yield job
-
-    jobs = list(flatten_jobs(job))
     job_ids = {j.id: j for j in jobs}
     job_ids_color = {j.id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
                      for i, j in enumerate(jobs)}
-    job_ids_color[job.id] = 'white'
-    url = '%s/ws/jobs/%s/stream' % (stream_url, job.id)
+    job_ids_color[jobs[-1].id] = 'white'
 
     def on_message(ws, message):
         msg = json.loads(message)
@@ -179,6 +171,20 @@ def stream_log(job):
     # FIXME: {'Authorization': os.environ.get('RISEML_APIKEY')}
     ws.run_forever()
 
+def stream_job_log(job):
+    def flatten_jobs(job):
+        for c in job.children:
+            for j in flatten_jobs(c):
+                yield j
+        yield job
+
+    jobs = list(flatten_jobs(job))
+    url = '%s/ws/jobs/%s/stream' % (stream_url, job.id)
+    stream_log(url, jobs)
+
+def stream_training_log(training):
+    url = '%s/ws/trainings/%s/stream' % (stream_url, training.id)
+    stream_log(url, training.jobs)
 
 def load_config(config_file, config_section):
     if not os.path.exists(config_file):
@@ -199,7 +205,7 @@ def run_job(project_name, revision, kind, config):
     except ApiException as e:
         body = json.loads(e.body)
         handle_error(body['message'], e.status)        
-    stream_log(jobs[0])
+    stream_job_log(jobs[0])
 
 
 def run_section(args):
@@ -378,22 +384,20 @@ def add_clusterinfo_parser(subparsers):
 
 def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs', help="show logs")
-    parser.add_argument('job', help="job identifier (optional)", nargs='?')
+    parser.add_argument('training', help="job identifier (optional)", nargs='?')
     def run(args):
-        job = None
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
-        if args.job:
-            jobs = client.get_job(args.job)
-            job = jobs[0]
+        if args.training:
+            training = client.get_training(args.training)
         else:
             project = get_project(get_project_name())
-            jobs = client.get_repository_jobs(project.id)
-            if not jobs:
+            trainings = client.get_repository_trainings(project.id)
+            if not trainings:
                 return
-            job = jobs[0]
+            training = trainings[0]
 
-        stream_log(job)
+        stream_training_log(training)
     parser.set_defaults(run=run)
 
 
