@@ -292,6 +292,137 @@ class DefaultApi(object):
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
+    def create_training(self, repository, revision, kind, config, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.create_training(repository, revision, kind, config, callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str repository:  (required)
+        :param str revision:  (required)
+        :param str kind:  (required)
+        :param str config:  (required)
+        :return: Training
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('callback'):
+            return self.create_training_with_http_info(repository, revision, kind, config, **kwargs)
+        else:
+            (data) = self.create_training_with_http_info(repository, revision, kind, config, **kwargs)
+            return data
+
+    def create_training_with_http_info(self, repository, revision, kind, config, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.create_training_with_http_info(repository, revision, kind, config, callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str repository:  (required)
+        :param str revision:  (required)
+        :param str kind:  (required)
+        :param str config:  (required)
+        :return: Training
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['repository', 'revision', 'kind', 'config']
+        all_params.append('callback')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+
+        params = locals()
+        for key, val in iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method create_training" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'repository' is set
+        if ('repository' not in params) or (params['repository'] is None):
+            raise ValueError("Missing the required parameter `repository` when calling `create_training`")
+        # verify the required parameter 'revision' is set
+        if ('revision' not in params) or (params['revision'] is None):
+            raise ValueError("Missing the required parameter `revision` when calling `create_training`")
+        # verify the required parameter 'kind' is set
+        if ('kind' not in params) or (params['kind'] is None):
+            raise ValueError("Missing the required parameter `kind` when calling `create_training`")
+        # verify the required parameter 'config' is set
+        if ('config' not in params) or (params['config'] is None):
+            raise ValueError("Missing the required parameter `config` when calling `create_training`")
+
+
+        collection_formats = {}
+
+        resource_path = '/trainings'.replace('{format}', 'json')
+        path_params = {}
+
+        query_params = {}
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+        if 'repository' in params:
+            form_params.append(('repository', params['repository']))
+        if 'revision' in params:
+            form_params.append(('revision', params['revision']))
+        if 'kind' in params:
+            form_params.append(('kind', params['kind']))
+        if 'config' in params:
+            form_params.append(('config', params['config']))
+
+        body_params = None
+
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.\
+            select_header_accept(['text/plain'])
+        if not header_params['Accept']:
+            del header_params['Accept']
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.\
+            select_header_content_type(['multipart/form-data'])
+
+        # Authentication setting
+        auth_settings = ['api_key']
+
+        return self.api_client.call_api(resource_path, 'POST',
+                                            path_params,
+                                            query_params,
+                                            header_params,
+                                            body=body_params,
+                                            post_params=form_params,
+                                            files=local_var_files,
+                                            response_type='Training',
+                                            auth_settings=auth_settings,
+                                            callback=params.get('callback'),
+                                            _return_http_data_only=params.get('_return_http_data_only'),
+                                            _preload_content=params.get('_preload_content', True),
+                                            collection_formats=collection_formats)
+
     def delete_repository(self, repository_id, **kwargs):
         """
         
@@ -1508,6 +1639,116 @@ class DefaultApi(object):
                                             post_params=form_params,
                                             files=local_var_files,
                                             response_type='list[Job]',
+                                            auth_settings=auth_settings,
+                                            callback=params.get('callback'),
+                                            _return_http_data_only=params.get('_return_http_data_only'),
+                                            _preload_content=params.get('_preload_content', True),
+                                            collection_formats=collection_formats)
+
+    def kill_training(self, training_id, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.kill_training(training_id, callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str training_id:  (required)
+        :return: Job
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('callback'):
+            return self.kill_training_with_http_info(training_id, **kwargs)
+        else:
+            (data) = self.kill_training_with_http_info(training_id, **kwargs)
+            return data
+
+    def kill_training_with_http_info(self, training_id, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.kill_training_with_http_info(training_id, callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str training_id:  (required)
+        :return: Job
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['training_id']
+        all_params.append('callback')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+
+        params = locals()
+        for key, val in iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method kill_training" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'training_id' is set
+        if ('training_id' not in params) or (params['training_id'] is None):
+            raise ValueError("Missing the required parameter `training_id` when calling `kill_training`")
+
+
+        collection_formats = {}
+
+        resource_path = '/trainings/{training_id}/kill'.replace('{format}', 'json')
+        path_params = {}
+        if 'training_id' in params:
+            path_params['training_id'] = params['training_id']
+
+        query_params = {}
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.\
+            select_header_accept(['application/json'])
+        if not header_params['Accept']:
+            del header_params['Accept']
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.\
+            select_header_content_type(['application/json'])
+
+        # Authentication setting
+        auth_settings = ['api_key']
+
+        return self.api_client.call_api(resource_path, 'PUT',
+                                            path_params,
+                                            query_params,
+                                            header_params,
+                                            body=body_params,
+                                            post_params=form_params,
+                                            files=local_var_files,
+                                            response_type='Job',
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),

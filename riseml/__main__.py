@@ -121,7 +121,7 @@ def handle_http_error(res):
     handle_error(res.json()['message'], res.status_code)
 
 
-def stream_log(url, jobs):
+def stream_log(url, ids_to_name):
 
     def print_log_message(msg):
         for line in msg['log_lines']:
@@ -135,16 +135,14 @@ def stream_log(url, jobs):
         print(output)
 
     def message_prefix(msg):
-        job_name = util.get_job_name(job_ids[msg['job_id']])
+        job_name = ids_to_name[msg['job_id']]
         color = job_ids_color[msg['job_id']]
         prefix = "{:<12}| ".format(job_name)
         return util.color_string(color, prefix)
 
-    job_ids = {j.id: j for j in jobs}
-    job_ids_color = {j.id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
-                     for i, j in enumerate(jobs)}
-    job_ids_color[jobs[-1].id] = 'white'
-
+    job_ids_color = {id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
+                     for i, id in enumerate(ids_to_name.keys())}
+    
     def on_message(ws, message):
         msg = json.loads(message)
 
@@ -179,12 +177,17 @@ def stream_job_log(job):
         yield job
 
     jobs = list(flatten_jobs(job))
+    ids_to_name = { job.id: util.get_job_name(job) for job in jobs }
     url = '%s/ws/jobs/%s/stream' % (stream_url, job.id)
-    stream_log(url, jobs)
+    stream_log(url, ids_to_name)
 
 def stream_training_log(training):
     url = '%s/ws/trainings/%s/stream' % (stream_url, training.id)
-    stream_log(url, training.jobs)
+    ids_to_name = { job.id: util.get_job_name(job) for job in training.jobs }
+    ids_to_name[training.id] = 'training'
+    for run in training.runs:
+        ids_to_name[run.id] = 'run {}'.format(run.number)
+    stream_log(url, ids_to_name)
 
 def load_config(config_file, config_section):
     if not os.path.exists(config_file):
@@ -402,26 +405,26 @@ def add_logs_parser(subparsers):
 
 
 def add_kill_parser(subparsers):
-    parser = subparsers.add_parser('kill', help="kill job")
-    parser.add_argument('jobs', help="job identifier (optional)", nargs='*')
+    parser = subparsers.add_parser('kill', help="kill training")
+    parser.add_argument('trainings', help="training identifier (optional)", nargs='*')
     def run(args):
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
 
-        jobs = args.jobs
+        trainings = args.trainings
 
-        if not jobs:
+        if not trainings:
             project = get_project(get_project_name())
-            jobs = client.get_repository_jobs(project.id)
-            if not jobs:
+            trainings = client.get_repository_trainings(project.id)
+            if not trainings:
                 return
-            if jobs[0].state in ('FINISHED', 'FAILED', 'KILLED'):
+            if trainings[0].state in ('FINISHED', 'FAILED', 'KILLED'):
                 return
-            jobs = [jobs[0].id]
-        for job_id in jobs:
+            trainings = [trainings[0].id]
+        for training_id in trainings:
             try:
-                job = client.kill_job(job_id)[0]
-                print("killed %s job %s (%s)" % (job.name, job.short_id, job.id))
+                training = client.kill_training(training_id)
+                print("killed training %s (%s)" % (training.short_id, training.id))
             except ApiException as e:
                 body = json.loads(e.body)
                 print('ERROR: %s (%s)' % (body['message'], e.status))
@@ -495,9 +498,24 @@ def add_exec_parser(subparsers):
 
 def add_train_parser(subparsers):
     parser = subparsers.add_parser('train', help="run new training job")
-    parser.add_argument('-f', '--config-file', help="config file to use", type=str, default='riseml.yml') 
-    parser.set_defaults(config_section='train')
-    parser.set_defaults(run=run_section)
+    parser.add_argument('-f', '--config-file', help="config file to use", type=str, default='riseml.yml')
+
+    def run(args):
+        project_name = get_project_name()
+        # TODO: validate config here already
+        config_section = load_config(args.config_file, 'train')
+        user = get_user()
+        revision = push_project(user, project_name)
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        try:
+            training = client.create_training(project_name, revision, kind='train', config=json.dumps(config_section))
+        except ApiException as e:
+            body = json.loads(e.body)
+            handle_error(body['message'], e.status)
+        stream_training_log(training)
+    
+    parser.set_defaults(run=run)
 
 
 def add_deploy_parser(subparsers):
