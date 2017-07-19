@@ -368,12 +368,12 @@ def add_clusterinfo_parser(subparsers):
         total_gpus = 0
         print('-' * width)       
         for n in nodes:
-            print("{:<18}  {:>6} {:>9} {:>4}".format(n.hostname, n.cpus, "%.1f" % (float(n.mem) / 1024), n.gpus))
+            print("{:<18}  {:>6} {:>9} {:>4}".format(n.hostname, n.cpus, "%.1f" % (float(n.mem) * (10 ** 6) / (1024 ** 3)), n.gpus))
             total_cpus += n.cpus
             total_mem += n.mem
             total_gpus += n.gpus
         print('-' * width)
-        print("{:<18}  {:>6} {:>9} {:>4}".format('Total', total_cpus, "%.1f" % (float(total_mem) / 1024), total_gpus))
+        print("{:<18}  {:>6} {:>9} {:>4}".format('Total', total_cpus, "%.1f" % (float(total_mem) * (10 ** 6) / (1024 ** 3)), total_gpus))
     parser.set_defaults(run=run)
 
 def add_logs_parser(subparsers):
