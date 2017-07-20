@@ -578,18 +578,20 @@ def add_info_parser(subparsers):
             if value is not None:
                 print("   {}: {}".format(attribute, value))
         print("Run Commands:")
-        print(''.join(["  {}\n".format(command) for command in training.run_commands]))
+        print(''.join(["  {}".format(command) for command in training.run_commands]))
+        print("Max Parallel Runs: {}\n".format(training.max_parallel_runs))
 
-        header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS']
-        widths = [4, 9, 13, 13, 40]
+        header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS', 'PARAMS']
+        widths = [4, 9, 13, 13, 40, 20]
         print(util.format_header(header, widths=widths))
         for run in training.runs:
             values = [run.number, run.state, util.get_since_str(run.started_at),
                       util.get_since_str(run.finished_at),
-                      format_job(run.jobs[0])]
+                      format_job(run.jobs[0]),
+                      ', '.join(['{} = {}'.format(p, v) for p, v in json.loads(run.params).items()])]
             print(util.format_line(values, widths=widths))
             for job in run.jobs[1:]:
-                print(util.format_line([''] * 4 + [format_job(job)], widths=widths))
+                print(util.format_line([''] * 4 + [format_job(job)] + [''], widths=widths))
     
     parser.set_defaults(run=run)
 
