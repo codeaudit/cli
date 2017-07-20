@@ -137,7 +137,7 @@ def stream_log(url, ids_to_name):
     def message_prefix(msg):
         job_name = ids_to_name[msg['job_id']]
         color = job_ids_color[msg['job_id']]
-        prefix = "{:<12}| ".format(job_name)
+        prefix = "{:<17}| ".format(job_name)
         return util.color_string(color, prefix)
 
     job_ids_color = {id: util.COLOR_CODES.keys()[(i + 1) % len(util.COLOR_CODES)] 
@@ -183,10 +183,15 @@ def stream_job_log(job):
 
 def stream_training_log(training):
     url = '%s/ws/trainings/%s/stream' % (stream_url, training.id)
-    ids_to_name = { job.id: util.get_job_name(job) for job in training.jobs }
+    ids_to_name = {}
     ids_to_name[training.id] = 'training'
     for run in training.runs:
         ids_to_name[run.id] = 'run {}'.format(run.number)
+        for job in run.jobs:
+            ids_to_name[job.id] = 'run {}: {}'.format(run.number, job.name)
+    for job in training.jobs:
+        if job.id not in ids_to_name:
+            ids_to_name[job.id] = job.name
     stream_log(url, ids_to_name)
 
 def load_config(config_file, config_section):
