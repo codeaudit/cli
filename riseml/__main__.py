@@ -140,7 +140,7 @@ def stream_log(url, ids_to_name):
         prefix = "{:<12}| ".format(job_name)
         return util.color_string(color, prefix)
 
-    job_ids_color = {id: util.COLOR_NAMES[(i + 2) % len(util.COLOR_NAMES)] 
+    job_ids_color = {id: util.COLOR_CODES.keys()[(i + 1) % len(util.COLOR_CODES)] 
                      for i, id in enumerate(ids_to_name.keys())}
     
     def on_message(ws, message):

@@ -1,15 +1,23 @@
 import time
 
-COLOR_NAMES = [
-    'grey',
-    'red',
-    'green',
-    'yellow',
-    'blue',
-    'magenta',
-    'cyan',
-    'white'
-]
+COLOR_CODES = {
+    # 'black': 30,     NOTE: We don't want that color!
+    'red': 31,
+    'green': 32,
+    'yellow': 33,
+    'blue': 34,
+    'magenta': 35,
+    'cyan': 36,
+    'light gray': 37,
+    'dark gray': 90,
+    'light red': 91,
+    'light green': 92,
+    'light yellow': 93,
+    'light blue': 94,
+    'light magenta': 95,
+    'light cyan': 96,
+    'white': 97
+}
 
 colors = {}
 
@@ -29,9 +37,9 @@ def get_job_name(job):
         return job.name
 
 def get_color_pairs():
-    for i, name in enumerate(COLOR_NAMES):
-        yield(name, str(30 + i))
-        yield('bold_' + name, str(30 + i) + ';1')
+    for name, code in COLOR_CODES.items():
+        yield(name, str(code))
+        yield('bold_' + name, str(code) + ';1')
 
 
 for (name, ansi_code) in get_color_pairs():
