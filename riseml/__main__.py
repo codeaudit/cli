@@ -49,6 +49,8 @@ git_url = endpoint_url + '/git'
 o = urlparse(endpoint_url)
 stream_url = "ws://%s/stream" % o.netloc
 
+ANSI_ESCAPE_REGEX = re.compile(r'\x1b[^m]*m')
+
 # avoid using ~.netrc
 class NoAuth(object):
     def __call__(self, request):
@@ -120,13 +122,16 @@ def handle_error(message, status_code=None):
 def handle_http_error(res):
     handle_error(res.json()['message'], res.status_code)
 
-
 def stream_log(url, ids_to_name):
 
     def print_log_message(msg):
         for line in msg['log_lines']:
-            output = "%s%s" % (message_prefix(msg), line)
-            print(output)
+            last_color = job_ids_last_color_used.get(msg['job_id'], '')
+            output = "%s%s%s%s" % (message_prefix(msg), last_color, line, util.ansi_sequence(0))
+            used_colors = ANSI_ESCAPE_REGEX.findall(line)
+            if used_colors:
+                job_ids_last_color_used[msg['job_id']] = used_colors[-1]
+            print output
 
     def print_state_message(msg):
         state = "--> %s" % msg['new_state']
@@ -142,6 +147,7 @@ def stream_log(url, ids_to_name):
 
     job_ids_color = {id: util.COLOR_CODES.keys()[(i + 1) % len(util.COLOR_CODES)] 
                      for i, id in enumerate(ids_to_name.keys())}
+    job_ids_last_color_used = {}
     
     def on_message(ws, message):
         msg = json.loads(message)
