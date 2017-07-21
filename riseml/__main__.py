@@ -105,10 +105,17 @@ def get_project(name):
     handle_error("project not found: %s" % name)
 
 
-def create_project(name):
+def create_project():
+    cwd = os.getcwd()
+    if not os.path.exists(os.path.join(cwd, 'riseml.yml')):
+        project_name = os.path.basename(cwd)
+        with open('riseml.yml', 'a') as f:
+            f.write("project: %s\n" % project_name)
+    name = get_project_name()
     api_client = ApiClient(host=api_url)
     client = DefaultApi(api_client)
-    return client.create_repository(name)[0]
+    project = client.create_repository(name)[0]
+    print("project created: %s (%s)" % (project.name, project.id))
 
 
 def handle_error(message, status_code=None):
@@ -249,19 +256,6 @@ def exec_command(args):
     user = get_user()
     revision = push_project(user, project_name)
     run_job(project_name, revision, 'train', json.dumps(config))
-
-
-def add_create_parser(subparsers):
-    parser = subparsers.add_parser('create', help="create project")
-    def run(args):
-        cwd = os.getcwd()
-        if not os.path.exists(os.path.join(cwd, 'riseml.yml')):
-            project_name = os.path.basename(cwd)
-            with open('riseml.yml', 'a') as f:
-                f.write("project: %s\n" % project_name)
-        project = create_project(get_project_name())
-        print("project created: %s (%s)" % (project.name, project.id))
-    parser.set_defaults(run=run)
 
 
 def add_register_parser(subparsers):
@@ -461,6 +455,9 @@ def push_project(user, project_name):
     done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
     res = requests.post(prepare_url)
+    if res.status_code == 412 and 'Repository does not exist' in res.json()['message']:
+        create_project()
+        res = requests.post(prepare_url)
     if res.status_code != 200:
         handle_http_error(res)
     sync_path = res.json()['path']
@@ -755,7 +752,6 @@ def get_parser():
     add_clusterinfo_parser(subparsers)
 
     # worklow ops
-    add_create_parser(subparsers)
     add_push_parser(subparsers)
     add_train_parser(subparsers)
     add_exec_parser(subparsers)
