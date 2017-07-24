@@ -15,10 +15,10 @@ from __future__ import absolute_import
 # import models into sdk package
 from .models.changeset import Changeset
 from .models.error import Error
+from .models.experiment import Experiment
 from .models.job import Job
 from .models.node import Node
 from .models.repository import Repository
-from .models.run import Run
 from .models.scratch_entry import ScratchEntry
 from .models.training import Training
 from .models.training_framework_details import TrainingFrameworkDetails

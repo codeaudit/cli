@@ -149,7 +149,7 @@ def stream_log(url, ids_to_name):
     def message_prefix(msg):
         job_name = ids_to_name[msg['job_id']]
         color = job_ids_color[msg['job_id']]
-        prefix = "{:<17}| ".format(job_name)
+        prefix = "{:<18}| ".format(job_name)
         return util.color_string(color, prefix)
 
     job_ids_color = {id: util.COLOR_CODES.keys()[(i + 1) % len(util.COLOR_CODES)] 
@@ -198,10 +198,10 @@ def stream_training_log(training):
     url = '%s/ws/trainings/%s/stream' % (stream_url, training.id)
     ids_to_name = {}
     ids_to_name[training.id] = 'training'
-    for run in training.runs:
-        ids_to_name[run.id] = 'run {}'.format(run.number)
-        for job in run.jobs:
-            ids_to_name[job.id] = 'run {}: {}'.format(run.number, job.name)
+    for experiment in training.experiments:
+        ids_to_name[experiment.id] = 'exp. {}'.format(experiment.number)
+        for job in experiment.jobs:
+            ids_to_name[job.id] = 'exp. {}: {}'.format(experiment.number, job.name)
     for job in training.jobs:
         if job.id not in ids_to_name:
             ids_to_name[job.id] = job.name
@@ -449,7 +449,7 @@ def add_ps_parser(subparsers):
         client = DefaultApi(api_client)
         trainings = client.get_trainings()
 
-        header = ['ID', 'PROJECT', 'STATE', 'AGE', 'FINISHED RUNS', 'ACTIVE JOBS']
+        header = ['ID', 'PROJECT', 'STATE', 'AGE', 'FINISHED EXPS', 'ACTIVE JOBS']
         widths = (4, 14, 9, 13, 14, 10)
         print(util.format_header(header, widths=widths))
 
@@ -458,9 +458,9 @@ def add_ps_parser(subparsers):
                 continue
             values = [training.short_id, training.changeset.repository.name,
                       training.state, util.get_since_str(training.created_at),
-                      # Finished runs
-                      '{}/{}'.format(len([run for run in training.runs if run.state == 'FINISHED']),
-                                     len(training.runs)),
+                      # Finished experiments
+                      '{}/{}'.format(len([experiment for experiment in training.experiments if experiment.state == 'FINISHED']),
+                                     len(training.experiments)),
                       # Active jobs
                       '{}'.format(training.active_job_count)]
             print(util.format_line(values, widths=widths))
@@ -489,18 +489,18 @@ def add_info_parser(subparsers):
                 print("   {}: {}".format(attribute, value))
         print("Run Commands:")
         print(''.join(["  {}".format(command) for command in training.run_commands]))
-        print("Max Parallel Runs: {}\n".format(training.max_parallel_runs))
+        print("Max Parallel Experiments: {}\n".format(training.max_parallel_experiments))
 
-        header = ['RUN', 'STATE', 'STARTED', 'FINISHED', 'JOBS', 'PARAMS']
+        header = ['EXP', 'STATE', 'STARTED', 'FINISHED', 'JOBS', 'PARAMS']
         widths = [4, 9, 13, 13, 40, 20]
         print(util.format_header(header, widths=widths))
-        for run in training.runs:
-            values = [run.number, run.state, util.get_since_str(run.started_at),
-                      util.get_since_str(run.finished_at),
-                      format_job(run.jobs[0]),
-                      ', '.join(['{} = {}'.format(p, v) for p, v in json.loads(run.params).items()])]
+        for experiment in training.experiments:
+            values = [experiment.number, experiment.state, util.get_since_str(experiment.started_at),
+                      util.get_since_str(experiment.finished_at),
+                      format_job(experiment.jobs[0]),
+                      ', '.join(['{} = {}'.format(p, v) for p, v in json.loads(experiment.params).items()])]
             print(util.format_line(values, widths=widths))
-            for job in run.jobs[1:]:
+            for job in experiment.jobs[1:]:
                 print(util.format_line([''] * 4 + [format_job(job)] + [''], widths=widths))
     
     parser.set_defaults(run=run)
