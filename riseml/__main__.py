@@ -276,88 +276,6 @@ def add_register_parser(subparsers):
     parser.set_defaults(run=run)
 
 
-def add_ls_parser(subparsers):
-    parser = subparsers.add_parser('ls', help="list directory from scratch")
-    parser.add_argument('file', help="scratch file path", nargs='?', default='')
-    def run(args):
-        project_name = get_project_name()
-        project = get_project(project_name)
-
-        api_client = ApiClient(host=scratch_url)
-        client = ScratchApi(api_client)
-        entries = client.get_scratch_meta(project.id, args.file)
-        for entry in entries:
-            if entry.is_dir:
-                print(" " * 11 + " %s" % (entry.name))
-            else:
-                print("%11d %s" % (entry.size, entry.name))
-
-    parser.set_defaults(run=run)
-
-
-def add_cp_parser(subparsers):
-    parser = subparsers.add_parser('cp', help="cp file from scratch")
-    parser.add_argument('src', help="local or scratch file path")
-    parser.add_argument('dst', help="local or scratch file path")
-    def run(args):
-        project = get_project(get_project_name())
-        local_prefix = ['~', '/', '.']
-
-        # upload
-        if args.src[0] in local_prefix and args.dst[0] not in local_prefix:
-            res = requests.put('%s/scratches/%s/%s' % (scratch_url, project.id, args.dst),
-                headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-                auth=NoAuth(),
-                files={'file': open(args.src, 'rb')})
-            if res.status_code != 200:
-                handle_http_error(res)
-
-        # download
-        elif args.src[0] not in local_prefix and args.dst[0] in local_prefix:
-            res = requests.get('%s/scratches/%s/%s' % (scratch_url, project.id, args.src),
-                headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-                auth=NoAuth(),
-                stream=True)
-            if res.status_code != 200:
-                handle_http_error(res)
-
-            with open(args.dst, 'wb') as f:
-                for buf in res.iter_content(4096):
-                    f.write(buf)
-        else:
-            handle_error("copy operation not supported")
-
-    parser.set_defaults(run=run)
-
-
-def add_cat_parser(subparsers):
-    parser = subparsers.add_parser('cat', help="print file contents from scratch")
-    parser.add_argument('file', help="scratch file path")
-    def run(args):
-        project = get_project(get_project_name())
-        res = requests.get('%s/scratches/%s/%s' % (scratch_url, project.id, args.file),
-            headers={'Authorization': os.environ.get('RISEML_APIKEY')},
-            auth=NoAuth(),
-            stream=True)
-        if res.status_code == 200:
-            for buf in res.iter_content(4096):
-                stdout.write(buf)
-
-    parser.set_defaults(run=run)
-
-
-def add_clean_parser(subparsers):
-    parser = subparsers.add_parser('clean', help="remove all data from scratch")
-    parser.add_argument('file', help="scratch file path", nargs='?', default='')
-    def run(args):
-        project = get_project(get_project_name())
-        api_client = ApiClient(host=scratch_url)
-        client = ScratchApi(api_client)
-        client.delete_scratch_object(project.id, args.file)
-
-    parser.set_defaults(run=run)
-
-
 def add_whoami_parser(subparsers):
     parser = subparsers.add_parser('whoami', help="show currently logged in user")
     def run(args):
@@ -434,17 +352,6 @@ def add_kill_parser(subparsers):
                 body = json.loads(e.body)
                 print('ERROR: %s (%s)' % (body['message'], e.status))
             
-    parser.set_defaults(run=run)
-
-
-def add_push_parser(subparsers):
-    parser = subparsers.add_parser('push', help="push current code")
-    parser.set_defaults(notebook=False)
-    def run(args):
-        project_name = get_project_name()
-        user = get_user()
-        revision = push_project(user, project_name)
-        print("new revision: %s" % revision)
     parser.set_defaults(run=run)
 
 
@@ -752,7 +659,6 @@ def get_parser():
     add_clusterinfo_parser(subparsers)
 
     # worklow ops
-    add_push_parser(subparsers)
     add_train_parser(subparsers)
     add_exec_parser(subparsers)
     add_deploy_parser(subparsers)
@@ -761,12 +667,6 @@ def get_parser():
     add_ps_old_parser(subparsers)
     add_ps_parser(subparsers)
     add_info_parser(subparsers)
-
-    # scratch ops
-    add_ls_parser(subparsers)
-    add_cp_parser(subparsers)
-    add_cat_parser(subparsers)
-    add_clean_parser(subparsers)
 
     return parser
 
