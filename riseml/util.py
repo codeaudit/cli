@@ -66,7 +66,7 @@ def format_line(columns, widths=(4, 10, 9, 8)):
     line = '{:>{widths[0]}} {:<{widths[1]}} {:>{widths[2]}} {:<{widths[3]}}'
     line = ''
     for i, w in enumerate(widths):
-        line += '{:%s{widths[%s]}} ' % ('<', i)
+        line += u'{:%s{widths[%s]}} ' % ('<', i)
     return line.format(*columns, widths=widths)
 
 def get_since_str(timestamp):
