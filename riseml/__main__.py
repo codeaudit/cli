@@ -11,6 +11,7 @@ import webbrowser
 import requests
 import websocket
 import yaml
+from datetime import datetime
 
 try:
     from queue import Queue, Empty
@@ -135,8 +136,12 @@ def stream_log(url, ids_to_name):
     def print_log_message(msg):
         for line in msg['log_lines']:
             last_color = job_ids_last_color_used.get(msg['job_id'], '')
-            output = "%s%s%s%s" % (message_prefix(msg), last_color, line, util.ansi_sequence(0))
-            used_colors = ANSI_ESCAPE_REGEX.findall(line)
+
+            str_timestamp = datetime.utcfromtimestamp(int(line['time'])).strftime('%Y-%m-%dT%H:%M:%SZ')
+            line_text = "[%s] %s" % (str_timestamp, line['log'])
+
+            output = "%s%s%s%s" % (message_prefix(msg), last_color, line_text, util.ansi_sequence(0))
+            used_colors = ANSI_ESCAPE_REGEX.findall(line_text)
             if used_colors:
                 job_ids_last_color_used[msg['job_id']] = used_colors[-1]
             print output
