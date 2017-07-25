@@ -133,12 +133,14 @@ def handle_http_error(res):
 
 def stream_log(url, ids_to_name):
 
+    def str_timestamp(timestamp):
+        return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
     def print_log_message(msg):
         for line in msg['log_lines']:
             last_color = job_ids_last_color_used.get(msg['job_id'], '')
 
-            str_timestamp = datetime.utcfromtimestamp(int(line['time'])).strftime('%Y-%m-%dT%H:%M:%SZ')
-            line_text = "[%s] %s" % (str_timestamp, line['log'])
+            line_text = "[%s] %s" % (str_timestamp(line['time']), line['log'])
 
             output = "%s%s%s%s" % (message_prefix(msg), last_color, line_text, util.ansi_sequence(0))
             used_colors = ANSI_ESCAPE_REGEX.findall(line_text)
@@ -147,7 +149,7 @@ def stream_log(url, ids_to_name):
             print output
 
     def print_state_message(msg):
-        state = "--> %s" % msg['new_state']
+        state = "[%s] --> %s" % (str_timestamp(msg['time']), msg['new_state'])
         output = "%s%s" % (message_prefix(msg),
                            util.color_string("bold_white", state))
         print(output)
