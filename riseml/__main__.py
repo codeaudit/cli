@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import re
 import os
@@ -285,8 +286,8 @@ def add_whoami_parser(subparsers):
     parser.set_defaults(run=run)
 
 
-def add_clusterinfo_parser(subparsers):
-    parser = subparsers.add_parser('clusterinfo', help="show cluster info")
+def add_cluster_parser(subparsers):
+    parser = subparsers.add_parser('cluster', help="show cluster info")
  
     def run(args):
         api_client = ApiClient(host=api_url)
@@ -328,13 +329,13 @@ def add_logs_parser(subparsers):
 
 
 def add_kill_parser(subparsers):
-    parser = subparsers.add_parser('kill', help="kill training")
-    parser.add_argument('trainings', help="training identifier (optional)", nargs='*')
+    parser = subparsers.add_parser('kill', help="kill on-going experiment or experiment series")
+    parser.add_argument('experiments', help="experiment/series identifier (optional)", nargs='*')
     def run(args):
         api_client = ApiClient(host=api_url)
         client = DefaultApi(api_client)
 
-        trainings = args.trainings
+        trainings = args.experiments
 
         if not trainings:
             project = get_project(get_project_name())
@@ -347,7 +348,10 @@ def add_kill_parser(subparsers):
         for training_id in trainings:
             try:
                 training = client.kill_training(training_id)
-                print("killed training %s (%s)" % (training.short_id, training.id))
+                if len(training.experiments) == 1:
+                    print("killed experiment {}".format(training.short_id))
+                else:
+                    print("killed series {}".format(training.short_id))
             except ApiException as e:
                 body = json.loads(e.body)
                 print('ERROR: %s (%s)' % (body['message'], e.status))
@@ -412,7 +416,7 @@ def add_exec_parser(subparsers):
 
 
 def add_train_parser(subparsers):
-    parser = subparsers.add_parser('train', help="run new training job")
+    parser = subparsers.add_parser('train', help="run new experiment or experiment series")
     parser.add_argument('-f', '--config-file', help="config file to use", type=str, default='riseml.yml')
 
     def run(args):
@@ -439,207 +443,108 @@ def add_deploy_parser(subparsers):
     parser.set_defaults(config_section='deploy')
     parser.set_defaults(run=run_section)
 
-def add_ps_parser(subparsers):
-    parser = subparsers.add_parser('ps', help="show trainings")
-    parser.add_argument('-a', help = "show all trainings", action="store_const", const=True)
-    parser.add_argument('-l', help = "show more info", action="store_const", const=True)
+def add_status_parser(subparsers):
+    parser = subparsers.add_parser('status', help="show (running) experiments")
+    parser.add_argument('id', help='id of specific experiment/series for which to show status', nargs='?')
+    parser.add_argument('-a', '--all', help="show all experiments", action="store_const", const=True)
+    parser.add_argument('-l', '--long', help="expand series", action="store_const", const=True)
 
     def run(args):
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
-        trainings = client.get_trainings()
+        def full_id(training, experiment=None, job=None):
+            if len(training.experiments) > 1 and experiment:
+                return '{}.{}'.format(training.short_id, experiment.number)
+            else:
+                return training.short_id
+        
+        def params(experiment):
+            return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.params).items()])
+        
+        def show_experiment(training, experiment):
+            print("ID: {}".format(full_id(training, experiment)))
+            print("Type: Experiment")
+            print("State: {}".format(experiment.state))
+            print("Image: {}".format(training.image))
+            print("Framework: {}".format(training.framework))
+            print("Framework Config:")
+            for attribute, value in training.framework_details.to_dict().iteritems():
+                if value is not None:
+                    print("   {}: {}".format(attribute, value))
+            print("Run Commands:")
+            print(''.join(["  {}".format(command) for command in training.run_commands]))
+            print("Max Parallel Experiments: {}".format(training.max_parallel_experiments))
+            print("Params: {}\n".format(params(experiment)))
 
-        header = ['ID', 'PROJECT', 'STATE', 'AGE', 'FINISHED EXPS', 'ACTIVE JOBS']
-        widths = (4, 14, 9, 13, 14, 10)
-        print(util.format_header(header, widths=widths))
-
-        for training in trainings:
-            if not args.a and training.state in ['FINISHED', 'KILLED', 'FAILED']:
-                continue
-            values = [training.short_id, training.changeset.repository.name,
-                      training.state, util.get_since_str(training.created_at),
-                      # Finished experiments
-                      '{}/{}'.format(len([experiment for experiment in training.experiments if experiment.state == 'FINISHED']),
-                                     len(training.experiments)),
-                      # Active jobs
-                      '{}'.format(training.active_job_count)]
-            print(util.format_line(values, widths=widths))
-    
-    parser.set_defaults(run=run)
-
-def add_info_parser(subparsers):
-    parser = subparsers.add_parser('info', help="show training details")
-    parser.add_argument('training_id', help="id of trainining")
-
-    def format_job(job):
-        return "{} ({} since {})".format(job.name, job.state, util.get_since_str(job.state_changed_at))
-
-    def run(args):
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
-        training = client.get_training(args.training_id)
-        print("ID: {}".format(training.short_id))
-        print("UUID: {}".format(training.id))
-        print("State: {}".format(training.state))
-        print("Image: {}".format(training.image))
-        print("Framework: {}".format(training.framework))
-        print("Framework Config:")
-        for attribute, value in training.framework_details.to_dict().iteritems():
-            if value is not None:
-                print("   {}: {}".format(attribute, value))
-        print("Run Commands:")
-        print(''.join(["  {}".format(command) for command in training.run_commands]))
-        print("Max Parallel Experiments: {}\n".format(training.max_parallel_experiments))
-
-        header = ['EXP', 'STATE', 'STARTED', 'FINISHED', 'JOBS', 'PARAMS']
-        widths = [4, 9, 13, 13, 40, 20]
-        print(util.format_header(header, widths=widths))
-        for experiment in training.experiments:
-            values = [experiment.number, experiment.state, util.get_since_str(experiment.started_at),
-                      util.get_since_str(experiment.finished_at),
-                      format_job(experiment.jobs[0]),
-                      ', '.join(['{} = {}'.format(p, v) for p, v in json.loads(experiment.params).items()])]
-            print(util.format_line(values, widths=widths))
-            for job in experiment.jobs[1:]:
-                print(util.format_line([''] * 4 + [format_job(job)] + [''], widths=widths))
-    
-    parser.set_defaults(run=run)
-
-def add_ps_old_parser(subparsers):
-    parser = subparsers.add_parser('ps-old', help="show jobs")
-    parser.add_argument('-a', help="show all jobs",
-        action='store_const', const=True)
-    parser.add_argument('-l', help="show more info",
-        action='store_const', const=True)
-
-    def run(args):
-
-        def order_children(children):
-            next_c = {}
-            first_c = None
-            for c in children:
-                if c.previous_job:
-                    next_c[c.previous_job] = c
-                else:
-                    first_c = c
-            seq = [first_c]
-            first_c.index = 1
-            index = 2
-            while first_c.id in next_c:
-                first_c = next_c[first_c.id]
-                first_c.index = index
-                index += 1
-                seq.append(first_c)
-            return seq
-
-        def get_column_values(job, project, name, cols):
-            vals = []
-            for c in cols:
-                if c == 'project':
-                    vals.append(project)
-                elif c == 'name':
-                    vals.append(name)
-                elif c == 'since':
-                    vals.append(util.get_since_str(job.state_changed_at))
-                else:
-                    v = getattr(job, c)
-                    vals.append(v or '-')
-            return vals
-
-        def print_job(j, project, cols, depth=0, siblings_at=[],
-                      format_line=util.format_line):
-            index = index = getattr(j, 'index', None)
-            name = get_indent(depth, siblings_at, index=index) + util.get_job_name(j)
-            values = get_column_values(j, project, name, cols)
-            print(format_line(values))
-            if j.name == 'sequence':
-                j.children = order_children(j.children)
-            if j.children:
-                siblings_at.append(depth)
-                depth += 1
-                for i, c in enumerate(j.children):
-                    if i == len(j.children) - 1:
-                        siblings_at.pop()
-                    print_job(c, project, cols, depth, siblings_at,
-                              format_line=format_line)
-
-        def get_indent(depth, siblings_at, index=None):
-            indent = ""
-            for i in range(0, depth):
-                if i == depth - 1:
-                    indent += ' {:<3}'.format('\_%s ' % ('' if index is None else index))
-                elif i in siblings_at:
-                    indent += ' {:<3}'.format('|')
-                else:
-                    indent += ' {:<3}'.format(' ')
-            return indent
-
-        #def print_test(t, depth=0, siblings_at=[]):
-        #    name = get_indent(depth, siblings_at) + t['name']
-        #    print(format_line([t['name'], t['name'], t['name'], name], widths=(10, 10, 12, 10)))
-        #    if 'children' in t:
-        #        siblings_at.append(depth)
-        #        depth += 1
-        #        for i, c in enumerate(t['children']):
-        #            if i == len(t['children']) - 1:
-        #                siblings_at.pop()
-        #            print_test(c, depth, siblings_at)
-        #t = {
-        #    'name': 'p1',
-        #    'children': [
-        #        {'name': 'p1c1'},
-        #        {'name': 'p1c2'},
-        #        {'name': 'p1c3', 'children': [
-        #            {'name': 'p1c3c1'},
-        #            {'name': 'p1c3c2', 'children': [
-        #                {'name': 'p1c3c2c1'},
-        #                {'name': 'p1c3c2c2'},
-        #            ]},
-        #            {'name': 'p1c3c3'},
-        #        ]},
-        #        {'name': 'p1c4'},
-        #        {'name': 'p1c5', 'children': [
-        #            {'name': 'p1c5c1'},
-        #            {'name': 'p1c5c2', 'children': [
-        #                {'name': 'p1c5c2c1'},
-        #                {'name': 'p1c5c2c2'},
-        #            ]},
-        #            {'name': 'p1c5c3'},
-        #        ]},
-        #    ]
-        #}
-        #print_test(t)
-
-        def filter_jobs(jobs):
-            res = []
-            for job in jobs:
-                if args.a:
-                    res.append(job)
-                else:
-                    if job.state in ('PENDING', 'STARTING', 'RUNNING',
-                                     'BUILDING', 'SERVING'):
-                        res.append(job)
-            return res
-
-        api_client = ApiClient(host=api_url)
-        client = DefaultApi(api_client)
-        all_jobs = filter_jobs(client.get_jobs(only_root=True))
-
-        header = ['ID', 'PROJECT', 'STATE', 'SINCE', 'NAME']
-        widths = (4, 10, 9, 13, 8)
-        columns = ['short_id', 'project', 'state', 'since', 'name']
-
-        if args.l:
-            header = ['ID', 'UUID', 'PROJECT', 'CPUS', 'GPUS', 'MEM', 'STATE', 'SINCE', 'NAME']
-            widths = (4, 36, 10, 4, 4, 4, 9, 12, 8)
-            columns = ['short_id', 'id', 'project', 'cpus', 'gpus', 'mem', 'state', 'since', 'name']
-
-        if all_jobs:
+            header = ['JOB', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM']
+            widths = [9, 13, 13, 13, 6, 6, 6]
             print(util.format_header(header, widths=widths))
-        for j in all_jobs:
-            print_job(j, j.changeset.repository.name, columns,
-                      format_line=lambda x: util.format_line(x, widths=widths))
+            for job in experiment.jobs:
+                values = [job.name, job.state, util.get_since_str(job.started_at),
+                          util.get_since_str(job.finished_at)] + ['N/A'] * 3
+                print(util.format_line(values, widths=widths))
+        
+        def print_experiments(training, with_project=True, with_type=True, with_params=True, indent=True, widths=None):
+            for i, experiment in enumerate(training.experiments):
+                indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
+                values = [indent_str + full_id(training, experiment)]
+                if with_project:
+                    values += [training.changeset.repository.name]
+                values += [experiment.state, util.get_since_str(experiment.created_at)]
+                if with_type:
+                    values += [indent_str + 'Experiment']
+                if with_params:
+                    values += [params(experiment)]
+                print(util.format_line(values, widths=widths))
+        
+        def show_experiment_group(training):
+            print("ID: {}".format(full_id(training)))
+            print("Type: Series")
+            print("State: {}".format(training.state))
+            print("Project: {}\n".format(training.changeset.repository.name))
 
+            header = ['ID', 'STATE', 'AGE', 'PARAMS']
+            widths = (6, 9, 13, 14)
+            print(util.format_header(header, widths=widths))
+            print_experiments(training, with_project=False, with_type=False, indent=False, widths=widths)
+
+        def show_trainings(trainings, all=False, collapsed=True):
+            header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
+            if collapsed:
+                widths = (6, 14, 9, 13, 15)
+            else:
+                header += ['PARAMS']
+                widths = (8, 14, 9, 13, 15, 14)
+            print(util.format_header(header, widths=widths))
+
+            for training in trainings:
+                if not all and training.state in ['FINISHED', 'KILLED', 'FAILED']:
+                    continue
+                values = [training.short_id, training.changeset.repository.name,
+                        training.state, util.get_since_str(training.created_at),
+                        'Experiment' if len(training.experiments) == 1 else 'Series']
+                if not collapsed:
+                    values += ['']
+                print(util.format_line(values, widths=widths))
+                if not collapsed and len(training.experiments) > 1:
+                    print_experiments(training, widths=widths)
+        
+        api_client = ApiClient(host=api_url)
+        client = DefaultApi(api_client)
+        
+        if args.id:
+            ids = args.id.split('.')
+            training = client.get_training(ids[0])
+            if len(training.experiments) == 1:
+                show_experiment(training, training.experiments[0])
+            elif len(ids) > 1:
+                experiment = next((exp for exp in training.experiments if str(exp.number) == ids[1]), None)
+                if experiment:
+                    show_experiment(training, experiment)
+                else:
+                    handle_error('Experiment not found')
+            else:
+                show_experiment_group(training)
+        else:
+            show_trainings(client.get_trainings(), all=args.all, collapsed=not args.long)
 
     parser.set_defaults(run=run)
 
@@ -656,7 +561,7 @@ def get_parser():
     add_whoami_parser(subparsers)
 
     # clusterinfo ops
-    add_clusterinfo_parser(subparsers)
+    add_cluster_parser(subparsers)
 
     # worklow ops
     add_train_parser(subparsers)
@@ -664,9 +569,7 @@ def get_parser():
     add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
-    add_ps_old_parser(subparsers)
-    add_ps_parser(subparsers)
-    add_info_parser(subparsers)
+    add_status_parser(subparsers)
 
     return parser
 
