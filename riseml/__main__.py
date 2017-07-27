@@ -21,6 +21,7 @@ def main():
     add_cluster_parser(subparsers)
 
     # worklow ops
+    add_init_parser(subparsers)
     add_train_parser(subparsers)
     add_exec_parser(subparsers)
     add_deploy_parser(subparsers)
