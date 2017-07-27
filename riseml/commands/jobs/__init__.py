@@ -39,15 +39,18 @@ def stream_job_log(job):
 def stream_training_log(training):
     url = '%s/ws/trainings/%s/stream' % (STREAM_URL, training.id)
     ids_to_name = {}
-    ids_to_name[training.id] = 'training'
-
-    for experiment in training.experiments:
-        ids_to_name[experiment.id] = 'exp. {}'.format(experiment.number)
-        for job in experiment.jobs:
-            ids_to_name[job.id] = 'exp. {}: {}'.format(experiment.number, job.name)
+    ids_to_name[training.id] = '{}'.format(training.short_id)
+    if len(training.experiments) == 1:
+        for job in training.experiments[0].jobs:
+            ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
+    else:
+        for experiment in training.experiments:
+            ids_to_name[experiment.id] = '{}.{}'.format(training.short_id, experiment.number)
+            for job in experiment.jobs:
+                ids_to_name[job.id] = '{}.{}: {}'.format(training.short_id, experiment.number, job.name)
 
     for job in training.jobs:
         if job.id not in ids_to_name:
-            ids_to_name[job.id] = job.name
+            ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
 
     stream_log(url, ids_to_name)

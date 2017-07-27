@@ -31,12 +31,13 @@ def stream_log(url, ids_to_name):
     def message_prefix(msg):
         job_name = ids_to_name[msg['job_id']]
         color = job_ids_color[msg['job_id']]
-        prefix = "{:<18}| ".format(job_name)
+        prefix = "{}| ".format(job_name.ljust(indentation))
         return util.color_string(color, prefix)
 
     job_ids_color = {id: util.COLOR_CODES.keys()[(i + 1) % len(util.COLOR_CODES)]
                      for i, id in enumerate(ids_to_name.keys())}
     job_ids_last_color_used = {}
+    indentation = max([len(name) for _,name in ids_to_name.items()]) + 1
 
     def on_message(ws, message):
         msg = json.loads(message)
