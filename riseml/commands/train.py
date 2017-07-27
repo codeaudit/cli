@@ -8,8 +8,7 @@ from riseml.user import get_user
 from riseml.errors import handle_error
 from riseml.project import push_project, get_project_name
 from riseml.consts import API_URL
-
-from . import stream_training_log
+from riseml.stream import stream_training_log
 
 
 def add_train_parser(subparsers):

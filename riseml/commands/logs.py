@@ -2,8 +2,7 @@ from riseml.client import DefaultApi, ApiClient
 
 from riseml.consts import API_URL
 from riseml.project import get_project, get_project_name
-
-from . import stream_training_log
+from riseml.stream import stream_training_log
 
 
 def add_logs_parser(subparsers):

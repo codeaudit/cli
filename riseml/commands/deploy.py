@@ -3,8 +3,7 @@ import json
 from riseml.configs import load_config
 from riseml.user import get_user
 from riseml.project import push_project, get_project_name
-
-from . import run_job
+from riseml.jobs import run_job
 
 
 def add_deploy_parser(subparsers):
