@@ -6,7 +6,7 @@ from riseml.client import DefaultApi, ApiClient
 
 from riseml import util
 from riseml.errors import handle_error
-from riseml.consts import API_URL
+from riseml.consts import API_URL, ENDPOINT_URL
 
 
 def add_status_parser(subparsers):
@@ -59,6 +59,9 @@ def show_experiment(training, experiment):
     for attribute, value in training.framework_details.to_dict().iteritems():
         if value is not None:
             print("   {}: {}".format(attribute, value))
+    if training.framework == 'tensorflow' and training.framework_details.tensorboard:
+        tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')
+        print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in training.run_commands]))
     print("Max Parallel Experiments: {}".format(training.max_parallel_experiments))
@@ -91,7 +94,11 @@ def show_experiment_group(training):
     print("ID: {}".format(full_id(training)))
     print("Type: Series")
     print("State: {}".format(training.state))
-    print("Project: {}\n".format(training.changeset.repository.name))
+    print("Project: {}".format(training.changeset.repository.name))
+    if training.framework == 'tensorflow' and training.framework_details.tensorboard:
+        tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')
+        print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
+    print("")
 
     header = ['ID', 'STATE', 'AGE', 'PARAMS']
     widths = (6, 9, 13, 14)
