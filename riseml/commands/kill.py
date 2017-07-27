@@ -3,6 +3,8 @@ import json
 from riseml.client import DefaultApi, ApiClient
 from riseml.client.rest import ApiException
 
+from riseml.project import get_project, get_project_name
+from riseml.consts import API_URL
 
 def add_kill_parser(subparsers):
     parser = subparsers.add_parser('kill', help="kill on-going experiment or experiment series")
@@ -11,7 +13,7 @@ def add_kill_parser(subparsers):
 
 
 def run(args):
-    api_client = ApiClient(host=api_url)
+    api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
 
     trainings = args.experiments

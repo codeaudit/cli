@@ -3,6 +3,9 @@ import json
 from riseml.client import AdminApi, ApiClient
 from riseml.client.rest import ApiException
 
+from riseml.errors import handle_error
+from riseml.consts import API_URL
+
 
 def add_register_parser(subparsers):
     parser = subparsers.add_parser('register', help="register user (only admin)")
@@ -10,8 +13,9 @@ def add_register_parser(subparsers):
     parser.add_argument('--email', help="a person's email", required=True)
     parser.set_defaults(run=run)
 
+
 def run(args):
-    api_client = ApiClient(host=api_url)
+    api_client = ApiClient(host=API_URL)
     client = AdminApi(api_client)
     user = None
     try:
@@ -19,4 +23,5 @@ def run(args):
     except ApiException as e:
         body = json.loads(e.body)
         handle_error(body['message'], e.status)
+
     print(user)

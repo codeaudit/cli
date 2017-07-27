@@ -1,8 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import json
 
-from .. import util
-
 from riseml.client import DefaultApi, ApiClient
+
+from riseml import util
+from riseml.errors import handle_error
+from riseml.consts import API_URL
 
 
 def add_status_parser(subparsers):
@@ -14,7 +18,7 @@ def add_status_parser(subparsers):
 
 
 def run(args):
-    api_client = ApiClient(host=api_url)
+    api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
 
     if args.id:

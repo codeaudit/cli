@@ -1,4 +1,8 @@
+import os
 import time
+import platform
+
+from datetime import datetime
 
 COLOR_CODES = {
     # 'black': 30,     NOTE: We don't want that color!
@@ -21,6 +25,7 @@ COLOR_CODES = {
 
 colors = {}
 
+
 def get_job_name(job):
     if job.root is None:
         if job.role == 'sequence':
@@ -35,6 +40,7 @@ def get_job_name(job):
         return 'tensorboard (service: %s)' % job.service_name 
     else:
         return job.name
+
 
 def get_color_pairs():
     for name, code in COLOR_CODES.items():
@@ -54,6 +60,7 @@ def color_string(color, s):
     ansi_code = colors[color]
     return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
 
+
 def format_header(columns, widths=(4, 10, 9, 8)):
     def bold(s):
         return '\033[1m{}\033[0m'.format(s)
@@ -62,12 +69,14 @@ def format_header(columns, widths=(4, 10, 9, 8)):
         header += '{:%s{widths[%s]}} ' % ('<', i)
     return bold(header.format(*columns, widths=widths))
 
+
 def format_line(columns, widths=(4, 10, 9, 8)):
     line = '{:>{widths[0]}} {:<{widths[1]}} {:>{widths[2]}} {:<{widths[3]}}'
     line = ''
     for i, w in enumerate(widths):
         line += u'{:%s{widths[%s]}} ' % ('<', i)
     return line.format(*columns, widths=widths)
+
 
 def get_since_str(timestamp):
     if not timestamp:
@@ -88,3 +97,26 @@ def get_since_str(timestamp):
         return "%s second(s)" % seconds
     else:
         return "just now"
+
+
+def str_timestamp(timestamp):
+    return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
+def mb_to_gib(value):
+    return "%.1f" % (float(value) * (10 ** 6) / (1024 ** 3))
+
+
+def resolve_path(binary):
+    paths = os.environ.get('PATH', '').split(os.pathsep)
+    exts = ['']
+    if platform.system() == 'Windows':
+        path_exts = os.environ.get('PATHEXT', '.exe;.bat;.cmd').split(';')
+        has_ext = os.path.splitext(binary)[1] in path_exts
+        if not has_ext:
+            exts = path_exts
+    for path in paths:
+        for ext in exts:
+            loc = os.path.join(path, binary + ext)
+            if os.path.isfile(loc):
+                return loc

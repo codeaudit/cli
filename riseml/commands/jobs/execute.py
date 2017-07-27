@@ -1,6 +1,9 @@
 import json
 
-from ..push import push_project
+from riseml.user import get_user
+from riseml.project import push_project, get_project_name
+
+from . import run_job
 
 
 def add_exec_parser(subparsers):
@@ -26,7 +29,9 @@ def exec_command(args):
         },
         'run': [' '.join(args.command)]
     }
+
     # TODO: validate config here already
     user = get_user()
     revision = push_project(user, project_name)
+
     run_job(project_name, revision, 'train', json.dumps(config))

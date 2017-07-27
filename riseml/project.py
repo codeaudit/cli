@@ -3,17 +3,50 @@ import sys
 import subprocess
 import requests
 
+from riseml.util import resolve_path
+from riseml.errors import handle_error, handle_http_error
+from riseml.client import DefaultApi, ApiClient
+from riseml.consts import API_URL, GIT_URL, SYNC_URL
+from riseml.config_parser import parse_file
+
+
 try:
     from urllib.parse import urlparse
 except ImportError:
     from urlparse import urlparse
 
-from riseml.client import DefaultApi, ApiClient
-
 try:
     stdout = sys.stdout.buffer
 except AttributeError:
     stdout = sys.stdout
+
+
+def get_project_root(cwd=None):
+    if cwd is None:
+        cwd = os.getcwd()
+    if os.path.exists(os.path.join(cwd, 'riseml.yml')):
+        return cwd
+    elif cwd != '/':
+        return get_project_root(os.path.dirname(cwd))
+
+
+def get_project(name):
+    api_client = ApiClient(host=API_URL)
+    client = DefaultApi(api_client)
+    for project in client.get_repositories():
+        if project.name == name:
+            return project
+
+    handle_error("project not found: %s" % name)
+
+
+def get_project_name():
+    project_root = get_project_root()
+    if not project_root:
+        handle_error("no riseml project found")
+
+    config = parse_file(os.path.join(project_root, 'riseml.yml'))
+    return config.project
 
 
 def create_project():
@@ -22,15 +55,16 @@ def create_project():
         project_name = os.path.basename(cwd)
         with open('riseml.yml', 'a') as f:
             f.write("project: %s\n" % project_name)
+
     name = get_project_name()
-    api_client = ApiClient(host=api_url)
+    api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
     project = client.create_repository(name)[0]
     print("project created: %s (%s)" % (project.name, project.id))
 
 
 def push_project(user, project_name):
-    o = urlparse(git_url)
+    o = urlparse(GIT_URL)
     prepare_url = '%s://%s/%s/users/%s/repositories/%s/sync/prepare' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
     done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
@@ -39,12 +73,15 @@ def push_project(user, project_name):
     if res.status_code == 412 and 'Repository does not exist' in res.json()['message']:
         create_project()
         res = requests.post(prepare_url)
+
     if res.status_code != 200:
         handle_http_error(res)
+
     sync_path = res.json()['path']
-    o = urlparse(sync_url)
+    o = urlparse(SYNC_URL)
     rsync_url = '%s://%s%s/%s' % (
         o.scheme, o.netloc, o.path, sync_path)
+
     project_root = os.path.join(get_project_root(), '')
     exclude_file = os.path.join(project_root, '.risemlignore')
     sys.stderr.write("Pushing code...")
@@ -65,11 +102,14 @@ def push_project(user, project_name):
         stdout.flush()
 
     res = proc.wait()
+
     if res != 0:
         sys.exit(res)
     res = requests.post(done_url, params={'path': sync_path})
+
     if res.status_code != 200:
         handle_http_error(res)
+
     revision = res.json()['sha']
     print("done")
     return revision
