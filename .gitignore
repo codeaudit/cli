@@ -5,4 +5,3 @@ env
 # Python/PIP
 riseml.egg-info
 *.pyc
-.pylintrc

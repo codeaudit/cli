@@ -1,0 +1,5 @@
+[MESSAGES CONTROL]
+# Disable the following PyLint messages:
+# C0111:Missing module docstring
+# R0903:Too few public methods
+disable=C0111,R0903
