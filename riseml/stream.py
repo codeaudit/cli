@@ -65,7 +65,7 @@ def stream_log(url, ids_to_name):
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            print('Stopping log..')
+            print('Exiting...')
         else:
             # all other Exception based stuff goes to `handle_error`
             handle_error(e)
