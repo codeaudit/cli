@@ -55,15 +55,15 @@ def get_project_name():
 def init_project(config_file_path, project_name):
     cwd = os.getcwd()
     if os.path.exists(os.path.join(cwd, config_file_path)):
-        print('%s is already exists' % config_file_path)
-        sys.exit(0)
+        handle_error('%s is already exists' % config_file_path)
+        return
 
     if not project_name:
         project_name = os.path.basename(cwd)
         if not project_name:
             project_name = input('Please type project name: ')
             if not project_name:
-                sys.exit(1)
+                handle_error('Invalid project name passed')
 
     contents = project_template.format(project_name)
 
