@@ -7,3 +7,4 @@ from .kill import add_kill_parser
 from .register import add_register_parser
 from .status import add_status_parser
 from .whoami import add_whoami_parser
+from .init import add_init_parser

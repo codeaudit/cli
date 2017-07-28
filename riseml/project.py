@@ -2,12 +2,15 @@ import os
 import sys
 import subprocess
 import requests
+from builtins import input
+
 
 from riseml.util import resolve_path
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
 from riseml.consts import API_URL, GIT_URL, SYNC_URL
 from riseml.config_parser import parse_file
+from riseml.project_template import project_template
 
 
 try:
@@ -47,6 +50,27 @@ def get_project_name():
 
     config = parse_file(os.path.join(project_root, 'riseml.yml'))
     return config.project
+
+
+def init_project(config_file_path, project_name):
+    cwd = os.getcwd()
+    if os.path.exists(os.path.join(cwd, config_file_path)):
+        handle_error('%s already exists' % config_file_path)
+        return
+
+    if not project_name:
+        project_name = os.path.basename(cwd)
+        if not project_name:
+            project_name = input('Please type project name: ')
+            if not project_name:
+                handle_error('Invalid project name')
+
+    contents = project_template.format(project_name)
+
+    with open(config_file_path, 'a') as f:
+        f.write(contents)
+
+    print('%s successfully created' % config_file_path)
 
 
 def create_project():

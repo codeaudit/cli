@@ -40,7 +40,7 @@ mkdir test-deploy && cd test-deploy
 Add `riseml.yml` to test-deploy dir:
 
 ```yml
-repository: test-deploy
+project: test-deploy
 train:
   kind: train
   image:
