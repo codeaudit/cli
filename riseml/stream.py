@@ -31,6 +31,8 @@ class LogPrinter(object):
         return util.color_string(color, prefix)
 
     def print_log_message(self, msg):
+        if msg['job_id'] not in self.ids_to_name:
+            return
         for line in msg['log_lines']:
             last_color = self.job_ids_last_color_used.get(msg['job_id'], '')
 
@@ -45,6 +47,8 @@ class LogPrinter(object):
             print(output)
 
     def print_state_message(self, msg):
+        if msg['job_id'] not in self.ids_to_name:
+            return
         state = "[%s] --> %s" % (util.str_timestamp(msg['time']), msg['new_state'])
         output = "%s%s" % (self._message_prefix(msg),
                            util.color_string("bold_white", state))
