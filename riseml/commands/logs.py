@@ -24,5 +24,6 @@ def run(args):
         if not trainings:
             return
         training = trainings[0]
+        experiment_id = None
 
     stream_training_log(training, experiment_id)
