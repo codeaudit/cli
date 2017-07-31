@@ -33,4 +33,4 @@ def run_train(args):
         body = json.loads(e.body)
         handle_error(body['message'], e.status)
 
-    stream_training_log(training)
+    stream_training_log(training, None)

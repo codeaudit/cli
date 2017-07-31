@@ -101,21 +101,34 @@ def stream_job_log(job):
     stream_log(url, ids_to_name)
 
 
-def stream_training_log(training):
+def stream_training_log(training, experiment_id):
+    def add_experiment_to_log(experiment, include_experiment_level=True):
+        if include_experiment_level:
+            ids_to_name[experiment.id] = '{}.{}'.format(training.short_id, experiment.number)
+        for job in experiment.jobs:
+            if include_experiment_level:
+                ids_to_name[job.id] = '{}.{}: {}'.format(training.short_id, experiment.number, job.name)
+            else:
+                ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
+
     url = '%s/ws/trainings/%s/stream' % (STREAM_URL, training.id)
     ids_to_name = {}
-    ids_to_name[training.id] = '{}'.format(training.short_id)
-    if len(training.experiments) == 1:
-        for job in training.experiments[0].jobs:
-            ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
+    if experiment_id:
+        experiment = next((exp for exp in training.experiments if exp.number == int(experiment_id)), None)
+        if not experiment:
+            handle_error("Could not find experiment")
+        add_experiment_to_log(experiment)
     else:
-        for experiment in training.experiments:
-            ids_to_name[experiment.id] = '{}.{}'.format(training.short_id, experiment.number)
-            for job in experiment.jobs:
-                ids_to_name[job.id] = '{}.{}: {}'.format(training.short_id, experiment.number, job.name)
+        if len(training.experiments) == 1:
+            ids_to_name[training.id] = '{}'.format(training.short_id)
+            add_experiment_to_log(training.experiments[0], include_experiment_level=False)
+        else:
+            ids_to_name[training.id] = '{}'.format(training.short_id)
+            for experiment in training.experiments:
+                add_experiment_to_log(experiment)
 
-    for job in training.jobs:
-        if job.id not in ids_to_name:
-            ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
+        for job in training.jobs:
+            if job.id not in ids_to_name:
+                ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
 
     stream_log(url, ids_to_name)

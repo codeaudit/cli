@@ -7,7 +7,7 @@ from riseml.stream import stream_training_log
 
 def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs', help="show logs")
-    parser.add_argument('training', help="job identifier (optional)", nargs='?')
+    parser.add_argument('experiment', help="experiment identifier (optional)", nargs='?')
     parser.set_defaults(run=run)
 
 
@@ -15,8 +15,9 @@ def run(args):
     api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
 
-    if args.training:
-        training = client.get_training(args.training)
+    if args.experiment:
+        training_id, _, experiment_id = args.experiment.partition('.')
+        training = client.get_training(training_id)
     else:
         project = get_project(get_project_name())
         trainings = client.get_repository_trainings(project.id)
@@ -24,4 +25,4 @@ def run(args):
             return
         training = trainings[0]
 
-    stream_training_log(training)
+    stream_training_log(training, experiment_id)
