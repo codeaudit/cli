@@ -4,12 +4,12 @@ import subprocess
 import requests
 from builtins import input
 
+from config_parser import RepositoryConfig
 
 from riseml.util import resolve_path
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
 from riseml.consts import API_URL, GIT_URL, SYNC_URL
-from riseml.config_parser import parse_file
 from riseml.project_template import project_template
 
 
@@ -48,7 +48,8 @@ def get_project_name():
     if not project_root:
         handle_error("no riseml project found")
 
-    config = parse_file(os.path.join(project_root, 'riseml.yml'))
+    config_path = os.path.join(project_root, 'riseml.yml')
+    config = RepositoryConfig.from_yml_file(config_path)
     return config.project
 
 
