@@ -24,7 +24,7 @@ setup(
         ]
     },
     install_requires=REQUIRES,
-    dependency_links=('git+https://github.com/riseml/config-parser.git@master#egg=config_parser-0.1.0', ),
+    dependency_links=('git+ssh://git@github.com/riseml/config-parser.git@master#egg=config_parser-0.1.0', ),
 
     packages=find_packages(),
     include_package_data=True,
