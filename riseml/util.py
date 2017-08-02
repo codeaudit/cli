@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import platform
 
@@ -25,6 +26,7 @@ COLOR_CODES = {
 
 colors = {}
 
+COLORS_DISABLED = not sys.stdout.isatty()
 
 def get_job_name(job):
     if job.root is None:
@@ -56,14 +58,23 @@ def ansi_sequence(code):
     return "\033[%sm" % code
 
 
-def color_string(color, s):
-    ansi_code = colors[color]
-    return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
+def color_string(s, color=None, ansi_code=None):
+    assert color or ansi_code, "You need to supply `color` or `ansi_code` param."
+    assert not (color and ansi_code), "You need to supply either `color` or `ansi_code`"
+
+    if COLORS_DISABLED:
+        # return non-colored string if non-terminal output
+        return s
+    else:
+        if color:
+            ansi_code = colors[color]
+        return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
 
 
 def format_header(columns, widths=(4, 10, 9, 8)):
     def bold(s):
-        return '\033[1m{}\033[0m'.format(s)
+        return color_string(s, ansi_code=1)
+
     header = ''
     for i, w in enumerate(widths):
         header += '{:%s{widths[%s]}} ' % ('<', i)
