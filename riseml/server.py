@@ -7,7 +7,7 @@ from flask_cors import CORS
 import yaml
 from jsonschema import validate, ValidationError
 
-from riseml.config_parser import parse_file
+from config_parser import RepositoryConfig
 
 
 template = '''<!DOCTYPE html>
@@ -46,7 +46,7 @@ def serve(func,
 
     app = Flask(__name__)
     CORS(app, max_age=3600)
-    config = parse_file('riseml.yml')
+    config = RepositoryConfig.from_yml_file('riseml.yml')
 
     schemas = {}
     if config and config.deploy and config.deploy.output and config.deploy.output:

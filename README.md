@@ -4,9 +4,7 @@
 
 ```
 git clone https://github.com/riseml/client
-# optionally
-cd client && git checkout demo && cd ..
-pip install -e client
+pip install -e client --process-dependency-links
 ```
 
 ## Create config environment file
