@@ -55,7 +55,7 @@ class LogPrinter(object):
         print(output)
 
 
-def stream_log(url, ids_to_name):
+def stream_log(url, ids_to_name, stream_meta={}):
     log_printer = LogPrinter(ids_to_name)
 
     def on_message(ws, message):
@@ -69,7 +69,12 @@ def stream_log(url, ids_to_name):
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            print('Exiting...')
+            if stream_meta.get('type') == 'training':
+                print('Experiment will continue in background')
+                print('Type `riseml logs %s` to connect to log stream again' % stream_meta['training_id'])
+            else:
+                print('Job will continue in background')
+
         else:
             # all other Exception based stuff goes to `handle_error`
             handle_error(e)
@@ -131,4 +136,4 @@ def stream_training_log(training, experiment_id):
             if job.id not in ids_to_name:
                 ids_to_name[job.id] = '{}: {}'.format(training.short_id, job.name)
 
-    stream_log(url, ids_to_name)
+    stream_log(url, ids_to_name, stream_meta={"training_id": training.id})
