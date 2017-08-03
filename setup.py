@@ -9,7 +9,7 @@ VERSION = "0.3.10"
 
 REQUIRES = ["urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil"]
 
-REQUIRES += ['future', 'pyyaml', 'requests', 'flask', 'flask-cors', 'jsonschema', 'websocket-client']
+REQUIRES += ['future', 'pyyaml', 'requests', 'flask', 'flask-cors', 'config_parser==0.1.0', 'jsonschema', 'websocket-client']
 
 setup(
     name=NAME,
@@ -24,6 +24,8 @@ setup(
         ]
     },
     install_requires=REQUIRES,
+    dependency_links=('git+https://github.com/riseml/config-parser.git@master#egg=config_parser-0.1.0', ),
+
     packages=find_packages(),
     include_package_data=True,
     long_description="""\
