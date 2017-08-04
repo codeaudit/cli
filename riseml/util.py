@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 import time
@@ -71,22 +73,43 @@ def color_string(s, color=None, ansi_code=None):
         return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
 
 
-def format_header(columns, widths=(4, 10, 9, 8)):
-    def bold(s):
-        return color_string(s, ansi_code=1)
+def print_table(header, rows, min_widths=None):
+    n_columns = len(header)
 
-    header = ''
-    for i, w in enumerate(widths):
-        header += '{:%s{widths[%s]}} ' % ('<', i)
-    return bold(header.format(*columns, widths=widths))
+    if not min_widths:
+        widths = [5] * n_columns  # 5 is default width
+    else:
+        widths = list(min_widths)
+
+    for row in rows:
+        row_len = len(row)
+        assert row_len == n_columns, \
+            "Column %s (columns: %d) must match" \
+            " header's colums count: %d" % (str(row), row_len, n_columns)
+
+        for i, cell in enumerate(row):
+            item_len = len(cell) if not isinstance(cell, int) else len(str(cell))
+
+            if item_len > widths[i]:
+                widths[i] = item_len
+
+    # see https://pyformat.info/
+    # `Padding and aligning strings` block
+    line_pattern = ''.join([
+        '{:%s{widths[%s]}} ' % ('<', i)
+        for i in range(n_columns)
+    ])
 
 
-def format_line(columns, widths=(4, 10, 9, 8)):
-    line = '{:>{widths[0]}} {:<{widths[1]}} {:>{widths[2]}} {:<{widths[3]}}'
-    line = ''
-    for i, w in enumerate(widths):
-        line += u'{:%s{widths[%s]}} ' % ('<', i)
-    return line.format(*columns, widths=widths)
+    def bold(s): return color_string(s, ansi_code=1)
+    def render_line(columns): return line_pattern.decode('utf8').format(*columns, widths=widths)
+
+    # print header
+    print(bold(render_line(header)))
+
+    # print rows
+    for row in rows:
+        print(render_line(row))
 
 
 def get_since_str(timestamp):

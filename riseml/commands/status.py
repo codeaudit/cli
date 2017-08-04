@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 import json
 
 from riseml.client import DefaultApi, ApiClient
@@ -50,79 +52,113 @@ def params(experiment):
 
 
 def show_experiment(training, experiment):
-    print("ID: {}".format(full_id(training, experiment)))
+    print("ID: %s" % full_id(training, experiment))
     print("Type: Experiment")
-    print("State: {}".format(experiment.state))
-    print("Image: {}".format(training.image))
-    print("Framework: {}".format(training.framework))
+    print("State: %s" % experiment.state)
+    print("Image: %s" % training.image)
+    print("Framework: %s" % training.framework)
     print("Framework Config:")
+
     for attribute, value in training.framework_details.to_dict().iteritems():
         if value is not None:
             print("   {}: {}".format(attribute, value))
+
     if training.framework == 'tensorflow' and training.framework_details.tensorboard:
         tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')
         print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
+
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in training.run_commands]))
     print("Max Parallel Experiments: {}".format(training.max_parallel_experiments))
     print("Params: {}\n".format(params(experiment)))
 
-    header = ['JOB', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM']
-    widths = [9, 13, 13, 13, 6, 6, 6]
-    print(util.format_header(header, widths=widths))
-    for job in experiment.jobs:
-        values = [job.name, job.state, util.get_since_str(job.started_at),
-                  util.get_since_str(job.finished_at)] + ['N/A'] * 3
-        print(util.format_line(values, widths=widths))
+    rows = [
+        ([job.name,
+         job.state,
+         util.get_since_str(job.started_at),
+         util.get_since_str(job.finished_at),
+         'N/A', 'N/A', 'N/A']) for job in experiment.jobs
+    ]
+
+    util.print_table(
+        header=['JOB', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM'],
+        min_widths=[9, 13, 13, 13, 6, 6, 6],
+        rows=rows
+    )
 
 
-def print_experiments(training, with_project=True, with_type=True, with_params=True, indent=True, widths=None):
-    for i, experiment in enumerate(training.experiments):
-        indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
-        values = [indent_str + full_id(training, experiment)]
-        if with_project:
-            values += [training.changeset.repository.name]
-        values += [experiment.state, util.get_since_str(experiment.created_at)]
-        if with_type:
-            values += [indent_str + 'Experiment']
-        if with_params:
-            values += [params(experiment)]
-        print(util.format_line(values, widths=widths))
+def get_experiments_rows(training, with_project=True, with_type=True, with_params=True, indent=True):
+    def gen():
+        for i, experiment in enumerate(training.experiments):
+            indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
+            values = [indent_str + full_id(training, experiment)]
+
+            if with_project:
+                values += [training.changeset.repository.name]
+
+            values += [experiment.state, util.get_since_str(experiment.created_at)]
+
+            if with_type:
+                values += [indent_str + 'Experiment']
+            if with_params:
+                values += [params(experiment)]
+
+            yield values
+
+    return list(gen())
 
 
 def show_experiment_group(training):
-    print("ID: {}".format(full_id(training)))
+    print("ID: %s" % full_id(training))
     print("Type: Series")
-    print("State: {}".format(training.state))
-    print("Project: {}".format(training.changeset.repository.name))
+    print("State: %s" % training.state)
+    print("Project: %s" % training.changeset.repository.name)
+
     if training.framework == 'tensorflow' and training.framework_details.tensorboard:
         tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')
         print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
-    print("")
 
-    header = ['ID', 'STATE', 'AGE', 'PARAMS']
-    widths = (6, 9, 13, 14)
-    print(util.format_header(header, widths=widths))
-    print_experiments(training, with_project=False, with_type=False, indent=False, widths=widths)
+    print()
+
+    util.print_table(
+        header=['ID', 'STATE', 'AGE', 'PARAMS'],
+        min_widths=(6, 9, 13, 14),
+        rows=get_experiments_rows(training, with_project=False, with_type=False, indent=False)
+    )
 
 
 def show_trainings(trainings, all=False, collapsed=True):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
-    if collapsed:
-        widths = (6, 14, 9, 13, 15)
-    else:
+    widths = (6, 14, 9, 13, 15)
+
+    if not collapsed:
         header += ['PARAMS']
-        widths = (8, 14, 9, 13, 15, 14)
-    print(util.format_header(header, widths=widths))
+        widths += (14, )
+
+    rows = []
 
     for training in trainings:
         if not all and training.state in ['FINISHED', 'KILLED', 'FAILED']:
             continue
-        values = [training.short_id, training.changeset.repository.name,
-                  training.state, util.get_since_str(training.created_at),
-                  'Experiment' if len(training.experiments) == 1 else 'Series']
+
+        values = [
+            training.short_id,
+            training.changeset.repository.name,
+            training.state,
+            util.get_since_str(training.created_at),
+            'Experiment' if len(training.experiments) == 1 else 'Series'
+        ]
+
         if not collapsed:
             values += ['']
-        print(util.format_line(values, widths=widths))
+
+        rows.append(values)
+
         if not collapsed and len(training.experiments) > 1:
-            print_experiments(training, widths=widths)
+            rows += get_experiments_rows(training)
+
+    util.print_table(
+        header=header,
+        min_widths=widths,
+        rows=rows
+    )
