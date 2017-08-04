@@ -28,17 +28,17 @@ class LogPrinter(object):
         color = self.job_ids_color[msg['job_id']]
         prefix = "{}| ".format(job_name.ljust(self.indentation))
 
-        return util.color_string(color, prefix)
+        return util.color_string(prefix, color=color)
 
     def print_log_message(self, msg):
         if msg['job_id'] not in self.ids_to_name:
             return
         for line in msg['log_lines']:
-            last_color = self.job_ids_last_color_used.get(msg['job_id'], '')
+            last_color = self.job_ids_last_color_used.get(msg['job_id'], 0)
 
             line_text = "[%s] %s" % (util.str_timestamp(line['time']), line['log'])
 
-            output = "%s%s%s%s" % (self._message_prefix(msg), last_color, line_text, util.ansi_sequence(0))
+            output = "%s%s" % (self._message_prefix(msg), util.color_string(line_text, ansi_code=last_color))
             used_colors = ANSI_ESCAPE_REGEX.findall(line_text)
 
             if used_colors:
@@ -51,7 +51,7 @@ class LogPrinter(object):
             return
         state = "[%s] --> %s" % (util.str_timestamp(msg['time']), msg['new_state'])
         output = "%s%s" % (self._message_prefix(msg),
-                           util.color_string("bold_white", state))
+                           util.color_string(state, color="bold_white"))
         print(output)
 
 
