@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import re
 import json
 import sys
@@ -69,10 +71,12 @@ def stream_log(url, ids_to_name, stream_meta={}):
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            if stream_meta.get('type') == 'training':
+            if stream_meta.get('training_id'):
+                print()
                 print('Experiment will continue in background')
                 print('Type `riseml logs %s` to connect to log stream again' % stream_meta['training_id'])
             else:
+                print()  # newline after ^C
                 print('Job will continue in background')
 
         else:
