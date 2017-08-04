@@ -34,7 +34,7 @@ class LogPrinter(object):
         if msg['job_id'] not in self.ids_to_name:
             return
         for line in msg['log_lines']:
-            last_color = self.job_ids_last_color_used.get(msg['job_id'], '')
+            last_color = self.job_ids_last_color_used.get(msg['job_id'], 0)
 
             line_text = "[%s] %s" % (util.str_timestamp(line['time']), line['log'])
 

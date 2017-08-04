@@ -59,8 +59,8 @@ def ansi_sequence(code):
 
 
 def color_string(s, color=None, ansi_code=None):
-    assert color or ansi_code, "You need to supply `color` or `ansi_code` param."
-    assert not (color and ansi_code), "You need to supply either `color` or `ansi_code`"
+    assert color is not None or ansi_code is not None, "You need to supply `color` or `ansi_code` param."
+    assert not (color is not None and ansi_code is not None), "You need to supply either `color` or `ansi_code`"
 
     if COLORS_DISABLED:
         # return non-colored string if non-terminal output
