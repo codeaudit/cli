@@ -10,4 +10,9 @@ def handle_error(message, status_code=None):
 
 
 def handle_http_error(res):
-    handle_error(res.json()['message'], res.status_code)
+    try:
+        msg = res.json()['message']
+    except (ValueError, KeyError):
+        msg = res
+
+    handle_error(msg, res.status_code)
