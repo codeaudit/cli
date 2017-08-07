@@ -1,7 +1,7 @@
 import os
+from builtins import input
 
 from config_parser import RepositoryConfig, ConfigError
-
 from riseml.errors import handle_error
 
 

@@ -2,9 +2,6 @@ import os
 import sys
 import subprocess
 import requests
-from builtins import input
-
-from config_parser import RepositoryConfig
 
 from riseml.util import resolve_path
 from riseml.configs import create_config, get_project_name
