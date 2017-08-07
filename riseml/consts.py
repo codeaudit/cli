@@ -5,6 +5,7 @@ try:
 except ImportError:
     from urlparse import urlparse
 
+DEFAULT_CONFIG_NAME = 'riseml.yml'
 
 ENDPOINT_URL = os.environ.get('RISEML_ENDPOINT', 'http://127.0.0.1:8080')
 SYNC_URL = os.environ.get('RISEML_SYNC_ENDPOINT', 'rsync://192.168.99.100:31876/sync')

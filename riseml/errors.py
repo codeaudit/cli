@@ -1,5 +1,5 @@
 import sys
-
+import json
 
 def handle_error(message, status_code=None):
     if status_code:
@@ -9,10 +9,10 @@ def handle_error(message, status_code=None):
     sys.exit(1)
 
 
-def handle_http_error(res):
+def handle_http_error(text, status_code):
     try:
-        msg = res.json()['message']
+        msg = json.loads(text)['message']
     except (ValueError, KeyError):
-        msg = res
+        msg = text
 
-    handle_error(msg, res.status_code)
+    handle_error(msg, status_code)

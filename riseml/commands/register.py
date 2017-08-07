@@ -1,9 +1,7 @@
-import json
-
 from riseml.client import AdminApi, ApiClient
 from riseml.client.rest import ApiException
 
-from riseml.errors import handle_error
+from riseml.errors import handle_http_error
 from riseml.consts import API_URL
 
 
@@ -21,7 +19,6 @@ def run(args):
     try:
         user = client.update_or_create_user(username=args.username, email=args.email)[0]
     except ApiException as e:
-        body = json.loads(e.body)
-        handle_error(body['message'], e.status)
+        handle_http_error(e.body, e.status)
 
     print(user)

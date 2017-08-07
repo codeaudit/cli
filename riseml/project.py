@@ -7,6 +7,7 @@ from builtins import input
 from config_parser import RepositoryConfig
 
 from riseml.util import resolve_path
+from riseml.configs import create_config, get_project_name
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
 from riseml.consts import API_URL, GIT_URL, SYNC_URL
@@ -24,90 +25,38 @@ except AttributeError:
     stdout = sys.stdout
 
 
-def get_project_root(cwd=None):
-    if cwd is None:
-        cwd = os.getcwd()
-    if os.path.exists(os.path.join(cwd, 'riseml.yml')):
-        return cwd
-    elif cwd != '/':
-        return get_project_root(os.path.dirname(cwd))
+def create_project(config_file):
+    # create, if not exists
+    create_config(config_file, project_template)
 
-
-def get_project(name):
-    api_client = ApiClient(host=API_URL)
-    client = DefaultApi(api_client)
-    for project in client.get_repositories():
-        if project.name == name:
-            return project
-
-    handle_error("project not found: %s" % name)
-
-
-def get_project_name():
-    project_root = get_project_root()
-    if not project_root:
-        handle_error("no riseml project found")
-
-    config_path = os.path.join(project_root, 'riseml.yml')
-    config = RepositoryConfig.from_yml_file(config_path)
-    return config.project
-
-
-def init_project(config_file_path, project_name):
-    cwd = os.getcwd()
-    if os.path.exists(os.path.join(cwd, config_file_path)):
-        handle_error('%s already exists' % config_file_path)
-        return
-
-    if not project_name:
-        project_name = os.path.basename(cwd)
-        if not project_name:
-            project_name = input('Please type project name: ')
-            if not project_name:
-                handle_error('Invalid project name')
-
-    contents = project_template.format(project_name)
-
-    with open(config_file_path, 'a') as f:
-        f.write(contents)
-
-    print('%s successfully created' % config_file_path)
-
-
-def create_project():
-    cwd = os.getcwd()
-    if not os.path.exists(os.path.join(cwd, 'riseml.yml')):
-        project_name = os.path.basename(cwd)
-        with open('riseml.yml', 'a') as f:
-            f.write("project: %s\n" % project_name)
-
-    name = get_project_name()
+    name = get_project_name(config_file)
     api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
     project = client.create_repository(name)[0]
     print("project created: %s (%s)" % (project.name, project.id))
 
 
-def push_project(user, project_name):
+def push_project(user, project_name, config_file):
     o = urlparse(GIT_URL)
     prepare_url = '%s://%s/%s/users/%s/repositories/%s/sync/prepare' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
     done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
+
     res = requests.post(prepare_url)
     if res.status_code == 412 and 'Repository does not exist' in res.json()['message']:
-        create_project()
+        create_project(config_file)
         res = requests.post(prepare_url)
 
     if res.status_code != 200:
-        handle_http_error(res)
+        handle_http_error(res.text, res.status_code)
 
     sync_path = res.json()['path']
     o = urlparse(SYNC_URL)
     rsync_url = '%s://%s%s/%s' % (
         o.scheme, o.netloc, o.path, sync_path)
 
-    project_root = os.path.join(get_project_root(), '')
+    project_root = os.path.join(os.getcwd(), '')
     exclude_file = os.path.join(project_root, '.risemlignore')
     sys.stderr.write("Pushing code...")
     sync_cmd = [resolve_path('rsync'),
@@ -133,8 +82,18 @@ def push_project(user, project_name):
     res = requests.post(done_url, params={'path': sync_path})
 
     if res.status_code != 200:
-        handle_http_error(res)
+        handle_http_error(res.text, res.status_code)
 
     revision = res.json()['sha']
     print("done")
     return revision
+
+
+def get_project(name):
+    api_client = ApiClient(host=API_URL)
+    client = DefaultApi(api_client)
+    for project in client.get_repositories():
+        if project.name == name:
+            return project
+
+    handle_error("project not found: %s" % name)

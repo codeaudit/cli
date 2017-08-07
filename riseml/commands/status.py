@@ -88,24 +88,25 @@ def show_experiment(training, experiment):
 
 
 def get_experiments_rows(training, with_project=True, with_type=True, with_params=True, indent=True):
-    def gen():
-        for i, experiment in enumerate(training.experiments):
-            indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
-            values = [indent_str + full_id(training, experiment)]
+    rows = []
 
-            if with_project:
-                values += [training.changeset.repository.name]
+    for i, experiment in enumerate(training.experiments):
+        indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
+        values = [indent_str + full_id(training, experiment)]
 
-            values += [experiment.state, util.get_since_str(experiment.created_at)]
+        if with_project:
+            values += [training.changeset.repository.name]
 
-            if with_type:
-                values += [indent_str + 'Experiment']
-            if with_params:
-                values += [params(experiment)]
+        values += [experiment.state, util.get_since_str(experiment.created_at)]
 
-            yield values
+        if with_type:
+            values += [indent_str + 'Experiment']
+        if with_params:
+            values += [params(experiment)]
 
-    return list(gen())
+        rows.append(values)
+
+    return rows
 
 
 def show_experiment_group(training):
