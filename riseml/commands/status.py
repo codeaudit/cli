@@ -52,11 +52,11 @@ def params(experiment):
 
 
 def show_experiment(training, experiment):
-    print("ID: %s" % full_id(training, experiment))
+    print("ID: {}".format(full_id(training, experiment)))
     print("Type: Experiment")
-    print("State: %s" % experiment.state)
-    print("Image: %s" % training.image)
-    print("Framework: %s" % training.framework)
+    print("State: {}".format(experiment.state))
+    print("Image: {}".format(training.image))
+    print("Framework: {}".format(training.framework))
     print("Framework Config:")
 
     for attribute, value in training.framework_details.to_dict().iteritems():
