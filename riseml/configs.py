@@ -21,7 +21,12 @@ def load_config(config_file, config_section):
         handle_error("config doesn't contain section for %s" % config_section)
 
 
-def generate_project_name():
+def get_project_name(config_file):
+    config = RepositoryConfig.from_yml_file(config_file)
+    return config.project
+
+
+def _generate_project_name():
     cwd = os.getcwd()
     project_name = os.path.basename(cwd)
     if not project_name:
@@ -32,16 +37,11 @@ def generate_project_name():
     return project_name
 
 
-def get_project_name(config_file):
-    config = RepositoryConfig.from_yml_file(config_file)
-    return config.project
-
-
 def create_config(config_file, template, project_name=None):
     if os.path.exists(config_file):
         return False
     if project_name is None:
-        project_name = generate_project_name()
+        project_name = _generate_project_name()
 
     contents = template.format(project_name=project_name)
     with open(config_file, 'a') as f:
