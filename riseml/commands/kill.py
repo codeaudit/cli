@@ -1,7 +1,8 @@
 from riseml.client import DefaultApi, ApiClient
 from riseml.client.rest import ApiException
 
-from riseml.project import get_project, get_project_name
+from riseml.project import get_project
+from riseml.configs import get_project_name
 from riseml.consts import API_URL, DEFAULT_CONFIG_NAME
 from riseml.errors import handle_http_error
 
@@ -19,7 +20,7 @@ def run(args):
     trainings = args.experiments
 
     if not trainings:
-        project = get_project(get_project_name())
+        project = get_project(get_project_name(args.config_file))
         trainings = client.get_repository_trainings(project.id)
         if not trainings:
             return

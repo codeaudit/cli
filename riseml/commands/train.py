@@ -6,7 +6,7 @@ from riseml.client.rest import ApiException
 from riseml.configs import load_config
 from riseml.user import get_user
 from riseml.errors import handle_http_error
-from riseml.project import push_project, get_project_name
+from riseml.project import push_project
 from riseml.consts import API_URL, DEFAULT_CONFIG_NAME
 from riseml.stream import stream_training_log
 
@@ -18,9 +18,9 @@ def add_train_parser(subparsers):
 
 
 def run_train(args):
-    project_name = get_project_name()
+    config = load_config(args.config_file)
+    project_name = config.project
 
-    config_section = load_config(args.config_file, 'train')
     user = get_user()
     revision = push_project(user, project_name, args.config_file)
     api_client = ApiClient(host=API_URL)
@@ -29,10 +29,9 @@ def run_train(args):
     try:
         training = client.create_training(
             project_name, revision,
-            kind='train', config=json.dumps(config_section)
+            kind='train', config=json.dumps(config.train)
         )
     except ApiException as e:
         handle_http_error(e.body, e.status)
-        return
 
     stream_training_log(training, None)

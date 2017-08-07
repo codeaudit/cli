@@ -3,7 +3,8 @@ import json
 from config_parser import TrainSection
 
 from riseml.user import get_user
-from riseml.project import push_project, get_project_name
+from riseml.project import push_project
+from riseml.configs import get_project_name
 from riseml.jobs import run_job
 from riseml.consts import DEFAULT_CONFIG_NAME
 

@@ -1,7 +1,8 @@
 from riseml.client import DefaultApi, ApiClient
 
 from riseml.consts import API_URL, DEFAULT_CONFIG_NAME
-from riseml.project import get_project, get_project_name
+from riseml.project import get_project
+from riseml.configs import get_project_name
 from riseml.stream import stream_training_log
 
 

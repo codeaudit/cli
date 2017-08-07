@@ -5,7 +5,7 @@ from config_parser import RepositoryConfig, ConfigError
 from riseml.errors import handle_error
 
 
-def load_config(config_file, config_section):
+def load_config(config_file, config_section=None):
     if not os.path.exists(config_file):
         handle_error("%s does not exist" % config_file)
 
@@ -15,16 +15,18 @@ def load_config(config_file, config_section):
         handle_error("invalid config {}\n{}".format(config_file, e.message))
         return
 
-    try:
-        return getattr(config, config_section)
-    except AttributeError:
-        handle_error("config doesn't contain section for %s" % config_section)
+    if config_section is None:
+        return config
+    else:
+        try:
+            return getattr(config, config_section)
+        except AttributeError:
+            handle_error("config doesn't contain section for %s" % config_section)
 
 
 def get_project_name(config_file):
-    config = RepositoryConfig.from_yml_file(config_file)
-    return config.project
-
+    # shortcut to .project attribute
+    return load_config(config_file, 'project')
 
 def _generate_project_name():
     cwd = os.getcwd()
