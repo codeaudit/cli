@@ -1,10 +1,6 @@
-import json
-
 from riseml.client import AdminApi, ApiClient
-from riseml.client.rest import ApiException
-
-from riseml.errors import handle_error
 from riseml.consts import API_URL
+from riseml.util import call_api
 
 
 def add_register_parser(subparsers):
@@ -17,11 +13,7 @@ def add_register_parser(subparsers):
 def run(args):
     api_client = ApiClient(host=API_URL)
     client = AdminApi(api_client)
-    user = None
-    try:
-        user = client.update_or_create_user(username=args.username, email=args.email)[0]
-    except ApiException as e:
-        body = json.loads(e.body)
-        handle_error(body['message'], e.status)
+
+    user = call_api(lambda: client.update_or_create_user(username=args.username, email=args.email))[0]
 
     print(user)

@@ -75,6 +75,16 @@ def color_string(s, color=None, ansi_code=None):
         return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
 
 
+class TableElement():
+    pass
+
+class TableRowDelimiter(TableElement):
+    def __init__(self, symbol):
+        self.symbol = symbol
+    def __str__(self):
+        return 'TableRowDelimiter ({})'.format(self.symbol)
+
+
 def print_table(header, rows, min_widths=None):
     n_columns = len(header)
 
@@ -84,10 +94,14 @@ def print_table(header, rows, min_widths=None):
         widths = list(min_widths)
 
     for row in rows:
-        row_len = len(row)
-        assert row_len == n_columns, \
+        # skip table elements as non-data rows
+        if isinstance(row, TableElement):
+           continue
+
+        row_items_count = len(row)
+        assert row_items_count == n_columns, \
             "Column %s (columns: %d) must match" \
-            " header's colums count: %d" % (str(row), row_len, n_columns)
+            " header's colums count: %d" % (str(row), row_items_count, n_columns)
 
         for i, cell in enumerate(row):
             item_len = len(cell) if not isinstance(cell, int) else len(str(cell))
@@ -95,13 +109,14 @@ def print_table(header, rows, min_widths=None):
             if item_len > widths[i]:
                 widths[i] = item_len
 
+    table_width = sum(widths) + n_columns - 1
+
     # see https://pyformat.info/
     # `Padding and aligning strings` block
     line_pattern = ''.join([
         '{:%s{widths[%s]}} ' % ('<', i)
         for i in range(n_columns)
     ])
-
 
     def bold(s): return color_string(s, ansi_code=1)
     def render_line(columns): return line_pattern.format(*columns, widths=widths)
@@ -111,7 +126,10 @@ def print_table(header, rows, min_widths=None):
 
     # print rows
     for row in rows:
-        print(render_line(row))
+        if isinstance(row, TableRowDelimiter):
+            print(row.symbol * table_width)
+        else:
+            print(render_line(row))
 
 
 def get_since_str(timestamp):
@@ -163,3 +181,14 @@ def resolve_path(binary):
             loc = os.path.join(path, binary + ext)
             if os.path.isfile(loc):
                 return loc
+
+
+from riseml.client.rest import ApiException
+from riseml.errors import handle_http_error
+
+
+def call_api(api_fn):
+    try:
+        return api_fn()
+    except ApiException as e:
+        handle_http_error(e.body, e.status)

@@ -2,8 +2,11 @@
 import sys
 import argparse
 
+from urllib3.exceptions import HTTPError
+
 from riseml.commands import *
 from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL
+from riseml.errors import handle_error
 
 
 def main():
@@ -39,7 +42,11 @@ def main():
         print('user_url: %s' % USER_URL)
 
     if hasattr(args, 'run'):
-        args.run(args)
+        try:
+            args.run(args)
+        except HTTPError as e:
+            # all uncaught http errors goes here
+            handle_error(e.message)
     else:
         parser.print_usage()
 

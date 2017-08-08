@@ -1,4 +1,7 @@
-project_template = """repository: {0}
+project_template = """repository: {project_name}
+"""
+
+project_init_template = """repository: {project_name}
 train:
   framework: tensorflow
   image:
@@ -29,4 +32,5 @@ train:
 #     range:
 #       min: 0
 #       max: 1
-#       step: 0.5"""
+#       step: 0.5
+"""
