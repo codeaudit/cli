@@ -1,7 +1,9 @@
 from riseml.client import DefaultApi, ApiClient
+from riseml.client.rest import ApiException
 
+from riseml.util import call_api
 from riseml.consts import API_URL
-from riseml.project import get_project, get_project_name
+from riseml.errors import handle_error, handle_http_error
 from riseml.stream import stream_training_log
 
 
@@ -17,12 +19,13 @@ def run(args):
 
     if args.experiment:
         training_id, _, experiment_id = args.experiment.partition('.')
-        training = client.get_training(training_id)
+        training = call_api(lambda: client.get_training(training_id))
     else:
-        project = get_project(get_project_name())
-        trainings = client.get_repository_trainings(project.id)
+        trainings = call_api(lambda: client.get_trainings())
+
         if not trainings:
-            return
+            handle_error('No training logs to show')
+
         training = trainings[0]
         experiment_id = None
 
