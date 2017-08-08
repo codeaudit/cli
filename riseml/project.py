@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 import subprocess
@@ -109,7 +111,7 @@ def push_project(user, project_name):
 
     project_root = os.path.join(get_project_root(), '')
     exclude_file = os.path.join(project_root, '.risemlignore')
-    sys.stderr.write("Pushing code...")
+    print("Pushing code...", end='')
     sync_cmd = [get_rsync_path(),
                 '-rlpt',
                 '--exclude=.git',
