@@ -25,7 +25,8 @@ def run(args):
 
     if args.id:
         ids = args.id.split('.')
-        training = client.get_training(ids[0])
+        training = util.call_api(lambda: client.get_training(ids[0]))
+
         if len(training.experiments) == 1:
             show_experiment(training, training.experiments[0])
         elif len(ids) > 1:
@@ -110,10 +111,10 @@ def get_experiments_rows(training, with_project=True, with_type=True, with_param
 
 
 def show_experiment_group(training):
-    print("ID: %s" % full_id(training))
+    print("ID: {}".format(full_id(training)))
     print("Type: Series")
-    print("State: %s" % training.state)
-    print("Project: %s" % training.changeset.repository.name)
+    print("State: {}".format(training.state))
+    print("Project: {}".format(training.changeset.repository.name))
 
     if training.framework == 'tensorflow' and training.framework_details.tensorboard:
         tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')

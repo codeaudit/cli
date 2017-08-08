@@ -20,7 +20,7 @@ def run_section(args):
 
     try:
         deploy_config = config.deploy
-    except AttributeError as e:
+    except AttributeError:
         handle_error('no `deploy` section in {}'.format(args.config_file))
 
     user = get_user()

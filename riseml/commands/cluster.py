@@ -1,6 +1,6 @@
 from riseml.client import AdminApi, ApiClient
 from riseml.consts import API_URL
-from riseml.util import mb_to_gib, print_table, TableRowDelimiter
+from riseml.util import mb_to_gib, print_table, TableRowDelimiter, call_api
 
 
 def add_cluster_parser(subparsers):
@@ -11,7 +11,7 @@ def add_cluster_parser(subparsers):
 def run(args):
     api_client = ApiClient(host=API_URL)
     client = AdminApi(api_client)
-    nodes = client.get_nodes()
+    nodes = call_api(lambda: client.get_nodes())
 
     rows = []
     total_cpus = 0

@@ -172,3 +172,14 @@ def resolve_path(binary):
             loc = os.path.join(path, binary + ext)
             if os.path.isfile(loc):
                 return loc
+
+
+from riseml.client.rest import ApiException
+from riseml.errors import handle_http_error
+
+
+def call_api(api_fn):
+    try:
+        return api_fn()
+    except ApiException as e:
+        handle_http_error(e.body, e.status)
