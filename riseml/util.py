@@ -7,6 +7,8 @@ import platform
 
 from datetime import datetime
 
+from riseml.consts import IS_BUNDLE
+
 COLOR_CODES = {
     # 'black': 30,     NOTE: We don't want that color!
     'red': 31,
@@ -139,6 +141,13 @@ def str_timestamp(timestamp):
 
 def mb_to_gib(value):
     return "%.1f" % (float(value) * (10 ** 6) / (1024 ** 3))
+
+
+def get_rsync_path():
+    if IS_BUNDLE:
+        return os.path.join(sys._MEIPASS, 'bin', 'rsync')
+    else:
+        return resolve_path('rsync')
 
 
 def resolve_path(binary):

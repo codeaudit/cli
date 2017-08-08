@@ -6,7 +6,7 @@ from builtins import input
 
 from config_parser import RepositoryConfig
 
-from riseml.util import resolve_path
+from riseml.util import get_rsync_path
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
 from riseml.consts import API_URL, GIT_URL, SYNC_URL
@@ -110,7 +110,7 @@ def push_project(user, project_name):
     project_root = os.path.join(get_project_root(), '')
     exclude_file = os.path.join(project_root, '.risemlignore')
     sys.stderr.write("Pushing code...")
-    sync_cmd = [resolve_path('rsync'),
+    sync_cmd = [get_rsync_path(),
                 '-rlpt',
                 '--exclude=.git',
                 '--delete-during',
