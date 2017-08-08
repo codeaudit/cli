@@ -1,4 +1,5 @@
 import os
+import sys
 
 try:
     from urllib.parse import urlparse
@@ -13,3 +14,5 @@ USER_URL = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 API_URL = ENDPOINT_URL + '/api'
 GIT_URL = ENDPOINT_URL + '/git'
 STREAM_URL = "ws://%s/stream" % urlparse(ENDPOINT_URL).netloc
+
+IS_BUNDLE = getattr(sys, 'frozen', False)
