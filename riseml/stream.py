@@ -18,7 +18,7 @@ class LogPrinter(object):
         self.ids_to_name = ids_to_name
 
         self.job_ids_color = {
-            id: util.COLOR_CODES.keys()[(i + 1) % len(util.COLOR_CODES)]
+            id: list(util.COLOR_CODES.keys())[(i + 1) % len(util.COLOR_CODES)]
             for i, id in enumerate(list(self.ids_to_name.keys()))
         }
 
