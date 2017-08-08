@@ -75,7 +75,8 @@ def push_project(user, project_name, config_file):
     res = proc.wait()
 
     if res != 0:
-        sys.exit(res)
+        handle_error('Push code failed, rsync error', exit_code=res)
+
     res = requests.post(done_url, params={'path': sync_path})
 
     if res.status_code != 200:
