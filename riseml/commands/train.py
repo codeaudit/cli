@@ -29,7 +29,7 @@ def run_train(args):
     try:
         training = client.create_training(
             project_name, revision,
-            kind='train', config=json.dumps(config.train)
+            kind='train', config=json.dumps(dict(config.train))
         )
     except ApiException as e:
         handle_http_error(e.body, e.status)
