@@ -62,11 +62,11 @@ riseml train
 PyInstaller currently not supporting python3.6, so use py3.4 or py3.5 executable.
 
 ```bash
+git clone https://github.com/riseml/client
 virtualenv env -p python3.4 && source env/bin/activate
 pip3 install pyinstaller
-git clone https://github.com/riseml/client
 pip3 install -e client --process-dependency-links
-pyinstaller client/riseml/__main__.py \
+pyinstaller riseml.spec \
             --onefile \
             --name riseml \
             --add-binary /usr/bin/rsync:bin
