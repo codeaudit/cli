@@ -8,7 +8,6 @@ from riseml.stream import stream_training_log
 
 def add_logs_parser(subparsers):
     parser = subparsers.add_parser('logs', help="show logs")
-    parser.add_argument('-f', '--config-file', help="config file to use", type=str, default=DEFAULT_CONFIG_NAME)
     parser.add_argument('experiment', help="experiment identifier (optional)", nargs='?')
     parser.set_defaults(run=run)
 

@@ -6,7 +6,6 @@ from riseml.errors import handle_http_error, handle_error
 
 def add_kill_parser(subparsers):
     parser = subparsers.add_parser('kill', help="kill on-going experiment or experiment series")
-    parser.add_argument('-f', '--config-file', help="config file to use", type=str, default=DEFAULT_CONFIG_NAME)
     parser.add_argument('experiments', help="experiment/series identifier (optional)", nargs='*')
     parser.set_defaults(run=run)
 
