@@ -18,6 +18,7 @@ def add_train_parser(subparsers):
 
 
 def run_train(args):
+    raise Exception("Test Error")
     project_name = get_project_name()
 
     # TODO: validate config here already

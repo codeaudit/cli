@@ -12,3 +12,6 @@ USER_URL = os.environ.get('RISEML_USER_ENDPOINT', 'https://%s.riseml.io')
 API_URL = ENDPOINT_URL + '/api'
 GIT_URL = ENDPOINT_URL + '/git'
 STREAM_URL = "ws://%s/stream" % urlparse(ENDPOINT_URL).netloc
+ROLLBAR_ENDPOINT = os.environ.get('RISEML_ROLLBAR_ENDPOINT', 'https://api.riseml.com/errors/client')
+CLUSTER_ID = os.environ.get('RISEML_CLUSTER_ID')
+ENVIRONMENT = os.environ.get('RISEML_ENVIRONMENT', 'production')
