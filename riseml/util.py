@@ -104,7 +104,7 @@ def print_table(header, rows, min_widths=None):
 
 
     def bold(s): return color_string(s, ansi_code=1)
-    def render_line(columns): return line_pattern.decode('utf8').format(*columns, widths=widths)
+    def render_line(columns): return line_pattern.format(*columns, widths=widths)
 
     # print header
     print(bold(render_line(header)))
