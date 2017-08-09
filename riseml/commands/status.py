@@ -70,7 +70,7 @@ def show_experiment(training, experiment):
 
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in training.run_commands]))
-    print("Max Parallel Experiments: {}".format(training.max_parallel_experiments))
+    print("Concurrent Experiments: {}".format(training.concurrent_experiments))
     print("Params: {}\n".format(params(experiment)))
 
     rows = [

@@ -27,7 +27,7 @@ def run_train(args):
 
     training = call_api(lambda: client.create_training(
         project_name, revision,
-        kind='train', config=json.dumps(dict(config.train))
+        kind='train', config=json.dumps(config.train.as_dict())
     ))
 
     stream_training_log(training, None)
