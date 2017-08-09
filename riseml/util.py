@@ -192,7 +192,10 @@ def call_api(api_fn):
     try:
         return api_fn()
     except ApiException as e:
-        handle_http_error(e.body, e.status)
+        if e.status == 0:
+            raise e
+        else:
+            handle_http_error(e.body, e.status)
     except HTTPError as e:
         handle_error('Could not connect to API ({host}:{port}{url}) — {exc_type}'.format(
             host=e.pool.host,
