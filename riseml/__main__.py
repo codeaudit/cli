@@ -8,6 +8,9 @@ from riseml.commands import *
 from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL
 from riseml.errors import handle_error
 
+import logging
+logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
+
 
 def main():
     parser = argparse.ArgumentParser()

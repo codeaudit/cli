@@ -184,7 +184,8 @@ def resolve_path(binary):
 
 
 from riseml.client.rest import ApiException
-from riseml.errors import handle_http_error
+from riseml.errors import handle_http_error, handle_error
+from urllib3.exceptions import HTTPError
 
 
 def call_api(api_fn):
@@ -192,3 +193,10 @@ def call_api(api_fn):
         return api_fn()
     except ApiException as e:
         handle_http_error(e.body, e.status)
+    except HTTPError as e:
+        handle_error('Could not connect to API ({host}:{port}{url}) — {exc_type}'.format(
+            host=e.pool.host,
+            port=e.pool.port,
+            url=e.url,
+            exc_type=e.__class__.__name__
+        ))
