@@ -57,7 +57,7 @@ def entrypoint():
             root=os.path.dirname(os.path.realpath(__file__)))
         try:
             main()
-        except:
+        except StandardError:
             rollbar.report_exc_info()
             handle_error("An unexpected error occured. A report was sent to RiseML successfully.")
     else:
