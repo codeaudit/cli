@@ -4,9 +4,14 @@ import os
 import argparse
 import rollbar
 
+from urllib3.exceptions import HTTPError
+
 from riseml.commands import *
 from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL, ROLLBAR_ENDPOINT, CLUSTER_ID, ENVIRONMENT
 from riseml.errors import handle_error
+
+import logging
+logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
 
 
 def main():
@@ -42,7 +47,11 @@ def main():
         print('user_url: %s' % USER_URL)
 
     if hasattr(args, 'run'):
-        args.run(args)
+        try:
+            args.run(args)
+        except HTTPError as e:
+            # all uncaught http errors goes here
+            handle_error(e.message)
     else:
         parser.print_usage()
 

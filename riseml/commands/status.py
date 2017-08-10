@@ -25,7 +25,8 @@ def run(args):
 
     if args.id:
         ids = args.id.split('.')
-        training = client.get_training(ids[0])
+        training = util.call_api(lambda: client.get_training(ids[0]))
+
         if len(training.experiments) == 1:
             show_experiment(training, training.experiments[0])
         elif len(ids) > 1:
@@ -69,7 +70,7 @@ def show_experiment(training, experiment):
 
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in training.run_commands]))
-    print("Max Parallel Experiments: {}".format(training.max_parallel_experiments))
+    print("Concurrent Experiments: {}".format(training.concurrent_experiments))
     print("Params: {}\n".format(params(experiment)))
 
     rows = [
@@ -88,31 +89,32 @@ def show_experiment(training, experiment):
 
 
 def get_experiments_rows(training, with_project=True, with_type=True, with_params=True, indent=True):
-    def gen():
-        for i, experiment in enumerate(training.experiments):
-            indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
-            values = [indent_str + full_id(training, experiment)]
+    rows = []
 
-            if with_project:
-                values += [training.changeset.repository.name]
+    for i, experiment in enumerate(training.experiments):
+        indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
+        values = [indent_str + full_id(training, experiment)]
 
-            values += [experiment.state, util.get_since_str(experiment.created_at)]
+        if with_project:
+            values += [training.changeset.repository.name]
 
-            if with_type:
-                values += [indent_str + 'Experiment']
-            if with_params:
-                values += [params(experiment)]
+        values += [experiment.state, util.get_since_str(experiment.created_at)]
 
-            yield values
+        if with_type:
+            values += [indent_str + 'Experiment']
+        if with_params:
+            values += [params(experiment)]
 
-    return list(gen())
+        rows.append(values)
+
+    return rows
 
 
 def show_experiment_group(training):
-    print("ID: %s" % full_id(training))
+    print("ID: {}".format(full_id(training)))
     print("Type: Series")
-    print("State: %s" % training.state)
-    print("Project: %s" % training.changeset.repository.name)
+    print("State: {}".format(training.state))
+    print("Project: {}".format(training.changeset.repository.name))
 
     if training.framework == 'tensorflow' and training.framework_details.tensorboard:
         tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')

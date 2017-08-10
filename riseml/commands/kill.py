@@ -1,10 +1,9 @@
-import json
-
 from riseml.client import DefaultApi, ApiClient
-from riseml.client.rest import ApiException
 
-from riseml.project import get_project, get_project_name
 from riseml.consts import API_URL
+from riseml.errors import handle_error
+
+from riseml.util import call_api
 
 def add_kill_parser(subparsers):
     parser = subparsers.add_parser('kill', help="kill on-going experiment or experiment series")
@@ -19,20 +18,20 @@ def run(args):
     trainings = args.experiments
 
     if not trainings:
-        project = get_project(get_project_name())
-        trainings = client.get_repository_trainings(project.id)
+        trainings = call_api(lambda: client.get_trainings())
+
         if not trainings:
-            return
+            handle_error('No trainings to kill')
+
         if trainings[0].state in ('FINISHED', 'FAILED', 'KILLED'):
-            return
+            handle_error('No trainings to kill')
+
         trainings = [trainings[0].id]
+
     for training_id in trainings:
-        try:
-            training = client.kill_training(training_id)
-            if len(training.experiments) == 1:
-                print("killed experiment {}".format(training.short_id))
-            else:
-                print("killed series {}".format(training.short_id))
-        except ApiException as e:
-            body = json.loads(e.body)
-            print('ERROR: %s (%s)' % (body['message'], e.status))
+        training = call_api(lambda: client.kill_training(training_id))
+
+        if len(training.experiments) == 1:
+            print("killed experiment {}".format(training.short_id))
+        else:
+            print("killed series {}".format(training.short_id))

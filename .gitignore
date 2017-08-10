@@ -5,3 +5,7 @@ env
 # Python/PIP
 riseml.egg-info
 *.pyc
+
+# PyInstaller
+build
+dist

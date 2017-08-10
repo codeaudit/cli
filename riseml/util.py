@@ -7,6 +7,8 @@ import platform
 
 from datetime import datetime
 
+from riseml.consts import IS_BUNDLE
+
 COLOR_CODES = {
     # 'black': 30,     NOTE: We don't want that color!
     'red': 31,
@@ -73,6 +75,16 @@ def color_string(s, color=None, ansi_code=None):
         return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
 
 
+class TableElement():
+    pass
+
+class TableRowDelimiter(TableElement):
+    def __init__(self, symbol):
+        self.symbol = symbol
+    def __str__(self):
+        return 'TableRowDelimiter ({})'.format(self.symbol)
+
+
 def print_table(header, rows, min_widths=None):
     n_columns = len(header)
 
@@ -82,16 +94,22 @@ def print_table(header, rows, min_widths=None):
         widths = list(min_widths)
 
     for row in rows:
-        row_len = len(row)
-        assert row_len == n_columns, \
+        # skip table elements as non-data rows
+        if isinstance(row, TableElement):
+           continue
+
+        row_items_count = len(row)
+        assert row_items_count == n_columns, \
             "Column %s (columns: %d) must match" \
-            " header's colums count: %d" % (str(row), row_len, n_columns)
+            " header's colums count: %d" % (str(row), row_items_count, n_columns)
 
         for i, cell in enumerate(row):
             item_len = len(cell) if not isinstance(cell, int) else len(str(cell))
 
             if item_len > widths[i]:
                 widths[i] = item_len
+
+    table_width = sum(widths) + n_columns - 1
 
     # see https://pyformat.info/
     # `Padding and aligning strings` block
@@ -100,16 +118,18 @@ def print_table(header, rows, min_widths=None):
         for i in range(n_columns)
     ])
 
-
     def bold(s): return color_string(s, ansi_code=1)
-    def render_line(columns): return line_pattern.decode('utf8').format(*columns, widths=widths)
+    def render_line(columns): return line_pattern.format(*columns, widths=widths)
 
     # print header
     print(bold(render_line(header)))
 
     # print rows
     for row in rows:
-        print(render_line(row))
+        if isinstance(row, TableRowDelimiter):
+            print(row.symbol * table_width)
+        else:
+            print(render_line(row))
 
 
 def get_since_str(timestamp):
@@ -141,6 +161,13 @@ def mb_to_gib(value):
     return "%.1f" % (float(value) * (10 ** 6) / (1024 ** 3))
 
 
+def get_rsync_path():
+    if IS_BUNDLE:
+        return os.path.join(sys._MEIPASS, 'bin', 'rsync')
+    else:
+        return resolve_path('rsync')
+
+
 def resolve_path(binary):
     paths = os.environ.get('PATH', '').split(os.pathsep)
     exts = ['']
@@ -154,3 +181,25 @@ def resolve_path(binary):
             loc = os.path.join(path, binary + ext)
             if os.path.isfile(loc):
                 return loc
+
+
+from riseml.client.rest import ApiException
+from riseml.errors import handle_http_error, handle_error
+from urllib3.exceptions import HTTPError
+
+
+def call_api(api_fn):
+    try:
+        return api_fn()
+    except ApiException as e:
+        if e.status == 0:
+            raise e
+        else:
+            handle_http_error(e.body, e.status)
+    except HTTPError as e:
+        handle_error('Could not connect to API ({host}:{port}{url}) — {exc_type}'.format(
+            host=e.pool.host,
+            port=e.pool.port,
+            url=e.url,
+            exc_type=e.__class__.__name__
+        ))
