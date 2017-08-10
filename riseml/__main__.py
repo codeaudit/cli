@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 import sys
+import os
 import argparse
+import rollbar
 
 from urllib3.exceptions import HTTPError
 
 from riseml.commands import *
-from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL
+from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL, ROLLBAR_ENDPOINT, CLUSTER_ID, ENVIRONMENT
 from riseml.errors import handle_error
 
 import logging
@@ -53,5 +55,22 @@ def main():
     else:
         parser.print_usage()
 
+def entrypoint():
+    if ENVIRONMENT not in ['development', 'test']:
+        if not CLUSTER_ID:
+            handle_error("Environment variable CLUSTER_ID has to be set!")
+        rollbar.init(
+            CLUSTER_ID, # Use cluster id as access token
+            ENVIRONMENT,
+            endpoint=ROLLBAR_ENDPOINT,
+            root=os.path.dirname(os.path.realpath(__file__)))
+        try:
+            main()
+        except Exception:
+            rollbar.report_exc_info()
+            handle_error("An unexpected error occured. A report was sent to RiseML successfully.")
+    else:
+        main()
+
 if __name__ == '__main__':
-    main()
+    entrypoint()
