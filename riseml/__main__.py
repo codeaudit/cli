@@ -58,7 +58,7 @@ def main():
 def entrypoint():
     if ENVIRONMENT not in ['development', 'test']:
         if not CLUSTER_ID:
-            handle_error("Environment variable CLUSTER_ID has to be set!")
+            handle_error("Environment variable RISEML_CLUSTER_ID has to be set!")
         rollbar.init(
             CLUSTER_ID, # Use cluster id as access token
             ENVIRONMENT,
