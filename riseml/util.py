@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import os
 import sys
 import time
@@ -74,13 +74,18 @@ class TableRowDelimiter(TableElement):
         return 'TableRowDelimiter ({})'.format(self.symbol)
 
 
-def print_table(header, rows, min_widths=None):
+def print_table(header, rows, min_widths=None, file=sys.stdout):
+      
     n_columns = len(header)
 
     if not min_widths:
         widths = [5] * n_columns  # 5 is default width
     else:
         widths = list(min_widths)
+    
+    for i, (h, w) in enumerate(zip(header, widths)):
+        if len(h) > w:
+            widths[i] = len(h)
 
     for row in rows:
         # skip table elements as non-data rows
@@ -111,14 +116,14 @@ def print_table(header, rows, min_widths=None):
     def render_line(columns): return line_pattern.format(*columns, widths=widths)
 
     # print header
-    print(bold(render_line(header)))
+    print(bold(render_line(header)), file=file)
 
     # print rows
     for row in rows:
         if isinstance(row, TableRowDelimiter):
-            print(row.symbol * table_width)
+            print(row.symbol * table_width, file=file)
         else:
-            print(render_line(row))
+            print(render_line(row), file=file)
 
 
 def get_since_str(timestamp):
@@ -147,7 +152,11 @@ def str_timestamp(timestamp):
 
 
 def mb_to_gib(value):
-    return "%.1f" % (float(value) * (10 ** 6) / (1024 ** 3))
+    return float(value) * (10 ** 6) / (1024 ** 3)
+
+
+def bytes_to_gib(value):
+    return float(value) / (1024 ** 3)
 
 
 def get_rsync_path():
