@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from .changeset import Changeset
 from .error import Error
 from .experiment import Experiment
+from .gpu import GPU
 from .job import Job
 from .node import Node
 from .repository import Repository

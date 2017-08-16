@@ -36,6 +36,7 @@ def main():
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
     add_status_parser(subparsers)
+    add_monitor_parser(subparsers)
 
     args = parser.parse_args(sys.argv[1:])
 
