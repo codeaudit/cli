@@ -1,10 +1,9 @@
 from riseml.client import DefaultApi, ApiClient
-from riseml.client.rest import ApiException
 
 from riseml.util import call_api
 from riseml.consts import API_URL
-from riseml.errors import handle_error, handle_http_error
-from riseml.stream import stream_training_log
+from riseml.errors import handle_error
+from riseml.stream import stream_experiment_log
 
 
 def add_logs_parser(subparsers):
@@ -18,15 +17,11 @@ def run(args):
     client = DefaultApi(api_client)
 
     if args.experiment:
-        training_id, _, experiment_id = args.experiment.partition('.')
-        training = call_api(lambda: client.get_training(training_id))
+        experiment = call_api(lambda: client.get_experiment(args.experiment))
     else:
-        trainings = call_api(lambda: client.get_trainings())
+        experiments = call_api(lambda: client.get_experiments())
+        if not experiments:
+            handle_error('No experiment logs to show')
+        experiment = experiments[0]
 
-        if not trainings:
-            handle_error('No training logs to show')
-
-        training = trainings[0]
-        experiment_id = None
-
-    stream_training_log(training, experiment_id)
+    stream_experiment_log(experiment)

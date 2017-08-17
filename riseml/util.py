@@ -114,7 +114,7 @@ def print_table(header, rows, min_widths=None):
     # see https://pyformat.info/
     # `Padding and aligning strings` block
     line_pattern = ''.join([
-        '{:%s{widths[%s]}} ' % ('<', i)
+        u'{:%s{widths[%s]}} ' % ('<', i)
         for i in range(n_columns)
     ])
 
