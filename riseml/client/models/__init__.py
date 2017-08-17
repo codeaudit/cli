@@ -16,10 +16,9 @@ from __future__ import absolute_import
 from .changeset import Changeset
 from .error import Error
 from .experiment import Experiment
+from .experiment_framework_config import ExperimentFrameworkConfig
 from .job import Job
 from .node import Node
 from .repository import Repository
 from .scratch_entry import ScratchEntry
-from .training import Training
-from .training_framework_details import TrainingFrameworkDetails
 from .user import User

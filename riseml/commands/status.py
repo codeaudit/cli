@@ -24,57 +24,43 @@ def run(args):
     client = DefaultApi(api_client)
 
     if args.id:
-        ids = args.id.split('.')
-        training = util.call_api(lambda: client.get_training(ids[0]))
-
-        if len(training.experiments) == 1:
-            show_experiment(training, training.experiments[0])
-        elif len(ids) > 1:
-            experiment = next((exp for exp in training.experiments if str(exp.number) == ids[1]), None)
-            if experiment:
-                show_experiment(training, experiment)
-            else:
-                handle_error('Experiment not found')
+        experiment = util.call_api(lambda: client.get_experiment(args.id))
+        if experiment.children:
+            show_experiment_group(experiment)
         else:
-            show_experiment_group(training)
+            show_experiment(experiment)
     else:
-        show_trainings(client.get_trainings(), all=args.all, collapsed=not args.long)
-
-
-def full_id(training, experiment=None, job=None):
-    if len(training.experiments) > 1 and experiment:
-        return '{}.{}'.format(training.short_id, experiment.number)
-    else:
-        return training.short_id
+        show_experiments(client.get_experiments(), all=args.all, collapsed=not args.long)
 
 
 def params(experiment):
     return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.params).items()])
 
 
-def show_experiment(training, experiment):
-    print("ID: {}".format(full_id(training, experiment)))
+def show_experiment(experiment):
+    print("ID: {}".format(experiment.short_id))
     print("Type: Experiment")
     print("State: {}".format(experiment.state))
-    print("Image: {}".format(training.image))
-    print("Framework: {}".format(training.framework))
+    print("Image: {}".format(experiment.image))
+    print("Framework: {}".format(experiment.framework))
     print("Framework Config:")
 
-    for attribute, value in training.framework_details.to_dict().iteritems():
+    for attribute, value in experiment.framework_config.to_dict().iteritems():
         if value is not None:
-            print("   {}: {}".format(attribute, value))
+            print("  {}: {}".format(attribute, value))
 
-    if training.framework == 'tensorflow' and training.framework_details.tensorboard:
-        tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')
-        print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
+    if experiment.framework == 'tensorflow' and experiment.framework_config.tensorboard:
+        tensorboard_job = next((job for job in experiment.jobs if job.role == 'tensorboard'), None)
+        if tensorboard_job:
+            print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
 
     print("Run Commands:")
-    print(''.join(["  {}".format(command) for command in training.run_commands]))
-    print("Concurrent Experiments: {}".format(training.concurrent_experiments))
+    print(''.join(["  {}".format(command) for command in experiment.run_commands]))
+    print("Concurrent Experiments: {}".format(experiment.concurrent_experiments))
     print("Params: {}\n".format(params(experiment)))
 
     rows = [
-        ([job.name,
+        (["{}.{}".format(experiment.short_id, job.name),
          job.state,
          util.get_since_str(job.started_at),
          util.get_since_str(job.finished_at),
@@ -82,21 +68,21 @@ def show_experiment(training, experiment):
     ]
 
     util.print_table(
-        header=['JOB', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM'],
-        min_widths=[9, 13, 13, 13, 6, 6, 6],
+        header=['JOB ID', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM'],
+        min_widths=[13, 13, 13, 13, 6, 6, 6],
         rows=rows
     )
 
 
-def get_experiments_rows(training, with_project=True, with_type=True, with_params=True, indent=True):
+def get_experiments_rows(group, with_project=True, with_type=True, with_params=True, indent=True):
     rows = []
 
-    for i, experiment in enumerate(training.experiments):
-        indent_str = (u'├╴' if i < len(training.experiments) - 1 else u'╰╴') if indent else ''
-        values = [indent_str + full_id(training, experiment)]
+    for i, experiment in enumerate(group.children):
+        indent_str = (u'├╴' if i < len(group.children) - 1 else u'╰╴') if indent else ''
+        values = [indent_str + experiment.short_id]
 
         if with_project:
-            values += [training.changeset.repository.name]
+            values += [experiment.changeset.repository.name]
 
         values += [experiment.state, util.get_since_str(experiment.created_at)]
 
@@ -110,14 +96,14 @@ def get_experiments_rows(training, with_project=True, with_type=True, with_param
     return rows
 
 
-def show_experiment_group(training):
-    print("ID: {}".format(full_id(training)))
+def show_experiment_group(group):
+    print("ID: {}".format(group.short_id))
     print("Type: Series")
-    print("State: {}".format(training.state))
-    print("Project: {}".format(training.changeset.repository.name))
+    print("State: {}".format(group.state))
+    print("Project: {}".format(group.changeset.repository.name))
 
-    if training.framework == 'tensorflow' and training.framework_details.tensorboard:
-        tensorboard_job = next(job for job in training.jobs if job.role == 'tensorboard')
+    if group.framework == 'tensorflow' and group.framework_config.tensorboard:
+        tensorboard_job = next(job for job in group.jobs if job.role == 'tensorboard')
         print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
 
     print()
@@ -125,11 +111,11 @@ def show_experiment_group(training):
     util.print_table(
         header=['ID', 'STATE', 'AGE', 'PARAMS'],
         min_widths=(6, 9, 13, 14),
-        rows=get_experiments_rows(training, with_project=False, with_type=False, indent=False)
+        rows=get_experiments_rows(group, with_project=False, with_type=False, indent=False)
     )
 
 
-def show_trainings(trainings, all=False, collapsed=True):
+def show_experiments(experiments, all=False, collapsed=True):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
     widths = (6, 14, 9, 13, 15)
 
@@ -139,16 +125,16 @@ def show_trainings(trainings, all=False, collapsed=True):
 
     rows = []
 
-    for training in trainings:
-        if not all and training.state in ['FINISHED', 'KILLED', 'FAILED']:
+    for experiment in experiments:
+        if not all and experiment.state in ['FINISHED', 'KILLED', 'FAILED']:
             continue
 
         values = [
-            training.short_id,
-            training.changeset.repository.name,
-            training.state,
-            util.get_since_str(training.created_at),
-            'Experiment' if len(training.experiments) == 1 else 'Series'
+            experiment.short_id,
+            experiment.changeset.repository.name,
+            experiment.state,
+            util.get_since_str(experiment.created_at),
+            'Experiment' if len(experiment.children) == 0 else 'Series'
         ]
 
         if not collapsed:
@@ -156,8 +142,8 @@ def show_trainings(trainings, all=False, collapsed=True):
 
         rows.append(values)
 
-        if not collapsed and len(training.experiments) > 1:
-            rows += get_experiments_rows(training)
+        if not collapsed and len(experiment.children) > 0:
+            rows += get_experiments_rows(experiment)
 
     util.print_table(
         header=header,

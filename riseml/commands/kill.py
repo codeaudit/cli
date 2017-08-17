@@ -15,23 +15,23 @@ def run(args):
     api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
 
-    trainings = args.experiments
+    experiments = args.experiments
 
-    if not trainings:
-        trainings = call_api(lambda: client.get_trainings())
+    if not experiments:
+        experiments = call_api(lambda: client.get_experiments())
 
-        if not trainings:
-            handle_error('No trainings to kill')
+        if not experiments:
+            handle_error('No experiments to kill')
 
-        if trainings[0].state in ('FINISHED', 'FAILED', 'KILLED'):
-            handle_error('No trainings to kill')
+        if experiments[0].state in ('FINISHED', 'FAILED', 'KILLED'):
+            handle_error('No experiments to kill')
 
-        trainings = [trainings[0].id]
+        experiments = [experiments[0].id]
 
-    for training_id in trainings:
-        training = call_api(lambda: client.kill_training(training_id))
+    for experiment_id in experiments:
+        experiment = call_api(lambda: client.kill_experiment(experiment_id))
 
-        if len(training.experiments) == 1:
-            print("killed experiment {}".format(training.short_id))
+        if experiment.children:
+            print("killed series {}".format(experiment.short_id))
         else:
-            print("killed series {}".format(training.short_id))
+            print("killed experiment {}".format(experiment.short_id))

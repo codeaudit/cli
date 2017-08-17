@@ -6,7 +6,7 @@ from riseml.configs import load_config
 from riseml.user import get_user
 from riseml.project import push_project
 from riseml.consts import API_URL, DEFAULT_CONFIG_NAME
-from riseml.stream import stream_training_log
+from riseml.stream import stream_experiment_log
 from riseml.util import call_api
 
 
@@ -25,9 +25,9 @@ def run_train(args):
     api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
 
-    training = call_api(lambda: client.create_training(
+    experiment = call_api(lambda: client.create_experiment(
         project_name, revision,
         kind='train', config=json.dumps(config.train.as_dict())
     ))
 
-    stream_training_log(training, None)
+    stream_experiment_log(experiment)
