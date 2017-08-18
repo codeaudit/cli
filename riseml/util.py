@@ -3,11 +3,15 @@
 import os
 import sys
 import time
+import re
 import platform
 
 from datetime import datetime
 
 from riseml.consts import IS_BUNDLE
+
+EXPERIMENT_ID_REGEX = re.compile(r'^\d+(\.\d+)?$')
+JOB_ID_REGEX = re.compile(r'^\d+(\.\d+)?\.[A-Za-z]+(\.\d+)?$')
 
 COLOR_CODES = {
     # 'black': 30,     NOTE: We don't want that color!
@@ -31,21 +35,6 @@ COLOR_CODES = {
 colors = {}
 
 COLORS_DISABLED = not sys.stdout.isatty()
-
-def get_job_name(job):
-    if job.root is None:
-        if job.role == 'sequence':
-            return "+ (%s)" % job.changeset.config_section
-        elif job.role in ('deploy', 'train'):
-            return "%s:run" % job.changeset.config_section
-        else:
-            return '%s (%s)' % (job.name, job.changeset.config_section)
-    elif job.role in ('deploy', 'train'):
-        return 'run'
-    elif job.role == 'tensorboard':
-        return 'tensorboard (service: %s)' % job.service_name 
-    else:
-        return job.name
 
 
 def get_color_pairs():
@@ -203,3 +192,9 @@ def call_api(api_fn):
             url=e.url,
             exc_type=e.__class__.__name__
         ))
+
+def is_job_id(id):
+    return JOB_ID_REGEX.match(id) is not None
+
+def is_experiment_id(id):
+    return EXPERIMENT_ID_REGEX.match(id) is not None
