@@ -71,14 +71,14 @@ def stream_log(url, ids_to_name, stream_meta={}):
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            if stream_meta.get('training_id'):
-                print()
+            any_id = stream_meta.get('experiment_id') or stream_meta.get('job_id')
+            print()  # newline after ^C
+            if stream_meta.get('experiment_id'):
                 print('Experiment will continue in background')
-                print('Type `riseml logs %s` to connect to log stream again' % stream_meta['training_id'])
             else:
-                print()  # newline after ^C
                 print('Job will continue in background')
-
+            if any_id:
+                print('Type `riseml logs %s` to connect to log stream again' % any_id)            
         else:
             # all other Exception based stuff goes to `handle_error`
             handle_error(e)
@@ -98,16 +98,9 @@ def stream_log(url, ids_to_name, stream_meta={}):
 
 
 def stream_job_log(job):
-    def flatten_jobs(job):
-        for c in job.children:
-            for j in flatten_jobs(c):
-                yield j
-        yield job
-
-    jobs = list(flatten_jobs(job))
-    ids_to_name = {job.id: util.get_job_name(job) for job in jobs}
+    ids_to_name = { job.id: job.short_id }
     url = '%s/ws/jobs/%s/stream' % (STREAM_URL, job.id)
-    stream_log(url, ids_to_name)
+    stream_log(url, ids_to_name, stream_meta={ "job_id": job.short_id })
 
 
 def stream_experiment_log(experiment):
@@ -122,4 +115,4 @@ def stream_experiment_log(experiment):
     for experiment in experiment.children:
         add_experiment_to_log(experiment)
 
-    stream_log(url, ids_to_name, stream_meta={"experiment_id": experiment.id})
+    stream_log(url, ids_to_name, stream_meta={"experiment_id": experiment.short_id})

@@ -31,7 +31,7 @@ class Job(object):
         """
         self.swagger_types = {
             'id': 'str',
-            'short_id': 'int',
+            'short_id': 'str',
             'root': 'str',
             'parent': 'str',
             'previous_job': 'str',
@@ -145,7 +145,7 @@ class Job(object):
 
 
         :return: The short_id of this Job.
-        :rtype: int
+        :rtype: str
         """
         return self._short_id
 
@@ -156,7 +156,7 @@ class Job(object):
 
 
         :param short_id: The short_id of this Job.
-        :type: int
+        :type: str
         """
 
         self._short_id = short_id

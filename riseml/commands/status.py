@@ -24,11 +24,17 @@ def run(args):
     client = DefaultApi(api_client)
 
     if args.id:
-        experiment = util.call_api(lambda: client.get_experiment(args.id))
-        if experiment.children:
-            show_experiment_group(experiment)
+        if util.is_experiment_id(args.id):
+            experiment = util.call_api(lambda: client.get_experiment(args.id))
+            if experiment.children:
+                show_experiment_group(experiment)
+            else:
+                show_experiment(experiment)
+        elif util.is_job_id(args.id):
+            job = util.call_api(lambda: client.get_job(args.id))
+            show_job(job)
         else:
-            show_experiment(experiment)
+            handle_error("Id is neither an experiment id nor a job id!")
     else:
         show_experiments(client.get_experiments(), all=args.all, collapsed=not args.long)
 
@@ -37,18 +43,27 @@ def params(experiment):
     return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.params).items()])
 
 
-def show_experiment(experiment):
-    print("ID: {}".format(experiment.short_id))
-    print("Type: Experiment")
-    print("State: {}".format(experiment.state))
-    print("Image: {}".format(experiment.image))
-    print("Framework: {}".format(experiment.framework))
-    print("Framework Config:")
-
-    for attribute, value in experiment.framework_config.to_dict().iteritems():
-        if value is not None:
+def show_dict(dictionary, indentation=2, title=None):
+    if title:
+        print(title)
+    for attribute, value in dictionary.items():
+        if isinstance(value, dict):
+            show_dict(value, indentation=indentation + 2)
+        elif value is not None:
             print("  {}: {}".format(attribute, value))
 
+def show_common_header(entity, type):
+    print("ID: {}".format(entity.short_id))
+    print("Type: {}".format(type))
+    print("State: {}".format(entity.state))
+    
+
+def show_experiment(experiment):
+    show_common_header(experiment, "Experiment")
+    print("Image: {}".format(experiment.image))
+    print("Framework: {}".format(experiment.framework))
+    show_dict(experiment.framework_config.to_dict(), title="Framework Config:")
+    
     if experiment.framework == 'tensorflow' and experiment.framework_config.tensorboard:
         tensorboard_job = next((job for job in experiment.jobs if job.role == 'tensorboard'), None)
         if tensorboard_job:
@@ -73,6 +88,19 @@ def show_experiment(experiment):
         rows=rows
     )
 
+
+def show_job(job):
+    show_common_header(job, "Job")
+    print("Started: {} ago".format(util.get_since_str(job.started_at)))
+    print("Finished: {} ago".format(util.get_since_str(job.finished_at)))
+    print("Requested cpus: {}".format(job.cpus))
+    print("Requested mem: {}".format(job.mem))
+    print("Requested gpus: {}".format(job.gpus))
+    print("Run Commands:")
+    print(''.join(["  {}".format(command) for command in json.loads(job.commands)]))
+    show_dict(json.loads(job.environment), title="Environment:")
+    if job.state == 'FAILED':
+        print("Reason: {}".format(job.reason))
 
 def get_experiments_rows(group, with_project=True, with_type=True, with_params=True, indent=True):
     rows = []

@@ -766,7 +766,7 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str job_id:  (required)
-        :return: list[Job]
+        :return: Job
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -793,7 +793,7 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str job_id:  (required)
-        :return: list[Job]
+        :return: Job
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -853,7 +853,7 @@ class DefaultApi(object):
                                             body=body_params,
                                             post_params=form_params,
                                             files=local_var_files,
-                                            response_type='list[Job]',
+                                            response_type='Job',
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),
@@ -969,116 +969,6 @@ class DefaultApi(object):
                                             post_params=form_params,
                                             files=local_var_files,
                                             response_type='list[Job]',
-                                            auth_settings=auth_settings,
-                                            callback=params.get('callback'),
-                                            _return_http_data_only=params.get('_return_http_data_only'),
-                                            _preload_content=params.get('_preload_content', True),
-                                            collection_formats=collection_formats)
-
-    def get_log(self, job_id, **kwargs):
-        """
-        
-        
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please define a `callback` function
-        to be invoked when receiving the response.
-        >>> def callback_function(response):
-        >>>     pprint(response)
-        >>>
-        >>> thread = api.get_log(job_id, callback=callback_function)
-
-        :param callback function: The callback function
-            for asynchronous request. (optional)
-        :param str job_id:  (required)
-        :return: None
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-        kwargs['_return_http_data_only'] = True
-        if kwargs.get('callback'):
-            return self.get_log_with_http_info(job_id, **kwargs)
-        else:
-            (data) = self.get_log_with_http_info(job_id, **kwargs)
-            return data
-
-    def get_log_with_http_info(self, job_id, **kwargs):
-        """
-        
-        
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please define a `callback` function
-        to be invoked when receiving the response.
-        >>> def callback_function(response):
-        >>>     pprint(response)
-        >>>
-        >>> thread = api.get_log_with_http_info(job_id, callback=callback_function)
-
-        :param callback function: The callback function
-            for asynchronous request. (optional)
-        :param str job_id:  (required)
-        :return: None
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-
-        all_params = ['job_id']
-        all_params.append('callback')
-        all_params.append('_return_http_data_only')
-        all_params.append('_preload_content')
-
-        params = locals()
-        for key, val in iteritems(params['kwargs']):
-            if key not in all_params:
-                raise TypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_log" % key
-                )
-            params[key] = val
-        del params['kwargs']
-        # verify the required parameter 'job_id' is set
-        if ('job_id' not in params) or (params['job_id'] is None):
-            raise ValueError("Missing the required parameter `job_id` when calling `get_log`")
-
-
-        collection_formats = {}
-
-        resource_path = '/jobs/{job_id}/logs'.replace('{format}', 'json')
-        path_params = {}
-        if 'job_id' in params:
-            path_params['job_id'] = params['job_id']
-
-        query_params = {}
-
-        header_params = {}
-
-        form_params = []
-        local_var_files = {}
-
-        body_params = None
-
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.\
-            select_header_accept(['text/plain'])
-        if not header_params['Accept']:
-            del header_params['Accept']
-
-        # HTTP header `Content-Type`
-        header_params['Content-Type'] = self.api_client.\
-            select_header_content_type(['application/json'])
-
-        # Authentication setting
-        auth_settings = ['api_key']
-
-        return self.api_client.call_api(resource_path, 'GET',
-                                            path_params,
-                                            query_params,
-                                            header_params,
-                                            body=body_params,
-                                            post_params=form_params,
-                                            files=local_var_files,
-                                            response_type=None,
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),
