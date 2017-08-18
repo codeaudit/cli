@@ -36,6 +36,23 @@ colors = {}
 
 COLORS_DISABLED = not sys.stdout.isatty()
 
+def bold(s): return color_string(s, ansi_code=1)
+
+def get_job_name(job):
+    if job.root is None:
+        if job.role == 'sequence':
+            return "+ (%s)" % job.changeset.config_section
+        elif job.role in ('deploy', 'train'):
+            return "%s:run" % job.changeset.config_section
+        else:
+            return '%s (%s)' % (job.name, job.changeset.config_section)
+    elif job.role in ('deploy', 'train'):
+        return 'run'
+    elif job.role == 'tensorboard':
+        return 'tensorboard (service: %s)' % job.service_name 
+    else:
+        return job.name
+
 
 def get_color_pairs():
     for name, code in COLOR_CODES.items():
@@ -74,7 +91,8 @@ class TableRowDelimiter(TableElement):
         return 'TableRowDelimiter ({})'.format(self.symbol)
 
 
-def print_table(header, rows, min_widths=None, file=sys.stdout):
+def print_table(header, rows, min_widths=None, 
+                file=sys.stdout, separator=False, bold_header=True):
       
     n_columns = len(header)
 
@@ -112,11 +130,18 @@ def print_table(header, rows, min_widths=None, file=sys.stdout):
         for i in range(n_columns)
     ])
 
-    def bold(s): return color_string(s, ansi_code=1)
     def render_line(columns): return line_pattern.format(*columns, widths=widths)
 
+    # print separator
+    if separator:
+        print('-' * len(render_line(header)), file=file)
+
     # print header
-    print(bold(render_line(header)), file=file)
+    if not bold_header:
+        emph = lambda x: x
+    else:
+        emph = bold
+    print(emph(render_line(header)), file=file)
 
     # print rows
     for row in rows:
@@ -157,6 +182,10 @@ def mb_to_gib(value):
 
 def bytes_to_gib(value):
     return float(value) / (1024 ** 3)
+
+
+def bytes_to_mib(value):
+    return float(value) / (1024 ** 2)
 
 
 def get_rsync_path():
