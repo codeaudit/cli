@@ -45,7 +45,7 @@ def display_long(nodes):
         gpus_counted = Counter(gpus)
         s = []
         for (name, mem), count in gpus_counted.items():
-            s.append('%s x %s (%s)' % (count, name, mem))
+            s.append('%s x %s (%.1f)' % (count, name, mem))
         return ', '.join(s)
 
     for n in nodes:

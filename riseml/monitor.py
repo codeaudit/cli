@@ -8,6 +8,7 @@ import websocket
 import threading
 import StringIO
 import math
+import traceback
 import os
 from collections import OrderedDict
 
@@ -16,7 +17,7 @@ from riseml.consts import STREAM_URL
 from riseml.util import bytes_to_gib, print_table, bold
 
 stats_lock = threading.Lock()
-stream_connected = False
+monitor_stream = None
 
 def formatted_getter(getter):
     def format_output(self, fmt=None, trans=None):
@@ -91,7 +92,7 @@ class JobStats(Stats):
     @formatted_getter
     def get_memory_percent(self):
         usage = self.get('memory_used')
-        total = self.get('memory_total')
+        total = self.get('memory_limit')
         if usage is not None and total is not None and total > 0:
             return (float(usage) / float(total)) * 100
 
@@ -130,10 +131,10 @@ def get_summary_infos(job_id_stats):
             gpu_mem_total = job_stats.get('gpu_memory_total', '%.1f', bytes_to_gib)
             rows.append([job.short_id, job.changeset.repository.name, job.state,
                          job_stats.get('cpu_percent', '%d'), 
-                         job_stats.get('memory_percent', '%d'), 
+                         job_stats.get('memory_percent', '%.1f'), 
                          '%s / %s' % (mem_used, mem_total),
                          job_stats.get('gpu_percent', '%d'), 
-                         job_stats.get('gpu_memory_percent', '%d'),
+                         job_stats.get('gpu_memory_percent', '%.1f'),
                          '%s / %s' % (gpu_mem_used, gpu_mem_total)])
         else:
             rows.append([job.short_id, job.changeset.repository.name, job.state] + ['N/A' for _ in range(6)])
@@ -247,34 +248,37 @@ class StatsScreen():
         self.job_id_stats = job_id_stats
 
     def _display(self, detailed):
-        while True:
-            with stats_lock:
-                if detailed:
-                    stats_screen = get_detailed_infos(self.job_id_stats)
+            while True:
+                with stats_lock:
+                    if detailed:
+                        stats_screen = get_detailed_infos(self.job_id_stats)
+                    else:
+                        stats_screen = get_summary_infos(self.job_id_stats)            
+                if monitor_stream.isAlive():
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    print(stats_screen.strip())
+                    sys.stdout.flush()
                 else:
-                    stats_screen = get_summary_infos(self.job_id_stats)            
-            if stream_connected:
-                os.system('cls' if os.name == 'nt' else 'clear')
-                print(stats_screen.strip())
-                sys.stdout.flush()
-            else:
-                handle_error('Monitor stream disconnected')
-                break
-            time.sleep(1)      
+                    sys.stderr.write('Monitor stream disconnected\n')
+                    break
+                time.sleep(1)      
 
     def display(self, detailed=False):
-        self._display(detailed)
+        try:
+            self._display(detailed)
+        except (KeyboardInterrupt, SystemExit):
+            print()  # newline after ^C
+            print('Job(s) will continue in background')
 
 
 def stream_stats(job_id_stats, stream_meta={}):
-    global stream_connected
+    global monitor_stream
     job_ids = job_id_stats.keys()
     url = '%s/ws/monitor/?jobId=%s' % (STREAM_URL, job_ids[0])
     if len(job_ids) > 1:
         url += '&' + '&'.join(['jobId=%s' % job_id for job_id in job_ids[1:]])
 
     def on_message(ws, message):
-        global stream_connected
         try:
             msg = json.loads(message)
             if 'job_id' in msg:
@@ -282,10 +286,8 @@ def stream_stats(job_id_stats, stream_meta={}):
                 with stats_lock:
                     job_stats = job_id_stats[job_id]
                     job_stats.update(msg)
-        except Exception e:
-            stream_connected = False
-            handle_error(e)
-
+        except Exception as e:
+            handle_error(traceback.format_exc())
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
@@ -312,16 +314,15 @@ def stream_stats(job_id_stats, stream_meta={}):
     )
 
     # FIXME: {'Authorization': os.environ.get('RISEML_APIKEY')}
-    wst = threading.Thread(target=ws.run_forever)
-    wst.daemon = True
-    wst.start()
+    monitor_stream = threading.Thread(target=ws.run_forever)
+    monitor_stream.daemon = True
+    monitor_stream.start()
     conn_timeout = 10
-    while not ws.sock.connected and conn_timeout > 0:
+    while not ws.sock.connected and conn_timeout > 0 and monitor_stream.isAlive():
         time.sleep(0.5)
         conn_timeout -= 1
     if not ws.sock.connected:
         handle_error('Unable to connect to monitor stream')
-    stream_connected = True
 
 
 def monitor_jobs(jobs, detailed=False):
