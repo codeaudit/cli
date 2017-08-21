@@ -123,8 +123,9 @@ def get_summary_infos(job_id_stats):
     for job_id, job_stats in job_id_stats.items():
         job = job_stats.job
         if job.state in ('RUNNING'):
+            print(job_stats.get('memory_used'), job_stats.get('memory_limit'))
             mem_used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
-            mem_total = job_stats.get('memory_total', '%.1f', bytes_to_gib)
+            mem_total = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
             gpu_mem_used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
             gpu_mem_total = job_stats.get('gpu_memory_total', '%.1f', bytes_to_gib)
             rows.append([job.short_id, job.changeset.repository.name, job.state,
@@ -220,7 +221,7 @@ def get_detailed_info(job_stats):
     job = job_stats.job    
     caption = bold('%s (STATE: %s)' % (job.short_id, job.state))
     if job.state in ('RUNNING'):
-        total_gib = job_stats.get('memory_total', '%.1f', bytes_to_gib)
+        total_gib = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         used_gib = job_stats.get('memory_used', '%.1f', bytes_to_gib)
         memory = 'Memory Stats (Used/Total) GiB: %s / %s' % (used_gib, total_gib)
         cpu_bars = get_cpu_bars(job.cpus, 
@@ -311,19 +312,12 @@ def stream_stats(job_id_stats, stream_meta={}):
         handle_error('Unable to connect to monitor stream')
 
 
-def stream_monitor(training, experiment_id):
-    jobs = []
-    if experiment_id:
-        experiment = next((exp for exp in training.experiments if exp.number == int(experiment_id)), None)
-        if not experiment:
-            handle_error("Could not find experiment")
-    else:
-        jobs = training.jobs
+def monitor_jobs(jobs, detailed=False):
     jobs = sorted(jobs, key=lambda j: j.short_id)
     job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs if j.role == 'train'})
     screen = StatsScreen(job_id_stats)
     stream_stats(job_id_stats)
-    screen.display()
+    screen.display(detailed=detailed)
 
 
 if __name__ == '__main__':
