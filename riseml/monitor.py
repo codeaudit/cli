@@ -16,6 +16,7 @@ from riseml.consts import STREAM_URL
 from riseml.util import bytes_to_gib, print_table, bold
 
 stats_lock = threading.Lock()
+stream_connected = False
 
 def formatted_getter(getter):
     def format_output(self, fmt=None, trans=None):
@@ -123,7 +124,6 @@ def get_summary_infos(job_id_stats):
     for job_id, job_stats in job_id_stats.items():
         job = job_stats.job
         if job.state in ('RUNNING'):
-            print(job_stats.get('memory_used'), job_stats.get('memory_limit'))
             mem_used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
             mem_total = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
             gpu_mem_used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
@@ -248,15 +248,18 @@ class StatsScreen():
 
     def _display(self, detailed):
         while True:
-            sys.stdout.flush()
-            os.system('cls' if os.name == 'nt' else 'clear')
             with stats_lock:
                 if detailed:
                     stats_screen = get_detailed_infos(self.job_id_stats)
                 else:
                     stats_screen = get_summary_infos(self.job_id_stats)            
-            print(stats_screen.strip())
-            sys.stdout.flush()
+            if stream_connected:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print(stats_screen.strip())
+                sys.stdout.flush()
+            else:
+                handle_error('Monitor stream disconnected')
+                break
             time.sleep(1)      
 
     def display(self, detailed=False):
@@ -264,17 +267,25 @@ class StatsScreen():
 
 
 def stream_stats(job_id_stats, stream_meta={}):
+    global stream_connected
     job_ids = job_id_stats.keys()
     url = '%s/ws/monitor/?jobId=%s' % (STREAM_URL, job_ids[0])
     if len(job_ids) > 1:
         url += '&' + '&'.join(['jobId=%s' % job_id for job_id in job_ids[1:]])
 
     def on_message(ws, message):
-        msg = json.loads(message)
-        job_id = msg['job_id']
-        with stats_lock:
-            job_stats = job_id_stats[job_id]
-            job_stats.update(msg)
+        global stream_connected
+        try:
+            msg = json.loads(message)
+            if 'job_id' in msg:
+                job_id = msg['job_id']
+                with stats_lock:
+                    job_stats = job_id_stats[job_id]
+                    job_stats.update(msg)
+        except Exception e:
+            stream_connected = False
+            handle_error(e)
+
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
@@ -310,6 +321,7 @@ def stream_stats(job_id_stats, stream_meta={}):
         conn_timeout -= 1
     if not ws.sock.connected:
         handle_error('Unable to connect to monitor stream')
+    stream_connected = True
 
 
 def monitor_jobs(jobs, detailed=False):
