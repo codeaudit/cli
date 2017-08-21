@@ -19,6 +19,23 @@ from riseml.util import bytes_to_gib, print_table, bold
 stats_lock = threading.Lock()
 monitor_stream = None
 
+
+def indent(text, spaces=2):
+    lines = text.split('\n')
+    return '\n'.join(['%s%s' % (' ' * spaces, l) for l in lines])
+
+
+def print_user_exit(stream_meta):
+    any_id = stream_meta.get('experiment_id') or stream_meta.get('job_id')
+    print()  # newline after ^C
+    if stream_meta.get('experiment_id'):
+        print('Experiment will continue in background')
+    else:
+        print('Job will continue in background')
+    if any_id:
+        print('Type `riseml monitor %s` to connect to log stream again' % any_id)            
+
+
 def formatted_getter(getter):
     def format_output(self, fmt=None, trans=None):
         v = getter(self)
@@ -179,7 +196,7 @@ def get_cpu_bars(num_cpus, percpu_percent):
         bar_lines.append(get_bar_line('N/A', 0))
     header = '{:<{w}} |{}'.format('CPU Stats', bar_header,
                                   w=cpu_col_width)
-    return '\n'.join([separator, header] + bar_lines)
+    return '\n'.join([separator, header] + bar_lines + [separator])
 
 
 def get_gpu_table(job_stats):
@@ -205,16 +222,10 @@ def get_gpu_table(job_stats):
                     'PWR-Used', 'PWR-Limit', 'TEMP'],
             min_widths=[4, 8, 3, 4, 4, 3, 3, 3],
             rows=rows,
-            separator=True,
             bold_header=False,
             file=output
         )
     return output.getvalue().strip()
-
-
-def indent(text, spaces=2):
-    lines = text.split('\n')
-    return '\n'.join(['%s%s' % (' ' * spaces, l) for l in lines])
 
 
 def get_detailed_info(job_stats):
@@ -232,7 +243,7 @@ def get_detailed_info(job_stats):
                           indent(cpu_bars), indent(gpu_table)])
     else:
         return '\n'.join([caption, indent('No real-time stats available')])
-                
+
 
 def get_detailed_infos(job_id_stats):
     output = StringIO.StringIO()
@@ -263,12 +274,11 @@ class StatsScreen():
                     break
                 time.sleep(1)      
 
-    def display(self, detailed=False):
+    def display(self, detailed=False, stream_meta={}):
         try:
             self._display(detailed)
         except (KeyboardInterrupt, SystemExit):
-            print()  # newline after ^C
-            print('Job(s) will continue in background')
+            print_user_exit(stream_meta)
 
 
 def stream_stats(job_id_stats, stream_meta={}):
@@ -291,14 +301,7 @@ def stream_stats(job_id_stats, stream_meta={}):
 
     def on_error(ws, e):
         if isinstance(e, (KeyboardInterrupt, SystemExit)):
-            if stream_meta.get('training_id'):
-                print()
-                print('Experiment will continue in background')
-                print('Type `riseml logs %s` to connect to log stream again' % stream_meta['training_id'])
-            else:
-                print()  # newline after ^C
-                print('Job will continue in background')
-
+            print_user_exit(stream_meta)
         else:
             # all other Exception based stuff goes to `handle_error`
             handle_error(e)
@@ -325,48 +328,9 @@ def stream_stats(job_id_stats, stream_meta={}):
         handle_error('Unable to connect to monitor stream')
 
 
-def monitor_jobs(jobs, detailed=False):
+def monitor_jobs(jobs, detailed=False, stream_meta={}):
     jobs = sorted(jobs, key=lambda j: j.short_id)
     job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs if j.role == 'train'})
     screen = StatsScreen(job_id_stats)
-    stream_stats(job_id_stats)
-    screen.display(detailed=detailed)
-
-
-if __name__ == '__main__':
-    from collections import namedtuple
-    Job = namedtuple('Job', ['short_id', 'id', 'state', 'changeset', 'gpus', 'cpus'])
-    Changeset = namedtuple('Changeset', ['repository'])
-    Repo = namedtuple('Repo', ['name'])
-    
-    job = Job('1.2.worker0', '123', 'RUNNING', Changeset(Repo('test')), 4, 7)
-    job_2 = Job('1.2.worker1', '123', 'FINISHED', Changeset(Repo('test')), 4, 7)
-
-    update = {'job_id': '123',
-               'memory_limit': 1000000,
-               'memory_used': 100000,
-               'timestamp': 123123123,
-               'percpu_percent': [74.4, 74.9, 75.1, 120.0]}
-    g_update = {'job_id': '123',
-               'timestamp': 123123123,
-               'gpus': {'/dev/nvidia0': {  
-                            'temperature': 73,
-                            'gpu_utilization': 44,
-                            'memory_free': 1000000,
-                            'name': 'Tesla K80',
-                            'power_draw': 240,
-                            'power_limit': 250,
-                            'memory_total': 12000000000,
-                            'memory_used': 1000000000,
-                            'memory_utilization': 42,
-                            'fan_speed': 25000,
-                            'host_device': '/dev/nvidia3'}
-                        }}
-
-    stats = JobStats(job)
-    stats.update(update)
-    stats.update(g_update)
-    stats_2 = JobStats(job_2)
-    job_id_stats = {job.id: stats, '234': stats, '345': stats_2}
-    screen = StatsScreen(job_id_stats)
-    screen.display(detailed=True)
+    stream_stats(job_id_stats, stream_meta)
+    screen.display(detailed, stream_meta)

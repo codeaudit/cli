@@ -21,10 +21,11 @@ def run(args):
     if args.id:
         if is_experiment_id(args.id):
             experiment = call_api(lambda: client.get_experiment(args.id))
-            monitor_jobs(experiment.jobs, detailed=args.long)
+            monitor_jobs(experiment.jobs, detailed=args.long, 
+                         stream_meta={"experiment_id": experiment.short_id})
         elif is_job_id(args.id):
             job = call_api(lambda: client.get_job(args.id))
-            monitor_jobs([job], detailed=args.long)
+            monitor_jobs([job], detailed=args.long, stream_meta={"job_id": job.short_id})
         else:
             handle_error("Id is neither an experiment id nor a job id!")
 
@@ -32,4 +33,5 @@ def run(args):
         experiments = call_api(lambda: client.get_experiments())
         if not experiments:
             handle_error('No experiment logs to show!')
-        monitor_jobs(experiments[0].jobs, detailed=args.long)
+        monitor_jobs(experiments[0].jobs, detailed=args.long, 
+                     stream_meta={"experiment_id": experiment.short_id})
