@@ -177,12 +177,16 @@ from riseml.errors import handle_http_error, handle_error
 from urllib3.exceptions import HTTPError
 
 
-def call_api(api_fn):
+def call_api(api_fn, not_found=None):
     try:
         return api_fn()
     except ApiException as e:
         if e.status == 0:
             raise e
+        elif e.status == 401:
+            handle_error("You are not authorized!")
+        elif e.status == 404 and not_found:
+            not_found()
         else:
             handle_http_error(e.body, e.status)
     except HTTPError as e:
