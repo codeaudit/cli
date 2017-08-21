@@ -33,7 +33,7 @@ def print_user_exit(stream_meta):
     else:
         print('Job will continue in background')
     if any_id:
-        print('Type `riseml monitor %s` to connect to log stream again' % any_id)            
+        print('Type `riseml monitor %s` to connect to monitor again' % any_id)            
 
 
 def formatted_getter(getter):
