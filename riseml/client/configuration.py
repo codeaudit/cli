@@ -63,7 +63,7 @@ class Configuration(object):
 
         # Logging Settings
         self.logger = {}
-        self.logger["package_logger"] = logging.getLogger("swagger_client")
+        self.logger["package_logger"] = logging.getLogger("riseml")
         self.logger["urllib3_logger"] = logging.getLogger("urllib3")
         self.logger["websocket"] = logging.getLogger("websocket")
         # Log format

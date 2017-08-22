@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 import os
 import sys
 import time
@@ -35,6 +35,23 @@ COLOR_CODES = {
 colors = {}
 
 COLORS_DISABLED = not sys.stdout.isatty()
+
+def bold(s): return color_string(s, ansi_code=1)
+
+def get_job_name(job):
+    if job.root is None:
+        if job.role == 'sequence':
+            return "+ (%s)" % job.changeset.config_section
+        elif job.role in ('deploy', 'train'):
+            return "%s:run" % job.changeset.config_section
+        else:
+            return '%s (%s)' % (job.name, job.changeset.config_section)
+    elif job.role in ('deploy', 'train'):
+        return 'run'
+    elif job.role == 'tensorboard':
+        return 'tensorboard (service: %s)' % job.service_name 
+    else:
+        return job.name
 
 
 def get_color_pairs():
@@ -74,13 +91,19 @@ class TableRowDelimiter(TableElement):
         return 'TableRowDelimiter ({})'.format(self.symbol)
 
 
-def print_table(header, rows, min_widths=None):
+def print_table(header, rows, min_widths=None, 
+                file=sys.stdout, separator=False, bold_header=True):
+      
     n_columns = len(header)
 
     if not min_widths:
         widths = [5] * n_columns  # 5 is default width
     else:
         widths = list(min_widths)
+    
+    for i, (h, w) in enumerate(zip(header, widths)):
+        if len(h) > w:
+            widths[i] = len(h)
 
     for row in rows:
         # skip table elements as non-data rows
@@ -107,18 +130,25 @@ def print_table(header, rows, min_widths=None):
         for i in range(n_columns)
     ])
 
-    def bold(s): return color_string(s, ansi_code=1)
     def render_line(columns): return line_pattern.format(*columns, widths=widths)
 
+    # print separator
+    if separator:
+        print('-' * len(render_line(header)), file=file)
+
     # print header
-    print(bold(render_line(header)))
+    if not bold_header:
+        emph = lambda x: x
+    else:
+        emph = bold
+    print(emph(render_line(header)), file=file)
 
     # print rows
     for row in rows:
         if isinstance(row, TableRowDelimiter):
-            print(row.symbol * table_width)
+            print(row.symbol * table_width, file=file)
         else:
-            print(render_line(row))
+            print(render_line(row), file=file)
 
 
 def get_since_str(timestamp):
@@ -147,7 +177,15 @@ def str_timestamp(timestamp):
 
 
 def mb_to_gib(value):
-    return "%.1f" % (float(value) * (10 ** 6) / (1024 ** 3))
+    return float(value) * (10 ** 6) / (1024 ** 3)
+
+
+def bytes_to_gib(value):
+    return float(value) / (1024 ** 3)
+
+
+def bytes_to_mib(value):
+    return float(value) / (1024 ** 2)
 
 
 def get_rsync_path():
