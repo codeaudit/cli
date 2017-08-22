@@ -12,6 +12,7 @@ def add_cluster_parser(subparsers):
 
 def display_short(nodes):
     rows = []
+    nodes = filter(lambda n: n.role != 'master', nodes)
     total_cpus = 0
     total_mem = 0
     total_gpus = 0
@@ -34,8 +35,8 @@ def display_short(nodes):
     )
 
 def display_long(nodes):
-
     rows = []
+    nodes = filter(lambda n: n.role != 'master', nodes)
     total_cpus = 0
     total_mem = 0
     total_gpus = 0
