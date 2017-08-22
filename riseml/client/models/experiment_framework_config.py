@@ -33,7 +33,7 @@ class ExperimentFrameworkConfig(object):
             'distributed': 'bool',
             'ps_count': 'int',
             'worker_count': 'int',
-            'tensorboard': 'str'
+            'tensorboard': 'bool'
         }
 
         self.attribute_map = {
@@ -125,7 +125,7 @@ class ExperimentFrameworkConfig(object):
 
 
         :return: The tensorboard of this ExperimentFrameworkConfig.
-        :rtype: str
+        :rtype: bool
         """
         return self._tensorboard
 
@@ -136,7 +136,7 @@ class ExperimentFrameworkConfig(object):
 
 
         :param tensorboard: The tensorboard of this ExperimentFrameworkConfig.
-        :type: str
+        :type: bool
         """
 
         self._tensorboard = tensorboard

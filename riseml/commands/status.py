@@ -25,13 +25,19 @@ def run(args):
 
     if args.id:
         if util.is_experiment_id(args.id):
-            experiment = util.call_api(lambda: client.get_experiment(args.id))
+            experiment = util.call_api(
+                lambda: client.get_experiment(args.id),
+                not_found=lambda: handle_error("Could not find experiment!")
+            )
             if experiment.children:
                 show_experiment_group(experiment)
             else:
                 show_experiment(experiment)
         elif util.is_job_id(args.id):
-            job = util.call_api(lambda: client.get_job(args.id))
+            job = util.call_api(
+                lambda: client.get_job(args.id),
+                not_found=lambda: handle_error("Could not find job!")
+            )
             show_job(job)
         else:
             handle_error("Id is neither an experiment id nor a job id!")
