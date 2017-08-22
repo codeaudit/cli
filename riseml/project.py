@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import sys
+import re
 import subprocess
 import requests
 
@@ -11,7 +12,7 @@ from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
 from riseml.consts import API_URL, GIT_URL, SYNC_URL
 from riseml.project_template import project_template
-
+from riseml.util import bytes_to_mib
 
 try:
     from urllib.parse import urlparse
@@ -57,15 +58,23 @@ def push_project(user, project_name, config_file):
 
     project_root = os.path.join(os.getcwd(), '')
     exclude_file = os.path.join(project_root, '.risemlignore')
-    print("Pushing code...")
+    
     sync_cmd = [get_rsync_path(),
                 '-rlpt',
                 '--exclude=.git',
+                '--exclude=riseml*.yml',
                 '--delete-during',
                 project_root,
                 rsync_url]
     if os.path.exists(exclude_file):
         sync_cmd.insert(2, '--exclude-from=%s' % exclude_file)
+    project_size = get_project_size(sync_cmd, project_root)
+    if project_size is not None:
+        num_files, size = project_size
+        sys.stdout.write('Syncing project (%.1f MiB, %d files)...' %
+                            (bytes_to_mib(size), num_files))
+    else:
+        sys.stdout.write('Syncing project...')
     proc = subprocess.Popen(sync_cmd,
                             cwd=project_root,
                             stdout=subprocess.PIPE,
@@ -85,8 +94,23 @@ def push_project(user, project_name, config_file):
         handle_http_error(res.text, res.status_code)
 
     revision = res.json()['sha']
-    print("done")
+    sys.stdout.write('done\n')
     return revision
+
+
+def get_project_size(sync_cmd, project_root):
+    sync_cmd = sync_cmd[:]
+    sync_cmd.insert(1, '--dry-run')
+    sync_cmd.insert(1, '-v')
+    try:
+        out = subprocess.check_output(sync_cmd)
+        m = re.search(r'total size is ([0-9,]+)  speedup', out)
+        if m:
+            num_files = len(out.strip().split('\n')) - 5 # 1 header, 3 footer, ./
+            size = int(m.group(1).replace(',', ''))
+            return num_files, size
+    except subprocess.CalledProcessError:
+        return None
 
 
 def get_project(name):
