@@ -62,7 +62,21 @@ def show_common_header(entity, type):
     print("ID: {}".format(entity.short_id))
     print("Type: {}".format(type))
     print("State: {}".format(entity.state))
-    
+
+def show_job_table(jobs):
+    rows = [
+        ([job.short_id,
+         job.state,
+         util.get_since_str(job.started_at),
+         util.get_since_str(job.finished_at),
+         'N/A', 'N/A', 'N/A']) for job in jobs
+    ]
+
+    util.print_table(
+        header=['JOB ID', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM'],
+        min_widths=[13, 13, 13, 13, 6, 6, 6],
+        rows=rows
+    )
 
 def show_experiment(experiment):
     show_common_header(experiment, "Experiment")
@@ -80,20 +94,7 @@ def show_experiment(experiment):
     print("Concurrent Experiments: {}".format(experiment.concurrent_experiments))
     print("Params: {}\n".format(params(experiment)))
 
-    rows = [
-        (["{}.{}".format(experiment.short_id, job.name),
-         job.state,
-         util.get_since_str(job.started_at),
-         util.get_since_str(job.finished_at),
-         'N/A', 'N/A', 'N/A']) for job in experiment.jobs
-    ]
-
-    util.print_table(
-        header=['JOB ID', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM'],
-        min_widths=[13, 13, 13, 13, 6, 6, 6],
-        rows=rows
-    )
-
+    show_job_table(experiment.jobs)
 
 def show_job(job):
     show_common_header(job, "Job")
@@ -129,10 +130,9 @@ def get_experiments_rows(group, with_project=True, with_type=True, with_params=T
 
     return rows
 
-
 def show_experiment_group(group):
     print("ID: {}".format(group.short_id))
-    print("Type: Series")
+    print("Type: Set")
     print("State: {}".format(group.state))
     print("Project: {}".format(group.changeset.repository.name))
 
@@ -141,12 +141,15 @@ def show_experiment_group(group):
         print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
 
     print()
-
     util.print_table(
-        header=['ID', 'STATE', 'AGE', 'PARAMS'],
+        header=['EXP ID', 'STATE', 'AGE', 'PARAMS'],
         min_widths=(6, 9, 13, 14),
         rows=get_experiments_rows(group, with_project=False, with_type=False, indent=False)
     )
+
+    if group.jobs:
+        print()
+        show_job_table(group.jobs)
 
 
 def show_experiments(experiments, all=False, collapsed=True):
