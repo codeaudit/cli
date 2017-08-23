@@ -22,22 +22,21 @@ def main():
     subparsers = parser.add_subparsers()
 
     # user ops
-    add_register_parser(subparsers)
     add_whoami_parser(subparsers)
 
-    # clusterinfo ops
-    add_cluster_parser(subparsers)
+    # system ops
+    add_system_parser(subparsers)
 
     # worklow ops
     add_init_parser(subparsers)
     add_train_parser(subparsers)
-    add_exec_parser(subparsers)
-    add_deploy_parser(subparsers)
+    #add_exec_parser(subparsers)
+    add_monitor_parser(subparsers)
+    #add_deploy_parser(subparsers)
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
     add_status_parser(subparsers)
-    add_monitor_parser(subparsers)
-
+    
     args = parser.parse_args(sys.argv[1:])
 
     if args.v:

@@ -10,7 +10,7 @@ java -jar swagger-codegen-cli.jar generate -i $url -l python -o tmp -t templates
 
 rm -rf riseml/client
 mv tmp/riseml riseml/client
-mv tmp/setup.py .
+#mv tmp/setup.py .
 
 rm tmp/README.md
 rm tmp/.gitignore
