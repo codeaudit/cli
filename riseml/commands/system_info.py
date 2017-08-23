@@ -4,8 +4,8 @@ from riseml.consts import API_URL
 from riseml.util import bytes_to_gib, print_table, TableRowDelimiter, call_api
 
 
-def add_cluster_parser(subparsers):
-    parser = subparsers.add_parser('cluster', help="show cluster info")
+def add_system_info_parser(subparsers):
+    parser = subparsers.add_parser('info', help="show cluster info")
     parser.add_argument('-l', '--long', help="display long version", action="store_const", const=True)
     parser.set_defaults(run=run)
 

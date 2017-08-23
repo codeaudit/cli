@@ -8,4 +8,4 @@ def add_whoami_parser(subparsers):
 
 def run(args):
     user = get_user()
-    print("%s (%s)" % (user.username, user.id))
+    print("you are: %s (%s)" % (user.username, user.email))
