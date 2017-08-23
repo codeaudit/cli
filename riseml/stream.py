@@ -51,7 +51,7 @@ class LogPrinter(object):
     def print_state_message(self, msg):
         if msg['job_id'] not in self.ids_to_name:
             return
-        state = "[%s] --> %s" % (util.str_timestamp(msg['time']), msg['new_state'])
+        state = "[%s] --> %s" % (util.str_timestamp(msg['time']), msg['state'])
         output = "%s%s" % (self._message_prefix(msg),
                            util.color_string(state, color="bold_white"))
         print(output)
