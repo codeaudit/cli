@@ -13,8 +13,9 @@ from riseml.consts import API_URL, ENDPOINT_URL
 
 def add_status_parser(subparsers):
     parser = subparsers.add_parser('status', help="show (running) experiments")
-    parser.add_argument('id', help='id of specific experiment/series for which to show status', nargs='?')
+    parser.add_argument('id', help='id of RiseML entity for which to show status', nargs='?')
     parser.add_argument('-a', '--all', help="show all experiments", action="store_const", const=True)
+    parser.add_argument('-u', '--all-users', help="show experiments for all users (admin only)", action="store_const", const=True)
     parser.add_argument('-l', '--long', help="expand series", action="store_const", const=True)
     parser.set_defaults(run=run)
 
@@ -23,26 +24,29 @@ def run(args):
     api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
 
-    if args.id:
-        if util.is_experiment_id(args.id):
-            experiment = util.call_api(
-                lambda: client.get_experiment(args.id),
-                not_found=lambda: handle_error("Could not find experiment!")
-            )
-            if experiment.children:
-                show_experiment_group(experiment)
-            else:
-                show_experiment(experiment)
-        elif util.is_job_id(args.id):
-            job = util.call_api(
-                lambda: client.get_job(args.id),
-                not_found=lambda: handle_error("Could not find job!")
-            )
-            show_job(job)
+    if args.id and util.is_experiment_id(args.id):
+        experiment = util.call_api(
+            lambda: client.get_experiment(args.id),
+            not_found=lambda: handle_error("Could not find experiment!")
+        )
+        if experiment.children:
+            show_experiment_group(experiment)
         else:
-            handle_error("Id is neither an experiment id nor a job id!")
+            show_experiment(experiment)
+    elif args.id and util.is_job_id(args.id):
+        job = util.call_api(
+            lambda: client.get_job(args.id),
+            not_found=lambda: handle_error("Could not find job!")
+        )
+        show_job(job)
+    elif args.id and util.is_user_id(args.id):
+        show_experiments(client.get_experiments(user=args.id[1:]),
+                         all=args.all, collapsed=not args.long, users=args.all_users)
+    elif not args.id:
+        show_experiments(client.get_experiments(all_users=args.all_users),
+                         all=args.all, collapsed=not args.long, users=args.all_users)
     else:
-        show_experiments(client.get_experiments(), all=args.all, collapsed=not args.long)
+        handle_error("Id does not identify any RiseML entity!")
 
 
 def params(experiment):
@@ -50,6 +54,8 @@ def params(experiment):
 
 
 def show_dict(dictionary, indentation=2, title=None):
+    if not dictionary:
+        return
     if title:
         print(title)
     for attribute, value in dictionary.items():
@@ -152,7 +158,7 @@ def show_experiment_group(group):
         show_job_table(group.jobs)
 
 
-def show_experiments(experiments, all=False, collapsed=True):
+def show_experiments(experiments, all=False, collapsed=True, users=False):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
     widths = (6, 14, 9, 13, 15)
 
@@ -167,7 +173,7 @@ def show_experiments(experiments, all=False, collapsed=True):
             continue
 
         values = [
-            experiment.short_id,
+            '.{}.{}'.format(experiment.user.username, experiment.short_id) if users else experiment.short_id,
             experiment.changeset.repository.name,
             experiment.state,
             util.get_since_str(experiment.created_at),

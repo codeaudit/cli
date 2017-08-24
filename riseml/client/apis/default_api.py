@@ -659,6 +659,8 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str states: 
+        :param str all_users: 
+        :param str user: 
         :return: list[Experiment]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -686,12 +688,14 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str states: 
+        :param str all_users: 
+        :param str user: 
         :return: list[Experiment]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['states']
+        all_params = ['states', 'all_users', 'user']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -715,6 +719,10 @@ class DefaultApi(object):
         query_params = {}
         if 'states' in params:
             query_params['states'] = params['states']
+        if 'all_users' in params:
+            query_params['all_users'] = params['all_users']
+        if 'user' in params:
+            query_params['user'] = params['user']
 
         header_params = {}
 

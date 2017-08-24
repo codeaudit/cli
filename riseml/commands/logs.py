@@ -18,13 +18,15 @@ def run(args):
 
     if args.id:
         if is_experiment_id(args.id):
-            experiment = call_api(lambda: client.get_experiment(args.id))
+            experiment = call_api(lambda: client.get_experiment(args.id),
+                                  not_found=lambda: handle_error("Could not find experiment!"))
             stream_experiment_log(experiment)
         elif is_job_id(args.id):
-            job = call_api(lambda: client.get_job(args.id))
+            job = call_api(lambda: client.get_job(args.id),
+                           not_found=lambda: handle_error("Could not find job!"))
             stream_job_log(job)
         else:
-            handle_error("Id is neither an experiment id nor a job id!")
+            handle_error("Can only show logs for jobs or experiments!")
 
     else:
         experiments = call_api(lambda: client.get_experiments())
