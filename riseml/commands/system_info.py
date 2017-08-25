@@ -69,7 +69,7 @@ def display_long(nodes):
     print("RiseML cluster nodes:")
 
     print_table(
-        header=['Hostname', 'CPUs', 'CPU Type', 'MEM (GiB)', 'GPUs (GiB)', 'Nvidia Driver', 'Kubelet Version', 'Docker Version '],
+        header=['Hostname', 'CPUs', 'CPU Type', 'MEM (GB)', 'GPUs (GB)', 'Nvidia Driver', 'Kubelet Version', 'Docker Version '],
         min_widths=[18, 6, 9, 4, 5, 5, 5, 5],
         rows=rows
     )    
