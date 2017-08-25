@@ -244,7 +244,7 @@ def get_gpu_table(job_stats):
     if rows:
         print_table(
             header=['GPU Stats', 'NAME', 'GPU-Util', 
-                    'MEM-Used', 'MEM-Total', 
+                    'MEM-Used (GiB)', 'MEM-Total (GiB)', 
                     'PWR-Used', 'PWR-Limit', 'TEMP'],
             min_widths=[4, 8, 3, 4, 4, 3, 3, 3],
             rows=rows,
