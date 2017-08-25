@@ -61,6 +61,9 @@ class Stats():
                 return self.stats.get(stat_name)
         return get(self, fmt, transform)
 
+    def update(self):
+        raise NotImplementedError
+
 
 class GPUStats(Stats):
 
@@ -94,6 +97,9 @@ class JobStats(Stats):
             gpu_stats = stats.pop('gpus')
             self._update_gpu_stats(gpu_stats, timestamp)
         self._update_stats(stats, timestamp)
+
+    def update_job_state(self, new_state):
+        self.job.state = new_state
     
     def _update_stats(self, stats, timestamp):
         self.timestamp = timestamp
@@ -291,11 +297,15 @@ def stream_stats(job_id_stats, stream_meta={}):
     def on_message(ws, message):
         try:
             msg = json.loads(message)
-            if 'job_id' in msg:
-                job_id = msg['job_id']
+            if msg['type'] == 'utilization':
+                stats = msg['data']
+                job_id = stats['job_id']
                 with stats_lock:
                     job_stats = job_id_stats[job_id]
-                    job_stats.update(msg)
+                    job_stats.update(stats)
+            elif msg['type'] == 'state':
+                job_id = msg['job_id']
+                job_stats[job_id].update_job_state(msg['state'])
         except Exception as e:
             handle_error(traceback.format_exc())
 
