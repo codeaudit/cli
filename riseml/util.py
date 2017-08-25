@@ -13,6 +13,20 @@ from riseml.consts import IS_BUNDLE
 EXPERIMENT_ID_REGEX = re.compile(r'^\d+(\.\d+)?$')
 JOB_ID_REGEX = re.compile(r'^\d+(\.\d+)?\.[A-Za-z]+(\.\d+)?$')
 
+class JobState(object):
+
+    created  = 'CREATED'
+    building = 'BUILDING'
+    pending  = 'PENDING'
+    starting = 'STARTING'
+    pausing  = 'PAUSING'
+    running  = 'RUNNING'
+    serving  = 'SERVING'
+    failed   = 'FAILED'
+    finished = 'FINISHED'
+    killed   = 'KILLED'
+
+
 COLOR_CODES = {
     # 'black': 30,     NOTE: We don't want that color!
     'red': 31,

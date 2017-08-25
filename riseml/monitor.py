@@ -14,10 +14,30 @@ from collections import OrderedDict
 
 from riseml.errors import handle_error
 from riseml.consts import STREAM_URL
-from riseml.util import bytes_to_gib, print_table, bold
+from riseml.util import bytes_to_gib, print_table, bold, JobState
 
 stats_lock = threading.Lock()
 monitor_stream = None
+
+
+SORTED_STATES = [JobState.running,
+                 JobState.building,
+                 JobState.starting,
+                 JobState.pending,
+                 JobState.failed,
+                 JobState.killed,
+                 JobState.finished,
+                 JobState.created]
+
+
+def sort_jobs_stats(jobs_stats):
+    def job_key(job_stats):
+        job = job_stats.job
+        try:
+         return (SORTED_STATES.index(job.state), job.short_id)
+        except ValueError:
+            return (len(SORTED_STATES), job.short_id)
+    return sorted(jobs_stats, key=job_key)
 
 
 def indent(text, spaces=2):
@@ -136,12 +156,12 @@ class JobStats(Stats):
             return (float(usage) / float(total)) * 100
 
 
-def get_summary_infos(job_id_stats):
+def get_summary_infos(jobs_stats):
     rows = []
     output = StringIO.StringIO()
-    for job_id, job_stats in job_id_stats.items():
+    for job_stats in jobs_stats:
         job = job_stats.job
-        if job.state in ('RUNNING'):
+        if job.state in (JobState.running):
             mem_used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
             mem_total = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
             gpu_mem_used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
@@ -245,9 +265,9 @@ def get_detailed_info(job_stats):
         return '\n'.join([caption, indent('No real-time stats available')])
 
 
-def get_detailed_infos(job_id_stats):
+def get_detailed_infos(jobs_stats):
     output = StringIO.StringIO()
-    for job_id, stats in job_id_stats.items():
+    for stats in jobs_stats.items():
         output.write(get_detailed_info(stats))
         output.write('\n\n')
     return output.getvalue()
@@ -255,16 +275,17 @@ def get_detailed_infos(job_id_stats):
 
 class StatsScreen():
 
-    def __init__(self, job_id_stats):
-        self.job_id_stats = job_id_stats
+    def __init__(self, jobs_stats):
+        self.jobs_stats = jobs_stats
 
     def _display(self, detailed):
             while True:
                 with stats_lock:
+                    sorted_stats = sort_jobs_stats(self.jobs_stats)
                     if detailed:
-                        stats_screen = get_detailed_infos(self.job_id_stats)
+                        stats_screen = get_detailed_infos(sorted_stats)
                     else:
-                        stats_screen = get_summary_infos(self.job_id_stats)            
+                        stats_screen = get_summary_infos(sorted_stats)            
                 if monitor_stream.isAlive():
                     os.system('cls' if os.name == 'nt' else 'clear')
                     print(stats_screen.strip())
@@ -329,8 +350,8 @@ def stream_stats(job_id_stats, stream_meta={}):
 
 
 def monitor_jobs(jobs, detailed=False, stream_meta={}):
-    jobs = sorted(jobs, key=lambda j: j.short_id)
     job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs if j.role == 'train'})
-    screen = StatsScreen(job_id_stats)
     stream_stats(job_id_stats, stream_meta)
+    jobs_stats = job_id_stats.values()
+    screen = StatsScreen(jobs_stats)
     screen.display(detailed, stream_meta)
