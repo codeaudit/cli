@@ -20,7 +20,8 @@ def run(args):
 
     if args.id:
         if is_experiment_id(args.id):
-            experiment = call_api(lambda: client.get_experiment(args.id))
+            experiment = call_api(lambda: client.get_experiment(args.id),
+                                  not_found=lambda: handle_error("Could not find experiment %s" % args.id))
             monitor_jobs(experiment.jobs, detailed=args.long, 
                          stream_meta={"experiment_id": experiment.short_id})
         elif is_job_id(args.id):
@@ -34,4 +35,4 @@ def run(args):
         if not experiments:
             handle_error('No experiment logs to show!')
         monitor_jobs(experiments[0].jobs, detailed=args.long, 
-                     stream_meta={"experiment_id": experiment.short_id})
+                     stream_meta={"experiment_id": experiments[0].short_id})

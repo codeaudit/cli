@@ -14,6 +14,7 @@ from __future__ import absolute_import
 
 # import models into model package
 from .changeset import Changeset
+from .cluster_info import ClusterInfo
 from .error import Error
 from .experiment import Experiment
 from .experiment_framework_config import ExperimentFrameworkConfig
@@ -21,5 +22,4 @@ from .gpu import GPU
 from .job import Job
 from .node import Node
 from .repository import Repository
-from .scratch_entry import ScratchEntry
 from .user import User

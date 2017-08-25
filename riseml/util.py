@@ -10,8 +10,9 @@ from datetime import datetime
 
 from riseml.consts import IS_BUNDLE
 
-EXPERIMENT_ID_REGEX = re.compile(r'^\d+(\.\d+)?$')
-JOB_ID_REGEX = re.compile(r'^\d+(\.\d+)?\.[A-Za-z]+(\.\d+)?$')
+USER_ONLY_REGEX = re.compile(r'^\.[^\.]+$')
+EXPERIMENT_ID_REGEX = re.compile(r'^(\.[^\.]+\.)?\d+(\.\d+)?$')
+JOB_ID_REGEX = re.compile(r'^(\.[^\.]+\.)?\d+(\.\d+)?\.[A-Za-z]+(\.\d+)?$')
 
 class JobState(object):
 
@@ -254,3 +255,6 @@ def is_job_id(id):
 
 def is_experiment_id(id):
     return EXPERIMENT_ID_REGEX.match(id) is not None
+
+def is_user_id(id):
+    return USER_ONLY_REGEX.match(id) is not None

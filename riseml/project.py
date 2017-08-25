@@ -75,6 +75,7 @@ def push_project(user, project_name, config_file):
                             (bytes_to_mib(size), num_files))
     else:
         sys.stdout.write('Syncing project...')
+    sys.stdout.flush()
     proc = subprocess.Popen(sync_cmd,
                             cwd=project_root,
                             stdout=subprocess.PIPE,
