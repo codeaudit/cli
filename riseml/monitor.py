@@ -48,12 +48,7 @@ def indent(text, spaces=2):
 def print_user_exit(stream_meta):
     any_id = stream_meta.get('experiment_id') or stream_meta.get('job_id')
     print()  # newline after ^C
-    if stream_meta.get('experiment_id'):
-        print('Experiment will continue in background')
-    else:
-        print('Job will continue in background')
-    if any_id:
-        print('Type `riseml monitor %s` to connect to monitor again' % any_id)            
+    print('Type `riseml monitor %s` to connect to monitor again' % any_id)            
 
 
 def formatted_getter(getter):
@@ -244,7 +239,7 @@ def get_gpu_table(job_stats):
     if rows:
         print_table(
             header=['GPU Stats', 'NAME', 'GPU-Util', 
-                    'MEM-Used (GiB)', 'MEM-Total (GiB)', 
+                    'MEM-Used (GB)', 'MEM-Total (GB)', 
                     'PWR-Used', 'PWR-Limit', 'TEMP'],
             min_widths=[4, 8, 3, 4, 4, 3, 3, 3],
             rows=rows,
@@ -261,7 +256,7 @@ def get_detailed_info(job_stats):
     if job.state in ('RUNNING'):
         total_gib = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         used_gib = job_stats.get('memory_used', '%.1f', bytes_to_gib)
-        memory = 'Memory Stats (Used/Total) GiB: %s / %s' % (used_gib, total_gib)
+        memory = 'Memory Stats (Used/Total) GB: %s / %s' % (used_gib, total_gib)
         cpu_bars = get_cpu_bars(job.cpus, 
                                 job_stats.get('percpu_percent'))
         gpu_table = get_gpu_table(job_stats)
