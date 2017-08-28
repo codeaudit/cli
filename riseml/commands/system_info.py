@@ -29,7 +29,7 @@ def display_short(nodes):
     print("RiseML Cluster Nodes:")
 
     print_table(
-        header=['Hostname', 'CPUs', 'MEM (GiB)', 'GPUs'],
+        header=['Hostname', 'CPUs', 'MEM (GB)', 'GPUs'],
         min_widths=[18, 6, 9, 4],
         rows=rows
     )
