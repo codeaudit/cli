@@ -72,6 +72,7 @@ def push_project(user, project_name, config_file):
     project_size = get_project_size(sync_cmd, project_root)
     if project_size is not None:
         num_files, size = project_size
+        warn_project_size(size, num_files)
         sys.stdout.write('Syncing project (%.1f MB, %d files)...' %
                             (bytes_to_mib(size), num_files))
     else:
@@ -93,7 +94,7 @@ def push_project(user, project_name, config_file):
     res = requests.post(done_url, params={'path': sync_path})
 
     if res.status_code == 412:
-        if '(failed to update ref)' in res.text or '(fetch first)' in res.text:
+        if '[remote rejected]' in res.text or '[rejected]' in res.text:
             print('Another sync was completed in the meantime. '
                   'Please do not sync in parallel.')
             sys.exit(1)
@@ -104,6 +105,15 @@ def push_project(user, project_name, config_file):
     revision = res.json()['sha']
     sys.stdout.write('done\n')
     return revision
+
+
+def warn_project_size(size, num_files, warn_mb=50, warn_num_files=1000):
+    if size >= warn_mb * 1024**2:
+        print('Warning, your project is larger than %s MB.' % warn_mb,
+              'Try to keep your project small, e.g., by using a .risemlignore file.')
+    elif num_files >= warn_num_files:
+        print('Warning, you are trying to sync a large number of files.',
+              'Try to keep your project small, e.g., by using a .risemlignore file.')
 
 
 def get_project_size(sync_cmd, project_root):
@@ -122,7 +132,15 @@ def get_project_size(sync_cmd, project_root):
         return None
     m = re.search(r'total size is ([0-9,]+)  speedup', out)
     if m:
-        num_files = len(out.strip().split('\n')) - 5 # 1 header, 3 footer, ./
+        lines = out.strip().split('\n')
+        deletions = 0
+        # deletions come after first line followed by './'
+        for l in lines[1:]:
+            if l.startswith('deleting '):
+                deletions += 1
+            else:
+                break
+        num_files = len(lines) - deletions - 5 # 1 header, 3 footer, ./
         size = int(m.group(1).replace(',', ''))
         return num_files, size
 
@@ -133,5 +151,4 @@ def get_project(name):
     for project in client.get_repositories():
         if project.name == name:
             return project
-
     handle_error("project not found: %s" % name)
