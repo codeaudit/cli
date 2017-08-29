@@ -44,12 +44,13 @@ def push_project(user, project_name, config_file):
         o.scheme, o.netloc, o.path, user.id, project_name)
 
     res = requests.post(prepare_url)
-    if res.status_code == 412 and 'Repository does not exist' in res.json()['message']:
-        create_project(config_file)
-        res = requests.post(prepare_url)
+    if res.status_code == 412:
+        if 'Repository does not exist' in res.json()['message']:
+            create_project(config_file)
+            res = requests.post(prepare_url)
 
     if res.status_code != 200:
-        handle_http_error(res.text, res.status_code)
+        handle_http_error('Connection problem with GIT server:\n' + res.text, res.status_code)
 
     sync_path = res.json()['path']
     o = urlparse(SYNC_URL)
@@ -90,6 +91,12 @@ def push_project(user, project_name, config_file):
         handle_error('Push code failed, rsync error', exit_code=res)
 
     res = requests.post(done_url, params={'path': sync_path})
+
+    if res.status_code == 412:
+        if '(failed to update ref)' in res.text or '(fetch first)' in res.text:
+            print('Another sync was completed in the meantime. '
+                  'Please do not sync in parallel.')
+            sys.exit(1)
 
     if res.status_code != 200:
         handle_http_error(res.text, res.status_code)
