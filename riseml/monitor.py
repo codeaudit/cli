@@ -213,7 +213,7 @@ def get_cpu_bars(num_cpus, percpu_percent):
     if percpu_percent:
         for i, p in enumerate(percpu_percent):
             bar_lines.append(get_bar_line(i, p))
-    for _ in range(num_cpus - len(bar_lines)):
+    for _ in range(int(math.ceil(num_cpus)) - len(bar_lines)):
         bar_lines.append(get_bar_line('N/A', 0))
     header = '{:<{w}} |{}'.format('CPU Stats', bar_header,
                                   w=cpu_col_width)
