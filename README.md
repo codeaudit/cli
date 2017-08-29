@@ -64,12 +64,7 @@ PyInstaller currently not supporting python3.6, so use py3.4 or py3.5 executable
 ```bash
 git clone https://github.com/riseml/client
 cd client
-virtualenv env -p python3.5 && source env/bin/activate
-pip3 install pyinstaller
-pip3 install jinja2==2.8.1 # latest jinja2 (2.9.6) has a SyntaxError with Python 3.5
-pip3 install -e . --process-dependency-links
-pyinstaller riseml.spec \
-            --onefile \
-            --name riseml \
-            --add-binary /usr/bin/rsync:bin
+virtualenv env && source env/bin/activate
+pip install pyinstaller
+pyinstaller riseml.spec
 ```
