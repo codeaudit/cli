@@ -15,4 +15,4 @@ before_install:
 
 script:
   - pip install -r requirements.txt pyinstaller
-  - pyinstaller --clean /src/riseml.spec
+  - pyinstaller --clean riseml.spec
