@@ -1,12 +1,17 @@
 language: c
 
+addons:
+  apt:
+    packages:
+      - rsync
+      - upx
+
 os:
   - linux
   - osx
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update && brew install rsync upx; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then apt-get -y update && apt-get -y install rsync upx; fi
 
 script:
   - pip install -r /requirements.txt pyinstaller
