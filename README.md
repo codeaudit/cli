@@ -13,6 +13,8 @@ pip install -e client --process-dependency-links
 export RISEML_APIKEY=admin_key
 export RISEML_SYNC_ENDPOINT=rsync://192.168.99.100:31876/sync
 export RISEML_ENDPOINT=http://localhost:80
+export RISEML_CLUSTER_ID=?
+export RISEML_ENVIRONMENT=?
 ```
 
 ## Check setup
@@ -63,6 +65,6 @@ riseml train
 git clone https://github.com/riseml/client
 cd client
 virtualenv env && source env/bin/activate
-pip install pyinstaller
+pip install -r requirements.txt pyinstaller
 pyinstaller riseml.spec
 ```
