@@ -53,22 +53,6 @@ COLORS_DISABLED = not sys.stdout.isatty()
 
 def bold(s): return color_string(s, ansi_code=1)
 
-def get_job_name(job):
-    if job.root is None:
-        if job.role == 'sequence':
-            return "+ (%s)" % job.changeset.config_section
-        elif job.role in ('deploy', 'train'):
-            return "%s:run" % job.changeset.config_section
-        else:
-            return '%s (%s)' % (job.name, job.changeset.config_section)
-    elif job.role in ('deploy', 'train'):
-        return 'run'
-    elif job.role == 'tensorboard':
-        return 'tensorboard (service: %s)' % job.service_name 
-    else:
-        return job.name
-
-
 def get_color_pairs():
     for name, code in COLOR_CODES.items():
         yield(name, str(code))
