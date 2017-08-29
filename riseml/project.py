@@ -7,7 +7,7 @@ import subprocess
 import requests
 
 from riseml.util import get_rsync_path
-from riseml.configs import create_config, get_project_name
+from riseml.configs import create_config, get_project_name, get_project_root
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
 from riseml.consts import API_URL, GIT_URL, SYNC_URL
@@ -56,7 +56,7 @@ def push_project(user, project_name, config_file):
     rsync_url = '%s://%s%s/%s' % (
         o.scheme, o.netloc, o.path, sync_path)
 
-    project_root = os.path.join(os.getcwd(), '')
+    project_root = os.path.join(get_project_root(config_file))
     exclude_file = os.path.join(project_root, '.risemlignore')
     
     sync_cmd = [get_rsync_path(),
@@ -64,7 +64,7 @@ def push_project(user, project_name, config_file):
                 '--exclude=.git',
                 '--exclude=riseml*.yml',
                 '--delete-during',
-                project_root,
+                '.',
                 rsync_url]
     if os.path.exists(exclude_file):
         sync_cmd.insert(2, '--exclude-from=%s' % exclude_file)
@@ -103,15 +103,21 @@ def get_project_size(sync_cmd, project_root):
     sync_cmd = sync_cmd[:]
     sync_cmd.insert(1, '--dry-run')
     sync_cmd.insert(1, '-v')
-    try:
-        out = subprocess.check_output(sync_cmd)
-        m = re.search(r'total size is ([0-9,]+)  speedup', out)
-        if m:
-            num_files = len(out.strip().split('\n')) - 5 # 1 header, 3 footer, ./
-            size = int(m.group(1).replace(',', ''))
-            return num_files, size
-    except subprocess.CalledProcessError:
+    proc = subprocess.Popen(sync_cmd,
+                            cwd=project_root,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    out = ''
+    for buf in proc.stdout:
+        out += buf
+    res = proc.wait()
+    if res != 0:
         return None
+    m = re.search(r'total size is ([0-9,]+)  speedup', out)
+    if m:
+        num_files = len(out.strip().split('\n')) - 5 # 1 header, 3 footer, ./
+        size = int(m.group(1).replace(',', ''))
+        return num_files, size
 
 
 def get_project(name):
