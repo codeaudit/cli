@@ -47,7 +47,7 @@ class Job(object):
             'started_at': 'int',
             'state_changed_at': 'int',
             'finished_at': 'int',
-            'cpus': 'int',
+            'cpus': 'float',
             'mem': 'int',
             'gpus': 'int',
             'image': 'str',
@@ -519,7 +519,7 @@ class Job(object):
 
 
         :return: The cpus of this Job.
-        :rtype: int
+        :rtype: float
         """
         return self._cpus
 
@@ -530,7 +530,7 @@ class Job(object):
 
 
         :param cpus: The cpus of this Job.
-        :type: int
+        :type: float
         """
 
         self._cpus = cpus

@@ -71,7 +71,7 @@ def push_project(user, project_name, config_file):
     project_size = get_project_size(sync_cmd, project_root)
     if project_size is not None:
         num_files, size = project_size
-        sys.stdout.write('Syncing project (%.1f MiB, %d files)...' %
+        sys.stdout.write('Syncing project (%.1f MB, %d files)...' %
                             (bytes_to_mib(size), num_files))
     else:
         sys.stdout.write('Syncing project...')
