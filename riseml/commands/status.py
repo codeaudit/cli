@@ -91,17 +91,17 @@ def show_experiment(experiment):
     show_common_header(experiment, "Experiment")
     print("Image: {}".format(experiment.image))
     print("Framework: {}".format(experiment.framework))
-    show_dict(experiment.framework_config.to_dict(), title="Framework Config:")
+    show_dict(experiment.framework_config, title="Framework Config:")
     
-    if experiment.framework == 'tensorflow' and experiment.framework_config.tensorboard:
+    if experiment.framework == 'tensorflow' and experiment.framework_config.get('tensorboard', False):
         tensorboard_job = next((job for job in experiment.jobs if job.role == 'tensorboard'), None)
         if tensorboard_job:
             print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
 
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in experiment.run_commands]))
-    print("Concurrent Experiments: {}".format(experiment.concurrent_experiments))
-    print("Params: {}\n".format(params(experiment)))
+    print("Concurrency: {}".format(experiment.concurrency))
+    print("Parameters: {}\n".format(params(experiment)))
 
     show_job_table(experiment.jobs)
 
@@ -151,7 +151,7 @@ def show_experiment_group(group):
     print("State: {}".format(group.state))
     print("Project: {}".format(group.changeset.repository.name))
 
-    if group.framework == 'tensorflow' and group.framework_config.tensorboard:
+    if group.framework == 'tensorflow' and group.framework_config.get('tensorboard', False):
         tensorboard_job = next(job for job in group.jobs if job.role == 'tensorboard')
         print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
 

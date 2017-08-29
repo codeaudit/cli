@@ -58,6 +58,7 @@ class DefaultApi(object):
         :param str revision:  (required)
         :param str kind:  (required)
         :param str config:  (required)
+        :param str node_selectors: 
         :return: Experiment
                  If the method is called asynchronously,
                  returns the request thread.
@@ -88,12 +89,13 @@ class DefaultApi(object):
         :param str revision:  (required)
         :param str kind:  (required)
         :param str config:  (required)
+        :param str node_selectors: 
         :return: Experiment
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['repository', 'revision', 'kind', 'config']
+        all_params = ['repository', 'revision', 'kind', 'config', 'node_selectors']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -140,6 +142,8 @@ class DefaultApi(object):
             form_params.append(('kind', params['kind']))
         if 'config' in params:
             form_params.append(('config', params['config']))
+        if 'node_selectors' in params:
+            form_params.append(('node_selectors', params['node_selectors']))
 
         body_params = None
 
