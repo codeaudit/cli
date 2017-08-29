@@ -59,8 +59,6 @@ riseml train
 
 ## Build a standalone bundle
 
-PyInstaller currently not supporting python3.6, so use py3.4 or py3.5 executable.
-
 ```bash
 git clone https://github.com/riseml/client
 cd client
