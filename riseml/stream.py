@@ -4,6 +4,7 @@ import re
 import json
 import sys
 import websocket
+import stringcase
 
 from riseml.errors import handle_error
 from riseml.consts import STREAM_URL
@@ -51,11 +52,16 @@ class LogPrinter(object):
     def print_state_message(self, msg):
         if msg['job_id'] not in self.ids_to_name:
             return
-        state = "[%s] --> %s" % (util.str_timestamp(msg['time']), msg['state'])
+        time = util.str_timestamp(msg['time'])
+        state = "[%s] --> %s" % (time, msg['state'])
         output = "%s%s" % (self._message_prefix(msg),
                            util.color_string(state, color="bold_white"))
         print(output)
-
+        for key in ['reason', 'message', 'exit_code']:
+            if msg.get(key, None) is not None:
+                message = "[{}] {}: {}".format(time, stringcase.titlecase(key), msg[key])
+                print("{}{}".format(self._message_prefix(msg), util.color_string(message, color="bold_white")))
+        
 
 def stream_log(url, ids_to_name, stream_meta={}):
     log_printer = LogPrinter(ids_to_name)

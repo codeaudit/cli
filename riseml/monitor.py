@@ -347,7 +347,8 @@ def stream_stats(job_id_stats, stream_meta={}):
     monitor_stream.daemon = True
     monitor_stream.start()
     conn_timeout = 10
-    while not ws.sock.connected and conn_timeout > 0 and monitor_stream.isAlive():
+    while ws.sock is None or \
+            not ws.sock.connected and conn_timeout > 0 and monitor_stream.isAlive():
         time.sleep(0.5)
         conn_timeout -= 1
     if not ws.sock.connected:

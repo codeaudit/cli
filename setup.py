@@ -9,7 +9,7 @@ VERSION = "0.3.10"
 
 REQUIRES = ["urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil"]
 
-REQUIRES += ['future', 'pyyaml', 'requests', 'flask', 'flask-cors', 'config_parser==0.1.0', 'jsonschema', 'websocket-client', 'rollbar']
+REQUIRES += ['future', 'pyyaml', 'requests', 'flask', 'flask-cors', 'config_parser==0.1.0', 'jsonschema', 'websocket-client', 'rollbar', 'stringcase']
 
 setup(
     name=NAME,

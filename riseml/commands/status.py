@@ -75,12 +75,15 @@ def show_job_table(jobs):
          job.state,
          util.get_since_str(job.started_at),
          util.get_since_str(job.finished_at),
+         job.reason or '',
+         job.message[:17] + '...' if job.message and len(job.message) > 20 else job.message or '',
+         job.exit_code or '',
          'N/A', 'N/A', 'N/A']) for job in jobs
     ]
 
     util.print_table(
-        header=['JOB ID', 'STATE', 'STARTED', 'FINISHED', 'GPU', 'CPU', 'MEM'],
-        min_widths=[13, 13, 13, 13, 6, 6, 6],
+        header=['JOB ID', 'STATE', 'STARTED', 'FINISHED', 'REASON', 'MESSAGE', 'EXIT CODE', 'GPU', 'CPU', 'MEM'],
+        min_widths=[13, 13, 13, 13, 13, 20, 10, 6, 6, 6],
         rows=rows
     )
 
@@ -106,6 +109,12 @@ def show_job(job):
     show_common_header(job, "Job")
     print("Started: {} ago".format(util.get_since_str(job.started_at)))
     print("Finished: {} ago".format(util.get_since_str(job.finished_at)))
+    if job.reason is not None:
+        print("Reason: {}".format(job.reason))
+    if job.message is not None:
+        print("Message: {}".format(job.message))    
+    if job.exit_code is not None:    
+        print("Exit Code: {}".format(job.exit_code))
     print("Requested cpus: {}".format(job.cpus))
     print("Requested mem: {}".format(job.mem))
     print("Requested gpus: {}".format(job.gpus))

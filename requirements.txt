@@ -1,0 +1,11 @@
+urllib3>=1.15
+six>=1.10
+certifi
+python-dateutil
+future
+pyyaml
+requests
+-e git+https://github.com/riseml/config-parser.git@master#egg=config_parser
+jsonschema
+websocket-client
+rollbar
