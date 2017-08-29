@@ -203,6 +203,18 @@ def bytes_to_mib(value):
     return float(value) / (1024 ** 2)
 
 
+def bytes_to_kib(value):
+    return float(value) / (1024 ** 1)
+
+
+def get_readable_size(value):
+    for f, u in ((bytes_to_gib, 'GB'), (bytes_to_mib, 'MB') , 
+                 (bytes_to_kib, 'KB')):
+        if f(value) >= 1:
+            return '%.1f %s' % (f(value), u)
+    return '%s B' % (value)
+
+
 def get_rsync_path():
     if IS_BUNDLE:
         return os.path.join(sys._MEIPASS, 'bin', 'rsync')
