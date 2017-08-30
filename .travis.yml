@@ -23,7 +23,8 @@ script:
               --with-included-zlib
               --disable-iconv
               --disable-iconv-open &&
-  make
+  make &&
+  cd -
 - pip install -r requirements.txt pyinstaller
 - pyinstaller --clean riseml.spec
 
