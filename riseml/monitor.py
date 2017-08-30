@@ -320,8 +320,9 @@ def stream_stats(job_id_stats, stream_meta={}):
                     job_stats = job_id_stats[job_id]
                     job_stats.update(stats)
             elif msg['type'] == 'state':
-                job_id = msg['job_id']
-                job_stats[job_id].update_job_state(msg['state'])
+                with stats_lock:
+                    job_stats = job_id_stats[job_id]
+                    job_stats.update_job_state(msg['state'])
         except Exception as e:
             handle_error(traceback.format_exc())
 
