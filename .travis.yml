@@ -19,7 +19,8 @@ script:
 before_deploy:
 - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 - tar xvzf rsync-3.1.2.tar.gz
-- cd rsync-3.1.2
+- mv rsync-3.1.2 rsync
+- cd rsync
 - ./configure --prefix=/usr
               --with-included-popt
               --with-included-zlib
