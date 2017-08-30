@@ -8,10 +8,15 @@ os:
 - linux
 - osx
 
-before_deploy:
+before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew update && brew install upx;
   fi
+
+script:
+- echo "RiseML rox!"
+
+before_deploy:
 - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 - tar xvzf rsync-3.1.2.tar.gz
 - cd rsync-3.1.2
