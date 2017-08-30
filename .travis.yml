@@ -14,7 +14,7 @@ before_install:
   fi
 - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 - tar xvzf rsync-3.1.2.tar.gz
-- mv rsync-3.1.2.tar.gz rsync
+- mv rsync-3.1.2 rsync
 
 script:
 - cd rsync &&
