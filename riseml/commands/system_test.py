@@ -3,6 +3,7 @@ import tempfile
 import json
 import math
 import random
+import shutil
 
 from riseml.configs import load_config
 from riseml.client import AdminApi, ApiClient
@@ -31,10 +32,9 @@ train:
 """
 
 SCRIPT = """#!/bin/bash
-exit
-for i in $(seq 100)
+for i in $(seq 15)
 do
-stress --cpu {threads_cpu} --vm {threads_mem} --vm-bytes {mem_per_thread}M -t 10
+stress --cpu {threads_cpu} --vm {threads_mem} --vm-bytes {mem_per_thread}M -t 20
 for i in $(seq 100)
     do
         /usr/games/fortune
@@ -73,6 +73,10 @@ def prepare_project_dir(job_config, stress_script):
     return config_path
 
 
+def remove_project_dir(config_path):
+    shutil.rmtree(os.path.dirname(config_path))
+
+
 def add_system_test_parser(subparsers):
     parser = subparsers.add_parser('test', help="perform cluster tests")
     parser.add_argument('--nodename', help="the node's hostname to schedule jobs on", 
@@ -81,6 +85,10 @@ def add_system_test_parser(subparsers):
                         type=int, required=False)
     parser.add_argument('--num_cpus', help="cpus per job to stress", default=1, 
                         type=float, required=False)
+    parser.add_argument('--request_cpus', help="cpus per job to request", default=.1, 
+                        type=float, required=False)
+    parser.add_argument('--request_mem', help="mem per job to request", default=128, 
+                        type=int, required=False)
     parser.add_argument('--mem', help="memory per job to stress", default=1024, 
                         type=int, required=False)  
     parser.add_argument('--force_build_steps', help="cause each job to perform considerable build steps",
@@ -94,8 +102,8 @@ def run(args):
     user = get_user()
     
     for i in range(args.num_jobs):
-        job_config = get_job_config(args.num_cpus, args.mem, args.force_build_steps)
-        stress_script = get_script(args.num_cpus, args.mem)    
+        job_config = get_job_config(args.request_cpus, args.request_mem, args.force_build_steps)
+        stress_script = get_script(args.num_cpus, args.mem)
         if i == 0:
             print('Job configuration:\n\n%s' % job_config)
         print('Starting job %s of %s to stress %s CPUs and %s MB of memory.' %
@@ -117,3 +125,4 @@ def start_job(user, nodename, job_config, stress_script):
         kind='train', config=json.dumps(config.train.as_dict()),
         node_selectors=node_selector
     ))
+    remove_project_dir(config_path)
