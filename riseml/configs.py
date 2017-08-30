@@ -31,6 +31,11 @@ def get_project_name(config_file):
     # shortcut to .project attribute
     return load_config(config_file, 'project')
 
+
+def get_project_root(config_file):
+    return os.path.dirname(os.path.abspath(config_file))
+
+
 def _generate_project_name():
     cwd = os.getcwd()
     project_name = os.path.basename(cwd)
