@@ -14,6 +14,14 @@ def add_monitor_parser(subparsers):
     parser.set_defaults(run=run)
 
 
+def get_experiment_jobs(experiment, roles=('train', 'dist-tf-master', 
+                                           'dist-tf-ps', 'dist-tf-worker')):
+   jobs = [j for j in experiment.jobs if j.role in roles]
+   for c in experiment.children:
+       jobs += get_experiment_jobs(c)
+   return jobs
+
+
 def run(args):
     api_client = ApiClient(host=API_URL)
     client = DefaultApi(api_client)
@@ -22,7 +30,10 @@ def run(args):
         if is_experiment_id(args.id):
             experiment = call_api(lambda: client.get_experiment(args.id),
                                   not_found=lambda: handle_error("Could not find experiment %s" % args.id))
-            monitor_jobs(experiment.jobs, detailed=args.long, 
+            jobs = get_experiment_jobs(experiment)
+            if not jobs:
+                handle_error('Experiment has no jobs.')
+            monitor_jobs(jobs, detailed=args.long, 
                          stream_meta={"experiment_id": experiment.short_id})
         elif is_job_id(args.id):
             job = call_api(lambda: client.get_job(args.id))
@@ -34,5 +45,8 @@ def run(args):
         experiments = call_api(lambda: client.get_experiments())
         if not experiments:
             handle_error('No experiment logs to show!')
-        monitor_jobs(experiments[0].jobs, detailed=args.long, 
+        jobs = get_experiment_jobs(experiments[0])
+        if not jobs:
+            handle_error('Last experiment has no jobs.')
+        monitor_jobs(jobs, detailed=args.long, 
                      stream_meta={"experiment_id": experiments[0].short_id})

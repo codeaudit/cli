@@ -10,6 +10,7 @@ import StringIO
 import math
 import traceback
 import os
+import subprocess
 from collections import OrderedDict
 
 from riseml.errors import handle_error
@@ -175,7 +176,8 @@ def get_summary_infos(jobs_stats):
                          job_stats.get('gpu_memory_percent', '%.1f'),
                          '%s / %s' % (gpu_mem_used, gpu_mem_total)])
         else:
-            rows.append([job.short_id, job.changeset.repository.name, job.state] + ['N/A' for _ in range(6)])
+            rows.append([job.short_id, job.changeset.repository.name, job.state] + \
+                        ['N/A', 'N/A', 'N/A / N/A', 'N/A', 'N/A', 'N/A / N/A'])
 
     print_table(
         header=['ID', 'PROJECT', 'STATE', 
@@ -223,9 +225,15 @@ def get_cpu_bars(num_cpus, percpu_percent):
 def get_gpu_table(job_stats):
     rows = []
     output = StringIO.StringIO()
+    def remove_dev_prefix(name):
+        print(name)
+        if name.startswith('/dev/nvidia'):
+            return name[len('/dev/nvidia'):]
+        return name
     for gpu_dev in job_stats.gpus:
         gpu_stats = job_stats.gpu_stats[gpu_dev]
-        row = [gpu_dev, gpu_stats.get('name', '%s'), 
+        gpu_index = remove_dev_prefix(gpu_dev)
+        row = [gpu_index, gpu_stats.get('name', '%s'),
                gpu_stats.get('gpu_utilization', '%d'),
                gpu_stats.get('memory_used', '%.1f', bytes_to_gib),
                gpu_stats.get('memory_total', '%.1f', bytes_to_gib),
@@ -238,7 +246,7 @@ def get_gpu_table(job_stats):
         rows.append(row)
     if rows:
         print_table(
-            header=['GPU Stats', 'NAME', 'GPU-Util', 
+            header=['GPU', 'NAME', 'GPU-Util', 
                     'MEM-Used (GB)', 'MEM-Total (GB)', 
                     'PWR-Used', 'PWR-Limit', 'TEMP'],
             min_widths=[4, 8, 3, 4, 4, 3, 3, 3],
@@ -289,12 +297,22 @@ class StatsScreen():
                         stats_screen = get_summary_infos(sorted_stats)            
                 if monitor_stream.isAlive():
                     os.system('cls' if os.name == 'nt' else 'clear')
-                    print(stats_screen.strip())
+                    print(self._fit_terminal(stats_screen.strip()))
                     sys.stdout.flush()
                 else:
                     sys.stderr.write('Monitor stream disconnected\n')
                     break
                 time.sleep(1)      
+
+    def _fit_terminal(self, output):
+        try:
+            rows, columns = subprocess.check_output(['stty', 'size']).split()
+            lines = output.split('\n')
+            output_lines = lines[:int(rows) - 1]
+            output_lines = [l[:int(columns) - 1] for l in output_lines]
+            return '\n'.join(output_lines)
+        except subprocess.CalledProcessError:
+            return output
 
     def display(self, detailed=False, stream_meta={}):
         try:
@@ -321,7 +339,9 @@ def stream_stats(job_id_stats, stream_meta={}):
                     job_stats.update(stats)
             elif msg['type'] == 'state':
                 job_id = msg['job_id']
-                job_stats[job_id].update_job_state(msg['state'])
+                with stats_lock:
+                    job_stats = job_id_stats[job_id]
+                    job_stats.update_job_state(msg['state'])
         except Exception as e:
             handle_error(traceback.format_exc())
 
@@ -356,7 +376,7 @@ def stream_stats(job_id_stats, stream_meta={}):
 
 
 def monitor_jobs(jobs, detailed=False, stream_meta={}):
-    job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs if j.role == 'train'})
+    job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs})
     stream_stats(job_id_stats, stream_meta)
     jobs_stats = job_id_stats.values()
     screen = StatsScreen(jobs_stats)
