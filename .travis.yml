@@ -26,4 +26,4 @@ deploy:
   file_glob: true
   file: dist/*
   on:
-    repo: riseml/client
+    tags: true
