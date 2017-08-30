@@ -1,3 +1,5 @@
+import pkg_resources
+
 from collections import Counter
 from riseml.client import AdminApi, ApiClient
 from riseml.consts import API_URL
@@ -74,11 +76,17 @@ def display_long(nodes):
         rows=rows
     )    
 
+def display_client_info():
+    dist = pkg_resources.get_distribution("riseml")
+    print('Client Version: {}'.format(dist.version))
+
 def display_clusterinfos(clusterinfos):
     clusterinfos = {e.key: e.value for e in clusterinfos}
+    server_version = clusterinfos.get('server_version', 'N/A')
     k8s_version = clusterinfos.get('k8s_version', 'N/A')
     k8s_build_date = clusterinfos.get('k8s_build_date', 'N/A')
     k8s_git_commit = clusterinfos.get('k8s_git_commit', 'N/A')
+    print('RiseML Server Version: {}'.format(server_version))
     print('Kubernetes Version %s (Build Date: %s)' % (k8s_version, k8s_build_date))
 
 
@@ -86,7 +94,8 @@ def run(args):
     api_client = ApiClient(host=API_URL)
     client = AdminApi(api_client)
     nodes = call_api(lambda: client.get_nodes())
-    clusterinfos = call_api(lambda: client.get_cluster_infos())    
+    clusterinfos = call_api(lambda: client.get_cluster_infos())
+    display_client_info()
     display_clusterinfos(clusterinfos)
     print('')
     if args.long:

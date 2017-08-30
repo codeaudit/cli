@@ -6,7 +6,7 @@ import re
 import subprocess
 import requests
 
-from riseml.util import get_rsync_path
+from riseml.util import get_rsync_path, get_readable_size
 from riseml.configs import create_config, get_project_name, get_project_root
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
@@ -73,8 +73,8 @@ def push_project(user, project_name, config_file):
     if project_size is not None:
         num_files, size = project_size
         warn_project_size(size, num_files)
-        sys.stdout.write('Syncing project (%.1f MB, %d files)...' %
-                            (bytes_to_mib(size), num_files))
+        sys.stdout.write('Syncing project (%s, %d files)...' %
+                            (get_readable_size(size), num_files))
     else:
         sys.stdout.write('Syncing project...')
     sys.stdout.flush()

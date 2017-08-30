@@ -53,22 +53,6 @@ COLORS_DISABLED = not sys.stdout.isatty()
 
 def bold(s): return color_string(s, ansi_code=1)
 
-def get_job_name(job):
-    if job.root is None:
-        if job.role == 'sequence':
-            return "+ (%s)" % job.changeset.config_section
-        elif job.role in ('deploy', 'train'):
-            return "%s:run" % job.changeset.config_section
-        else:
-            return '%s (%s)' % (job.name, job.changeset.config_section)
-    elif job.role in ('deploy', 'train'):
-        return 'run'
-    elif job.role == 'tensorboard':
-        return 'tensorboard (service: %s)' % job.service_name 
-    else:
-        return job.name
-
-
 def get_color_pairs():
     for name, code in COLOR_CODES.items():
         yield(name, str(code))
@@ -201,6 +185,18 @@ def bytes_to_gib(value):
 
 def bytes_to_mib(value):
     return float(value) / (1024 ** 2)
+
+
+def bytes_to_kib(value):
+    return float(value) / (1024 ** 1)
+
+
+def get_readable_size(value):
+    for f, u in ((bytes_to_gib, 'GB'), (bytes_to_mib, 'MB') , 
+                 (bytes_to_kib, 'KB')):
+        if f(value) >= 1:
+            return '%.1f %s' % (f(value), u)
+    return '%s B' % (value)
 
 
 def get_rsync_path():

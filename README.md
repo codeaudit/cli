@@ -13,6 +13,8 @@ pip install -e client --process-dependency-links
 export RISEML_APIKEY=admin_key
 export RISEML_SYNC_ENDPOINT=rsync://192.168.99.100:31876/sync
 export RISEML_ENDPOINT=http://localhost:80
+export RISEML_CLUSTER_ID=?
+export RISEML_ENVIRONMENT=?
 ```
 
 ## Check setup
@@ -59,17 +61,10 @@ riseml train
 
 ## Build a standalone bundle
 
-PyInstaller currently not supporting python3.6, so use py3.4 or py3.5 executable.
-
 ```bash
 git clone https://github.com/riseml/client
 cd client
-virtualenv env -p python3.5 && source env/bin/activate
-pip3 install pyinstaller
-pip3 install jinja2==2.8.1 # latest jinja2 (2.9.6) has a SyntaxError with Python 3.5
-pip3 install -e . --process-dependency-links
-pyinstaller riseml.spec \
-            --onefile \
-            --name riseml \
-            --add-binary /usr/bin/rsync:bin
+virtualenv env && source env/bin/activate
+pip install -r requirements.txt pyinstaller
+pyinstaller riseml.spec
 ```
