@@ -43,7 +43,10 @@ def run(args):
         show_experiments(client.get_experiments(user=args.id[1:]),
                          all=args.all, collapsed=not args.long, users=args.all_users)
     elif not args.id:
-        show_experiments(client.get_experiments(all_users=args.all_users),
+        query_args = {'all_users': args.all_users}
+        if not args.all:
+            query_args['states'] = 'CREATED|STARTING|BUILDING|RUNNING'
+        show_experiments(client.get_experiments(**query_args),
                          all=args.all, collapsed=not args.long, users=args.all_users)
     else:
         handle_error("Id does not identify any RiseML entity!")
