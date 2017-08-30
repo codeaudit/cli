@@ -2,7 +2,6 @@ language: c
 addons:
   apt:
     packages:
-    - rsync
     - upx
 
 os:
@@ -11,10 +10,21 @@ os:
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew update && brew install rsync upx;
+    brew update && brew install upx;
   fi
+- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
+- tar xvzf rsync-3.1.2.tar.gz
+- mv rsync-3.1.2.tar.gz rsync
 
 script:
+- cd rsync &&
+  ./configure --prefix=/usr
+              --with-included-popt
+              --with-included-zlib
+              --disable-iconv
+              --disable-iconv-open &&
+  make &&
+  make install
 - pip install -r requirements.txt pyinstaller
 - pyinstaller --clean riseml.spec
 
