@@ -126,7 +126,8 @@ class JobStats(Stats):
             s = self.gpu_stats.get(gpu, GPUStats(gpu))
             s.update(stats, timestamp=timestamp)
             self.gpu_stats[gpu] = s
-        self.gpus = sorted(list(set(self.gpus) | set(gpu_stats.keys())))
+        self.gpus = sorted(list(set(self.gpus) | set(gpu_stats.keys())),
+                           key=lambda x: self.gpu_stats[x].stats['index'])
 
     @formatted_getter
     def get_memory_percent(self):
@@ -225,14 +226,8 @@ def get_cpu_bars(num_cpus, percpu_percent):
 def get_gpu_table(job_stats):
     rows = []
     output = StringIO.StringIO()
-    def remove_dev_prefix(name):
-        print(name)
-        if name.startswith('/dev/nvidia'):
-            return name[len('/dev/nvidia'):]
-        return name
-    for gpu_dev in job_stats.gpus:
+    for gpu_index, gpu_dev in enumerate(job_stats.gpus):
         gpu_stats = job_stats.gpu_stats[gpu_dev]
-        gpu_index = remove_dev_prefix(gpu_dev)
         row = [gpu_index, gpu_stats.get('name', '%s'),
                gpu_stats.get('gpu_utilization', '%d'),
                gpu_stats.get('memory_used', '%.1f', bytes_to_gib),
