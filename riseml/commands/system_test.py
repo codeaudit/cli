@@ -81,17 +81,17 @@ def add_system_test_parser(subparsers):
     parser = subparsers.add_parser('test', help="perform cluster tests")
     parser.add_argument('--nodename', help="the node's hostname to schedule jobs on", 
                         required=False)
-    parser.add_argument('--num_jobs', help="the number of jobs to run", default=1, 
+    parser.add_argument('--num-jobs', help="the number of jobs to run", default=1, 
                         type=int, required=False)
-    parser.add_argument('--num_cpus', help="cpus per job to stress", default=1, 
+    parser.add_argument('--num-cpus', help="cpus per job to stress", default=1, 
                         type=float, required=False)
-    parser.add_argument('--request_cpus', help="cpus per job to request", default=.1, 
+    parser.add_argument('--request-cpus', help="cpus per job to request", default=.1, 
                         type=float, required=False)
-    parser.add_argument('--request_mem', help="mem per job to request", default=128, 
+    parser.add_argument('--request-mem', help="mem per job to request", default=128, 
                         type=int, required=False)
     parser.add_argument('--mem', help="memory per job to stress", default=1024, 
                         type=int, required=False)  
-    parser.add_argument('--force_build_steps', help="cause each job to perform considerable build steps",
+    parser.add_argument('--force-build-steps', help="cause each job to perform considerable build steps",
                          action="store_const", const=True)
     parser.set_defaults(run=run)
 
