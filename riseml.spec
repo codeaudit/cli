@@ -10,7 +10,7 @@ cfg_parser_loc = os.path.dirname(sys.modules['config_parser'].__file__)
 
 a = Analysis(['riseml/__main__.py'],
              pathex=[],
-             binaries=[('/usr/bin/rsync', 'bin')],
+             binaries=[('rsync/rsync', 'bin')],
              datas=[(os.path.join(cfg_parser_loc, 'schemas/*'), 'config_parser/schemas')],
              hiddenimports=[],
              hookspath=[],
