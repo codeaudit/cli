@@ -1,5 +1,6 @@
 import os
 import sys
+from client.configuration import Configuration
 
 try:
     from urllib.parse import urlparse
@@ -18,3 +19,4 @@ ROLLBAR_ENDPOINT = os.environ.get('RISEML_ROLLBAR_ENDPOINT', 'https://backend.ri
 CLUSTER_ID = os.environ.get('RISEML_CLUSTER_ID')
 ENVIRONMENT = os.environ.get('RISEML_ENVIRONMENT', 'production')
 IS_BUNDLE = getattr(sys, 'frozen', False)
+VERSION = Configuration().packageVersion

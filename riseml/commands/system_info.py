@@ -1,8 +1,6 @@
-import pkg_resources
-
 from collections import Counter
 from riseml.client import AdminApi, ApiClient
-from riseml.consts import API_URL
+from riseml.consts import API_URL, VERSION
 from riseml.util import bytes_to_gib, print_table, TableRowDelimiter, call_api
 
 
@@ -77,8 +75,7 @@ def display_long(nodes):
     )    
 
 def display_client_info():
-    dist = pkg_resources.get_distribution("riseml")
-    print('Client Version: {}'.format(dist.version))
+    print('Client Version: {}'.format(VERSION))
 
 def display_clusterinfos(clusterinfos):
     clusterinfos = {e.key: e.value for e in clusterinfos}
