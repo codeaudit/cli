@@ -80,7 +80,7 @@ def show_job_table(jobs):
          util.get_since_str(job.finished_at),
          job.reason or '',
          job.message[:17] + '...' if job.message and len(job.message) > 20 else job.message or '',
-         job.exit_code or '',
+         job.exit_code,
          'N/A', 'N/A', 'N/A']) for job in jobs
     ]
 
