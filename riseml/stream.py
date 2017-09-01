@@ -11,7 +11,7 @@ from riseml.consts import STREAM_URL
 
 from . import util
 
-ANSI_ESCAPE_REGEX = re.compile(r'\x1b[^m]*m')
+ANSI_ESCAPE_REGEX = re.compile(r'\x1b\[(\d+)m')
 
 
 class LogPrinter(object):
@@ -39,10 +39,11 @@ class LogPrinter(object):
         for line in msg['log_lines']:
             last_color = self.job_ids_last_color_used.get(msg['job_id'], 0)
 
-            line_text = "[%s] %s" % (util.str_timestamp(line['time']), line['log'])
+            line_text = "[%s] %s" % (util.str_timestamp(line['time']),
+                                     util.color_string(line['log'], ansi_code=last_color))
 
-            output = "%s%s" % (self._message_prefix(msg), util.color_string(line_text, ansi_code=last_color))
-            used_colors = ANSI_ESCAPE_REGEX.findall(line_text)
+            output = "%s%s" % (self._message_prefix(msg), line_text)
+            used_colors = ANSI_ESCAPE_REGEX.findall(line['log'])
 
             if used_colors:
                 self.job_ids_last_color_used[msg['job_id']] = used_colors[-1]
