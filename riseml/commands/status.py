@@ -45,7 +45,7 @@ def run(args):
     elif not args.id:
         query_args = {'all_users': args.all_users}
         if not args.all:
-            query_args['states'] = 'CREATED|STARTING|BUILDING|RUNNING'
+            query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
         show_experiments(client.get_experiments(**query_args),
                          all=args.all, collapsed=not args.long, users=args.all_users)
     else:
@@ -189,7 +189,7 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
             experiment.changeset.repository.name,
             experiment.state,
             util.get_since_str(experiment.created_at),
-            'Experiment' if len(experiment.children) == 0 else 'Series'
+            experiment.type
         ]
 
         if not collapsed:
@@ -197,7 +197,7 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
 
         rows.append(values)
 
-        if not collapsed and len(experiment.children) > 0:
+        if not collapsed and experiment.children:
             rows += get_experiments_rows(experiment)
 
     util.print_table(

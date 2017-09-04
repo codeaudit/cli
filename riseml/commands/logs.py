@@ -32,4 +32,5 @@ def run(args):
         experiments = call_api(lambda: client.get_experiments())
         if not experiments:
             handle_error('No experiment logs to show!')
-        stream_experiment_log(experiments[0])
+        experiment = call_api(lambda: client.get_experiment(experiments[0].short_id))
+        stream_experiment_log(experiment)
