@@ -7,7 +7,7 @@ import rollbar
 from urllib3.exceptions import HTTPError
 
 from riseml.commands import *
-from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL, ROLLBAR_ENDPOINT, CLUSTER_ID, ENVIRONMENT
+from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL, ROLLBAR_ENDPOINT, CLUSTER_ID, ENVIRONMENT, VERSION
 from riseml.errors import handle_error
 
 import logging
@@ -16,8 +16,8 @@ logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', help="show endpoints",
-                        action='store_const', const=True)
+    parser.add_argument('-v', help="show endpoints", action='store_const', const=True)
+    parser.add_argument('--version', '-V', help="show version", action='version', version='RiseML {}'.format(VERSION))
 
     subparsers = parser.add_subparsers()
 
