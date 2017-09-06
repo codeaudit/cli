@@ -61,11 +61,13 @@ def show_dict(dictionary, indentation=2, title=None):
         return
     if title:
         print(title)
+    whitespaces = ' ' * indentation
     for attribute, value in dictionary.items():
         if isinstance(value, dict):
+            print("{}{}:".format(whitespaces, attribute))
             show_dict(value, indentation=indentation + 2)
         elif value is not None:
-            print("  {}: {}".format(attribute, value))
+            print("{}{}: {}".format(whitespaces, attribute, value))
 
 def show_common_header(entity, type):
     print("ID: {}".format(entity.short_id))
