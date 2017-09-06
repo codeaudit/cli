@@ -6,6 +6,13 @@ import platform
 import config_parser
 
 
+def get_os():
+  val = platform.system().lower()
+  return {
+    'darwin': 'macos'
+  }.get(val, val)
+
+
 cfg_parser_loc = os.path.dirname(sys.modules['config_parser'].__file__)
 
 a = Analysis(['riseml/__main__.py'],
@@ -28,7 +35,7 @@ exe = EXE(pyz,
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='riseml_%s' % platform.system().lower(),
+          name='riseml_%s' % get_os(),
           debug=False,
           strip=False,
           upx=True,

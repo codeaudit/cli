@@ -32,11 +32,21 @@ before_deploy:
 - pyinstaller --clean riseml.spec
 
 deploy:
-  provider: releases
-  skip_cleanup: true
-  api_key:
-    secure: IAN69l/E5WLSZheNYgw+utauwHspngSVdj/G7ZZbwrmjUGk8VBUi1Xgs7bUvXRqbJ+VGtlkz/FryL6efl3PeVikTSZ3W+5q+rzKKBelj20TlFm9IY1FH0RE7wMKYMtE9uK8NQE5NQJcub7NQpSO9HflB4JOElLd4/vA2rDZ48/GsfQRff5t3D0WGpXKLwBQ95D9J9UmKqqE7+oc0tT8vWTxl3sw60RqzLRS1MmrTUO7t56qGWKX/wrm5VGogcFgkBPMKzd9/NIzAy4p9OBbdoQwXIp8VzjQxqH4CUeuWE40YBzXxIZN9IIs5ReI99qqXLbhCToGTtFcm+1HwKAA3cfHfIGDkV+4OOurQw76/7AghWZqRGsrZBMhUR9/eSuyXF/l7qarfcOOA1LcL0TLv4HmvseKHxN5s3UegMmy402YSudKoxBLdWTqZYHr4HxOHlVb1Kj0mrD/5PHIoLvE0b+sITdFbQU+TVf1bRDrWGyvzhL9u+tI5oSp5W1EPRTTt/bJwky6o4rNhUjCQ/j/6zSb4WIHNn1xBdPkSjJhNAA81yhIVJvfu0ulTvvNK3CCC1g9jrogegxhX0FyHATzZ8ddi07oczgp65hLu+k6GelT1aCKeSee+fnzReN834R09WtGU4um3ddAv7kpiMIkwMsyMPxC/y5B2EcI6K7CUjvo=
-  file_glob: true
-  file: dist/*
-  on:
-    tags: true
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: IAN69l/E5WLSZheNYgw+utauwHspngSVdj/G7ZZbwrmjUGk8VBUi1Xgs7bUvXRqbJ+VGtlkz/FryL6efl3PeVikTSZ3W+5q+rzKKBelj20TlFm9IY1FH0RE7wMKYMtE9uK8NQE5NQJcub7NQpSO9HflB4JOElLd4/vA2rDZ48/GsfQRff5t3D0WGpXKLwBQ95D9J9UmKqqE7+oc0tT8vWTxl3sw60RqzLRS1MmrTUO7t56qGWKX/wrm5VGogcFgkBPMKzd9/NIzAy4p9OBbdoQwXIp8VzjQxqH4CUeuWE40YBzXxIZN9IIs5ReI99qqXLbhCToGTtFcm+1HwKAA3cfHfIGDkV+4OOurQw76/7AghWZqRGsrZBMhUR9/eSuyXF/l7qarfcOOA1LcL0TLv4HmvseKHxN5s3UegMmy402YSudKoxBLdWTqZYHr4HxOHlVb1Kj0mrD/5PHIoLvE0b+sITdFbQU+TVf1bRDrWGyvzhL9u+tI5oSp5W1EPRTTt/bJwky6o4rNhUjCQ/j/6zSb4WIHNn1xBdPkSjJhNAA81yhIVJvfu0ulTvvNK3CCC1g9jrogegxhX0FyHATzZ8ddi07oczgp65hLu+k6GelT1aCKeSee+fnzReN834R09WtGU4um3ddAv7kpiMIkwMsyMPxC/y5B2EcI6K7CUjvo=
+    file_glob: true
+    file: dist/*
+    on:
+      tags: true
+  - provider: s3
+    skip_cleanup: true
+    access_key_id: AKIAJZEF7MF67LCYHY3Q
+    secret_access_key:
+      secure: co7slTPv8GFL58v3OhhAlhHRTzWBShRq1zcB/Hq04AkE6u1NymGkiCrzmj8b1kSPjb0Wzb85DIJdBn6d1ytWlQ+AzopGprYzQSK7dM+YCG9dIBimTBrHtoef/q2ia66fFIUm7GeyDUE9fOyxKWVEXi1ruYw7yYm6ouha/bwJyDEx4oLWRkpT7qoKuHdBsk2GLO8v4iPwcgAsGKpPKI5nFWChWIxPu2kcO+d502b2TP7Zik5Yb6YjPV/E8gK6dr766vnUnXC9r5NK2hwVP+i/8AFPlSnYs4XsSRprxmw+7IS+tlaBM4SdPEoYDgQ8xkcPf6vuu+f5mS3Qiimb2fb0CDTscUroW68s3WkJ/4v0WsLB0BJj2tHSyUgdeMjs//u3UdtAWkKapg2quI1KXeK7hXm+CH628uD6wewfzGNOlM1anOrkeaRPttm+6vp28eZAeVX/HoNIpxgfaaoeszS+n+at/VpJZ8iuO+os11dL+3yuPtVZSTZ79Novmppx5DMtw58/97MpCYBEGj0tPvtY18AFDeH5Ev9ZH8GE85AKGXQ3PPw/rx02S9adgRvgw3uf6alw2wJTpZpjauZsEa2dt1RioaIl93io/r4FWCkvWdYQXPqCfuOsOTWWjJTkjiaXRAxfkLYpQ+dClMXbMncPAalMwlddiAj4w/QhOdt4qjo=
+    bucket: cdn.riseml.com
+    local-dir: dist
+    upload-dir: releases/xyz
+    on:
+      repo: riseml/client
