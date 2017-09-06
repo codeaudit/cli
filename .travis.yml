@@ -32,14 +32,6 @@ before_deploy:
 - pyinstaller --clean riseml.spec
 
 deploy:
-  - provider: releases
-    skip_cleanup: true
-    api_key:
-      secure: IAN69l/E5WLSZheNYgw+utauwHspngSVdj/G7ZZbwrmjUGk8VBUi1Xgs7bUvXRqbJ+VGtlkz/FryL6efl3PeVikTSZ3W+5q+rzKKBelj20TlFm9IY1FH0RE7wMKYMtE9uK8NQE5NQJcub7NQpSO9HflB4JOElLd4/vA2rDZ48/GsfQRff5t3D0WGpXKLwBQ95D9J9UmKqqE7+oc0tT8vWTxl3sw60RqzLRS1MmrTUO7t56qGWKX/wrm5VGogcFgkBPMKzd9/NIzAy4p9OBbdoQwXIp8VzjQxqH4CUeuWE40YBzXxIZN9IIs5ReI99qqXLbhCToGTtFcm+1HwKAA3cfHfIGDkV+4OOurQw76/7AghWZqRGsrZBMhUR9/eSuyXF/l7qarfcOOA1LcL0TLv4HmvseKHxN5s3UegMmy402YSudKoxBLdWTqZYHr4HxOHlVb1Kj0mrD/5PHIoLvE0b+sITdFbQU+TVf1bRDrWGyvzhL9u+tI5oSp5W1EPRTTt/bJwky6o4rNhUjCQ/j/6zSb4WIHNn1xBdPkSjJhNAA81yhIVJvfu0ulTvvNK3CCC1g9jrogegxhX0FyHATzZ8ddi07oczgp65hLu+k6GelT1aCKeSee+fnzReN834R09WtGU4um3ddAv7kpiMIkwMsyMPxC/y5B2EcI6K7CUjvo=
-    file_glob: true
-    file: dist/*
-    on:
-      tags: true
   - provider: s3
     skip_cleanup: true
     access_key_id: AKIAJZEF7MF67LCYHY3Q
@@ -48,6 +40,6 @@ deploy:
     bucket: cdn.riseml.com
     region: us-west-2
     local-dir: dist
-    upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
+    upload-dir: releases/${TRAVIS_TAG:xyz}/$TRAVIS_OS_NAME
     on:
       repo: riseml/client
