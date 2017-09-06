@@ -31,6 +31,9 @@ before_deploy:
 - pip install -r requirements.txt pyinstaller
 - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 
+before_deploy:
+  - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
+
 deploy:
   - provider: releases
     skip_cleanup: true
@@ -47,7 +50,7 @@ deploy:
       secure: co7slTPv8GFL58v3OhhAlhHRTzWBShRq1zcB/Hq04AkE6u1NymGkiCrzmj8b1kSPjb0Wzb85DIJdBn6d1ytWlQ+AzopGprYzQSK7dM+YCG9dIBimTBrHtoef/q2ia66fFIUm7GeyDUE9fOyxKWVEXi1ruYw7yYm6ouha/bwJyDEx4oLWRkpT7qoKuHdBsk2GLO8v4iPwcgAsGKpPKI5nFWChWIxPu2kcO+d502b2TP7Zik5Yb6YjPV/E8gK6dr766vnUnXC9r5NK2hwVP+i/8AFPlSnYs4XsSRprxmw+7IS+tlaBM4SdPEoYDgQ8xkcPf6vuu+f5mS3Qiimb2fb0CDTscUroW68s3WkJ/4v0WsLB0BJj2tHSyUgdeMjs//u3UdtAWkKapg2quI1KXeK7hXm+CH628uD6wewfzGNOlM1anOrkeaRPttm+6vp28eZAeVX/HoNIpxgfaaoeszS+n+at/VpJZ8iuO+os11dL+3yuPtVZSTZ79Novmppx5DMtw58/97MpCYBEGj0tPvtY18AFDeH5Ev9ZH8GE85AKGXQ3PPw/rx02S9adgRvgw3uf6alw2wJTpZpjauZsEa2dt1RioaIl93io/r4FWCkvWdYQXPqCfuOsOTWWjJTkjiaXRAxfkLYpQ+dClMXbMncPAalMwlddiAj4w/QhOdt4qjo=
     bucket: cdn.riseml.com
     region: us-west-2
-    local-dir: dist
-    upload-dir: releases/$TRAVIS_TAG
+    local-dir: dist/$TRAVIS_OS_NAME
+    upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
     on:
       repo: riseml/client
