@@ -40,7 +40,7 @@ deploy:
     file_glob: true
     file: dist/riseml_*
     on:
-      repo: riseml/client
+      tags: true
   - provider: s3
     skip_cleanup: true
     access_key_id: AKIAJZEF7MF67LCYHY3Q
@@ -51,4 +51,4 @@ deploy:
     local-dir: dist/$TRAVIS_OS_NAME
     upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
     on:
-      repo: riseml/client
+      tags: true
