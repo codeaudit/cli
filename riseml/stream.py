@@ -119,7 +119,7 @@ def stream_experiment_log(experiment):
     url = '%s/ws/experiments/%s/stream' % (STREAM_URL, experiment.id)
     ids_to_name = {}
     add_experiment_to_log(experiment)
-    for experiment in experiment.children:
-        add_experiment_to_log(experiment)
+    for child_experiment in experiment.children:
+        add_experiment_to_log(child_experiment)
 
     stream_log(url, ids_to_name, stream_meta={"experiment_id": experiment.short_id})
