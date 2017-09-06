@@ -48,6 +48,6 @@ deploy:
     bucket: cdn.riseml.com
     region: us-west-2
     local-dir: dist
-    upload-dir: releases/xyz
+    upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
     on:
       repo: riseml/client
