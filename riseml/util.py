@@ -8,7 +8,7 @@ import platform
 
 from datetime import datetime
 
-from riseml.consts import IS_BUNDLE
+from riseml.consts import IS_BUNDLE, ENDPOINT_URL
 
 USER_ONLY_REGEX = re.compile(r'^\.[^\.]+$')
 EXPERIMENT_ID_REGEX = re.compile(r'^(\.[^\.]+\.)?\d+(\.\d+)?$')
@@ -254,3 +254,16 @@ def is_experiment_id(id):
 
 def is_user_id(id):
     return USER_ONLY_REGEX.match(id) is not None
+
+def has_tensorboard(experiment):
+    return experiment.framework == 'tensorflow' and \
+        experiment.framework_config.get('tensorboard', False)
+
+def is_tensorboard_job(job):
+    return job.role == 'tensorboard'
+
+def tensorboard_job(experiment):
+    return next((job for job in experiment.jobs if is_tensorboard_job(job)), None)
+
+def tensorboard_job_url(job):
+    return "{}/{}".format(ENDPOINT_URL, job.service_name)

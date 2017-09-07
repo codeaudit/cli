@@ -97,11 +97,11 @@ def show_experiment(experiment):
     print("Image: {}".format(experiment.image))
     print("Framework: {}".format(experiment.framework))
     show_dict(experiment.framework_config, title="Framework Config:")
-    
-    if experiment.framework == 'tensorflow' and experiment.framework_config.get('tensorboard', False):
-        tensorboard_job = next((job for job in experiment.jobs if job.role == 'tensorboard'), None)
+
+    if util.has_tensorboard(experiment):
+        tensorboard_job = util.tensorboard_job(experiment)
         if tensorboard_job:
-            print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
+            print("Tensorboard: {}".format(util.tensorboard_job_url(tensorboard_job)))
 
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in experiment.run_commands]))
