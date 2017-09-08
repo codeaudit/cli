@@ -75,8 +75,6 @@ class LogPrinter(object):
         if msg['job_id'] not in self.ids_to_name:
             return
         for line in msg['log_lines']:
-            last_color = self.job_ids_last_color_used.get(msg['job_id'], 0)
-
             log = line['log']
             if 'tensorboard' in self.ids_to_name[msg['job_id']] \
                 and self.stream_meta.get("tensorboard_job"):
@@ -85,17 +83,19 @@ class LogPrinter(object):
                                  util.tensorboard_job_url(self.stream_meta.get("tensorboard_job"))
                              ),
                              log)
+            for partial_log in log.split('\r'):
+                last_color = self.job_ids_last_color_used.get(msg['job_id'], 0)
+                line_text = "[%s] %s" % (util.str_timestamp(line['time']),
+                                        util.color_string(partial_log, ansi_code=last_color))
 
-            line_text = "[%s] %s" % (util.str_timestamp(line['time']),
-                                     util.color_string(log, ansi_code=last_color))
+                output = "%s%s" % (self._message_prefix(msg), line_text)
+                sys.stdout.write(output)
+                sys.stdout.write('\r')
 
-            output = "%s%s" % (self._message_prefix(msg), line_text)
-            used_colors = ANSI_ESCAPE_REGEX.findall(line['log'])
-
-            if used_colors:
-                self.job_ids_last_color_used[msg['job_id']] = used_colors[-1]
-
-            print(output)
+                used_colors = ANSI_ESCAPE_REGEX.findall(partial_log)
+                if used_colors:
+                    self.job_ids_last_color_used[msg['job_id']] = used_colors[-1]
+            sys.stdout.write('\n')
 
     def print_state_message(self, msg):
         if msg['job_id'] not in self.ids_to_name:
