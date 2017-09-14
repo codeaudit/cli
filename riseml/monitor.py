@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 from riseml.errors import handle_error
 from riseml.consts import STREAM_URL
-from riseml.util import bytes_to_gib, print_table, bold, JobState
+from riseml.util import bytes_to_gib, print_table, bold, JobState, mib_to_gib
 
 stats_lock = threading.Lock()
 monitor_stream = None
@@ -160,36 +160,58 @@ class JobStats(Stats):
 
 
 def get_summary_infos(jobs_stats):
+    def format_cpu(job_stats):
+        if job_stats.get('cpu_percent') is None:
+            return '-'        
+        used = '%.1f' % (job_stats.get('cpu_percent')/100)
+        requested = '%.1f' % job_stats.job.cpus
+        return '{:>3} |{:>3}'.format(used, 
+                                      requested.rstrip('0').rstrip('.'))
+    def format_mem(jobs_stats):
+        available = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
+        used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
+        requested = '%.1f' % mib_to_gib(job_stats.job.mem)
+        return '{:>3}/{} |{:>3}'.format(used, 
+                                         available.rstrip('0').rstrip('.'),
+                                         requested.rstrip('0').rstrip('.'))
+    def format_gpu(jobs_stats):
+        requested = '%d' % job_stats.job.gpus
+        if requested == 0 or job_stats.get('gpu_percent') is None:
+            used = '-'
+        else:
+            used = '%.1f' % (job_stats.get('gpu_percent')/100)
+        return '{:>3} |{}'.format(used, 
+                                  requested)
+    
+    def format_gpu_mem(jobs_stats):
+        if job_stats.get('gpu_memory_total') is None:
+            return '  -'
+        available = job_stats.get('gpu_memory_total', '%.1f', bytes_to_gib)
+        used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
+        return '{:>3}/{}'.format(used, 
+                                 available.rstrip('0').rstrip('.'))
     rows = []
     output = StringIO.StringIO()
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
-            mem_used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
-            mem_total = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
-            gpu_mem_used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
-            gpu_mem_total = job_stats.get('gpu_memory_total', '%.1f', bytes_to_gib)
             rows.append([job.short_id, job.changeset.repository.name, job.state,
-                         job_stats.get('cpu_percent', '%d'), 
-                         job_stats.get('memory_percent', '%.1f'), 
-                         '%s / %s' % (mem_used, mem_total),
-                         job_stats.get('gpu_percent', '%d'), 
-                         job_stats.get('gpu_memory_percent', '%.1f'),
-                         '%s / %s' % (gpu_mem_used, gpu_mem_total)])
+                         format_cpu(job_stats),
+                         format_mem(job_stats),
+                         format_gpu(job_stats),
+                         format_gpu_mem(job_stats)])
         else:
             rows.append([job.short_id, job.changeset.repository.name, job.state] + \
-                        ['N/A', 'N/A', 'N/A / N/A', 'N/A', 'N/A', 'N/A / N/A'])
-
+                        ['', '', '', ''])
     print_table(
-        header=['ID', 'PROJECT', 'STATE', 
-                'CPU %', 'MEM %', 'MEM-Used / Total', 
-                'GPU %', 'GPU-MEM %', 'GPU-MEM Used / Total'],
-        min_widths=[4, 6, 9, 6, 6, 12, 6, 6, 12],
+        header=['ID', 'PROJECT', 'STATE',
+                'CPU', 'MEM', 'GPU', 'GPU-MEM'],
+        min_widths=[4, 6, 9, 12, 12, 12, 12],
         rows=rows,
         file=output
     )
     return output.getvalue()
-        
+
 
 def get_cpu_bars(num_cpus, percpu_percent):
     cpu_col_width = 10

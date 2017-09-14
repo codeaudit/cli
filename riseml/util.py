@@ -175,7 +175,7 @@ def str_timestamp(timestamp):
     return datetime.utcfromtimestamp(int(timestamp)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
 
-def mb_to_gib(value):
+def mib_to_gib(value):
     return float(value) * (10 ** 6) / (1024 ** 3)
 
 
