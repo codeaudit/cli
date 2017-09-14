@@ -127,7 +127,7 @@ class JobStats(Stats):
             s.update(stats, timestamp=timestamp)
             self.gpu_stats[gpu] = s
         self.gpus = sorted(list(set(self.gpus) | set(gpu_stats.keys())),
-                           key=lambda x: self.gpu_stats[x].stats['index'])
+                           key=lambda x: self.gpu_stats[x].stats['device_bus_id'])
 
     @formatted_getter
     def get_memory_percent(self):
