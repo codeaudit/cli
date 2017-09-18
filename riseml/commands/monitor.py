@@ -10,7 +10,7 @@ from riseml.monitor import monitor_jobs
 def add_monitor_parser(subparsers):
     parser = subparsers.add_parser('monitor', help="show monitor")
     parser.add_argument('id', help="experiment or job identifier (optional)", nargs='?')
-    parser.add_argument('-l', '--long', help="detailed job stats", action="store_const", const=True)
+    parser.add_argument('-g', '--gpu', help="detailed gpu stats", action="store_const", const=True)
     parser.set_defaults(run=run)
 
 
@@ -33,11 +33,11 @@ def run(args):
             jobs = get_experiment_jobs(experiment)
             if not jobs:
                 handle_error('Experiment has no jobs.')
-            monitor_jobs(jobs, detailed=args.long, 
+            monitor_jobs(jobs, detailed=args.gpu, 
                          stream_meta={"experiment_id": experiment.short_id})
         elif is_job_id(args.id):
             job = call_api(lambda: client.get_job(args.id))
-            monitor_jobs([job], detailed=args.long, stream_meta={"job_id": job.short_id})
+            monitor_jobs([job], detailed=args.gpu, stream_meta={"job_id": job.short_id})
         else:
             handle_error("Id is neither an experiment id nor a job id!")
 
@@ -49,5 +49,5 @@ def run(args):
         jobs = get_experiment_jobs(experiment)
         if not jobs:
             handle_error('Last experiment has no jobs.')
-        monitor_jobs(jobs, detailed=args.long, 
+        monitor_jobs(jobs, detailed=args.gpu, 
                      stream_meta={"experiment_id": experiments[0].short_id})

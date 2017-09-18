@@ -91,7 +91,8 @@ class TableRowDelimiter(TableElement):
 
 
 def print_table(header, rows, min_widths=None, 
-                file=sys.stdout, separator=False, bold_header=True):
+                file=sys.stdout, separator=False, bold_header=True,
+                col_separator_spaces=1):
       
     n_columns = len(header)
 
@@ -125,7 +126,7 @@ def print_table(header, rows, min_widths=None,
     # see https://pyformat.info/
     # `Padding and aligning strings` block
     line_pattern = ''.join([
-        u'{:%s{widths[%s]}} ' % ('<', i)
+        u'{:%s{widths[%s]}}%s' % ('<', i, ' ' * col_separator_spaces)
         for i in range(n_columns)
     ])
 
