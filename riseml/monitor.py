@@ -15,7 +15,7 @@ from collections import OrderedDict
 
 from riseml.errors import handle_error
 from riseml.consts import STREAM_URL
-from riseml.util import bytes_to_gib, print_table, bold, JobState, mib_to_gib
+from riseml.util import bytes_to_gib, print_table, bold, JobState, mib_to_gib, get_state_symbol
 
 stats_lock = threading.Lock()
 monitor_stream = None
@@ -181,7 +181,7 @@ def get_summary_infos(jobs_stats):
     def format_gpu(jobs_stats):
         requested = '%d' % job_stats.job.gpus
         if requested == 0 or job_stats.get('gpu_percent') is None:
-            used = '-'
+            return ' -'
         else:
             used = '%.1f' % (job_stats.get('gpu_percent')/float(100))
         return '{:>3}/{}'.format(used, 
@@ -189,7 +189,7 @@ def get_summary_infos(jobs_stats):
     
     def format_gpu_mem(jobs_stats):
         if job_stats.get('gpu_memory_total') is None:
-            return '  -'
+            return '   -'
         available = job_stats.get('gpu_memory_total', '%.1f', bytes_to_gib)
         used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
         return '{:>3}/{}'.format(used, 
@@ -199,18 +199,20 @@ def get_summary_infos(jobs_stats):
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
-            rows.append([job.short_id, job.changeset.repository.name, job.state,
+            rows.append([job.short_id, job.changeset.repository.name, 
+                         '%s%s' % (get_state_symbol(job.state), job.state),
                          format_cpu(job_stats),
                          format_mem(job_stats),
                          format_gpu(job_stats),
                          format_gpu_mem(job_stats)])
         else:
-            rows.append([job.short_id, job.changeset.repository.name, job.state] + \
-                        ['', '', '', ''])
+            rows.append([job.short_id, job.changeset.repository.name,
+                         '%s%s' % (get_state_symbol(job.state), job.state)] + \
+                         ['', '', '', ''])
     print_table(
         header=['ID', 'PROJECT', 'STATE',
                 'CPU', 'MEM', 'GPU', 'GPU MEM'],
-        min_widths=[4, 8, 6, 10, 10, 5, 10],
+        min_widths=[4, 8, 6, 10, 10, 3, 10],
         rows=rows,
         file=output,
         col_separator_spaces=2
@@ -297,7 +299,10 @@ def get_gpu_table(job_stats):
 def get_detailed_info(job_stats):
     output = StringIO.StringIO()
     job = job_stats.job    
-    caption = bold('%s (STATE: %s)' % (job.short_id, job.state))
+    caption = bold('%s (STATE: %s)' % (job.short_id, 
+                                       '%s%s' % (get_state_symbol(job.state), job.state)))
+    if job.gpus == 0:
+        return '\n'.join([caption, indent('Experiment uses no GPUs')])
     if job.state in ('RUNNING'):
         #total_gib = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         #used_gib = job_stats.get('memory_used', '%.1f', bytes_to_gib)
