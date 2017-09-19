@@ -165,8 +165,12 @@ def get_summary_infos(jobs_stats):
             return '-'        
         used = '%.1f' % (job_stats.get('cpu_percent')/100)
         requested = '%.1f' % job_stats.job.cpus
-        return '{:>3} |{:>3}'.format(used, 
-                                      requested.rstrip('0').rstrip('.'))
+        available = '-'
+        if job_stats.get('percpu_percent'):
+            available = '%d' % len(job_stats.get('percpu_percent'))
+        return '{:>3}/{} |{:>3}'.format(used, 
+                                        available,
+                                        requested.rstrip('0').rstrip('.'))
     def format_mem(jobs_stats):
         available = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
@@ -179,9 +183,9 @@ def get_summary_infos(jobs_stats):
         if requested == 0 or job_stats.get('gpu_percent') is None:
             used = '-'
         else:
-            used = '%.1f' % (job_stats.get('gpu_percent')/100)
-        return '{:>3} |{}'.format(used, 
-                                  requested)
+            used = '%.1f' % (job_stats.get('gpu_percent')/float(100))
+        return '{:>3}/{}'.format(used, 
+                                 requested)
     
     def format_gpu_mem(jobs_stats):
         if job_stats.get('gpu_memory_total') is None:
@@ -205,10 +209,11 @@ def get_summary_infos(jobs_stats):
                         ['', '', '', ''])
     print_table(
         header=['ID', 'PROJECT', 'STATE',
-                'CPU', 'MEM', 'GPU', 'GPU-MEM'],
-        min_widths=[4, 6, 9, 12, 12, 12, 12],
+                'CPU', 'MEM', 'GPU', 'GPU MEM'],
+        min_widths=[4, 8, 6, 10, 10, 5, 10],
         rows=rows,
-        file=output
+        file=output,
+        col_separator_spaces=2
     )
     return output.getvalue()
 
@@ -246,29 +251,44 @@ def get_cpu_bars(num_cpus, percpu_percent):
 
 
 def get_gpu_table(job_stats):
+
+    def format_gpu_mem(gpu_stats):
+        if gpu_stats.get('memory_total') is None:
+            return '  -'
+        available = gpu_stats.get('memory_total', '%.1f', bytes_to_gib)
+        used = gpu_stats.get('memory_used', '%.1f', bytes_to_gib)
+        return '{:>3}/{}'.format(used, 
+                                 available.rstrip('0').rstrip('.'))
+
+    def format_gpu_pwr(gpu_stats):
+        if gpu_stats.get('power_limit') is None:
+            return '  -'
+        limit = gpu_stats.get('power_limit', '%d')
+        used = gpu_stats.get('power_draw', '%d')
+        return '{:>3}/{}W'.format(used, 
+                                 limit.rstrip('0').rstrip('.'))
     rows = []
     output = StringIO.StringIO()
     for gpu_index, gpu_dev in enumerate(job_stats.gpus):
         gpu_stats = job_stats.gpu_stats[gpu_dev]
         row = [gpu_index, gpu_stats.get('name', '%s'),
-               gpu_stats.get('gpu_utilization', '%d'),
-               gpu_stats.get('memory_used', '%.1f', bytes_to_gib),
-               gpu_stats.get('memory_total', '%.1f', bytes_to_gib),
-               gpu_stats.get('power_draw', '%d'),
-               gpu_stats.get('power_limit', '%d'),
-               gpu_stats.get('temperature', '%d')]
+               gpu_stats.get('gpu_utilization', '%d%%'),
+               format_gpu_mem(gpu_stats),
+               format_gpu_pwr(gpu_stats),
+               gpu_stats.get('temperature', '%dC'),
+               gpu_stats.get('device_bus_id', '%s')]
         rows.append(row)
     for _ in range(job_stats.job.gpus - len(job_stats.gpus)):
-        row = ['N/A'] + ['' for _ in range(7)]
+        row = ['N/A'] + ['' for _ in range(6)]
         rows.append(row)
     if rows:
         print_table(
-            header=['GPU', 'NAME', 'GPU-Util', 
-                    'MEM-Used (GB)', 'MEM-Total (GB)', 
-                    'PWR-Used', 'PWR-Limit', 'TEMP'],
-            min_widths=[4, 8, 3, 4, 4, 3, 3, 3],
+            header=['ID', 'NAME', 'UTIL', 'MEM',
+                    'POWER', 'TEMP', 'BUS ID'],
+            min_widths=[3, 8, 4, 6, 3, 3, 3, 12],
             rows=rows,
             bold_header=False,
+            col_separator_spaces=2,
             file=output
         )
     return output.getvalue().strip()
@@ -279,14 +299,13 @@ def get_detailed_info(job_stats):
     job = job_stats.job    
     caption = bold('%s (STATE: %s)' % (job.short_id, job.state))
     if job.state in ('RUNNING'):
-        total_gib = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
-        used_gib = job_stats.get('memory_used', '%.1f', bytes_to_gib)
-        memory = 'Memory Stats (Used/Total) GB: %s / %s' % (used_gib, total_gib)
-        cpu_bars = get_cpu_bars(job.cpus, 
-                                job_stats.get('percpu_percent'))
+        #total_gib = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
+        #used_gib = job_stats.get('memory_used', '%.1f', bytes_to_gib)
+        #memory = 'Memory Stats (Used/Total) GB: %s / %s' % (used_gib, total_gib)
+        # cpu_bars = get_cpu_bars(job.cpus, 
+        #                         job_stats.get('percpu_percent'))
         gpu_table = get_gpu_table(job_stats)
-        return '\n'.join([caption, indent(memory), 
-                          indent(cpu_bars), indent(gpu_table)])
+        return '\n'.join([caption, indent(gpu_table)])
     else:
         return '\n'.join([caption, indent('No real-time stats available')])
 

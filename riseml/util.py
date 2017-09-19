@@ -96,7 +96,8 @@ class TableRowDelimiter(TableElement):
 
 
 def print_table(header, rows, min_widths=None, 
-                file=sys.stdout, separator=False, bold_header=True):
+                file=sys.stdout, separator=False, bold_header=True,
+                col_separator_spaces=1):
       
     n_columns = len(header)
 
@@ -136,7 +137,8 @@ def print_table(header, rows, min_widths=None,
             return s
 
     def render_line(columns):
-        return ' '.join([ansi_ljust(c, widths[i]) for i, c in enumerate(columns)])
+        sep = ' ' * col_separator_spaces
+        return sep.join([ansi_ljust(c, widths[i]) for i, c in enumerate(columns)])
 
     # print separator
     if separator:
