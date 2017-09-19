@@ -279,19 +279,19 @@ def get_state_symbol(state):
     assert state in ('CREATED', 'PENDING', 'BUILDING', 'STARTING', 
               'RUNNING', 'FAILED', 'FINISHED', 'KILLED'), 'Unknown state %s' % state
     if state in ('CREATED'):
-        return u'\u25ef '
+        return u'\u25cb '
     elif state in ('PENDING', 'BUILDING'):
-        return color_string(u'\u25d0 ', color='green')
+        return color_string(u'\u25cf ', color='yellow')
     elif state in ('STARTING'):
-        return color_string(u'\u25d0 ', color='green')
+        return color_string(u'\u25cf ', color='yellow')
     elif state in ('RUNNING'):
-        return color_string(u'\u25c9 ', color='green')
+        return color_string(u'\u25cf ', color='green')
     elif state in ('FINISHED'):
-        return color_string(u'\u25fc ', color='green')
+        return color_string(u'\u25cf ', color='red')
     elif state in ('KILLED'):
-        return color_string(u'\u25fb ', color='red')
+        return color_string(u'\u25cf ', color='red')
     elif state in ('FAILED'):
-        return color_string(u'\u25fc ', color='red')
+        return color_string(u'\u25cf ', color='red')
 
 if __name__ == '__main__':
     for s in ('CREATED', 'PENDING', 'BUILDING', 'STARTING', 'RUNNING', 'FAILED', 'FINISHED', 'KILLED'):
