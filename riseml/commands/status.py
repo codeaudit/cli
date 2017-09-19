@@ -72,7 +72,8 @@ def show_dict(dictionary, indentation=2, title=None):
 def show_common_header(entity, type):
     print("ID: {}".format(entity.short_id))
     print("Type: {}".format(type))
-    print("State: {}".format(entity.state))
+    print(u"State: {}{}".format(util.get_state_symbol(entity.state),
+                                entity.state))
 
 def show_job_table(jobs):
     rows = [
@@ -83,7 +84,7 @@ def show_job_table(jobs):
          job.reason or '',
          job.message[:17] + '...' if job.message and len(job.message) > 20 else job.message or '',
          job.exit_code if job.exit_code is not None else '',
-         'N/A', 'N/A', 'N/A']) for job in jobs
+         '%d' % job.gpus, '%.1f' % job.cpus, '%d' % job.mem]) for job in jobs
     ]
 
     util.print_table(
@@ -153,7 +154,8 @@ def get_experiments_rows(group, with_project=True, with_type=True, with_params=T
 def show_experiment_group(group):
     print("ID: {}".format(group.short_id))
     print("Type: Set")
-    print("State: {}".format(group.state))
+    print(u"State: {}{}".format(util.get_state_symbol(group.state),
+                                group.state))
     print("Project: {}".format(group.changeset.repository.name))
 
     if group.framework == 'tensorflow' and group.framework_config.get('tensorboard', False):

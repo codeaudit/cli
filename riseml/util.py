@@ -66,11 +66,9 @@ for (name, ansi_code) in get_color_pairs():
 def ansi_sequence(code):
     return "\033[%sm" % code
 
-
 # from https://github.com/jonathaneunice/colors/blob/master/colors/colors.py
 def strip_color(s):
     return re.sub('\x1b\\[(K|.*?m)', '', s)
-
 
 def color_string(s, color=None, ansi_code=None):
     assert color is not None or ansi_code is not None, "You need to supply `color` or `ansi_code` param."
@@ -121,7 +119,7 @@ def print_table(header, rows, min_widths=None,
             " header's colums count: %d" % (str(row), row_items_count, n_columns)
 
         for i, cell in enumerate(row):
-            item_len = len(strip_color(cell)) if not isinstance(cell, int) else len(str(cell))
+            item_len = len(strip_color('%s' % cell))
 
             if item_len > widths[i]:
                 widths[i] = item_len
@@ -138,7 +136,7 @@ def print_table(header, rows, min_widths=None,
 
     def render_line(columns):
         sep = ' ' * col_separator_spaces
-        return sep.join([ansi_ljust(c, widths[i]) for i, c in enumerate(columns)])
+        return sep.join([ansi_ljust('%s' % c, widths[i]) for i, c in enumerate(columns)])
 
     # print separator
     if separator:
