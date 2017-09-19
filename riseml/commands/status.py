@@ -77,7 +77,7 @@ def show_common_header(entity, type):
 def show_job_table(jobs):
     rows = [
         ([job.short_id,
-         job.state,
+         '%s%s' % (util.get_state_symbol(job.state), job.state),
          util.get_since_str(job.started_at),
          util.get_since_str(job.finished_at),
          job.reason or '',
@@ -174,7 +174,7 @@ def show_experiment_group(group):
 
 def show_experiments(experiments, all=False, collapsed=True, users=False):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
-    widths = (6, 14, 9, 13, 15)
+    widths = (6, 14, 10, 13, 15)
 
     if not collapsed:
         header += ['PARAMS']
@@ -189,7 +189,7 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
         values = [
             '.{}.{}'.format(experiment.user.username, experiment.short_id) if users else experiment.short_id,
             experiment.changeset.repository.name,
-            experiment.state,
+            '%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
             util.get_since_str(experiment.created_at),
             experiment.type
         ]

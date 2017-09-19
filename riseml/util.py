@@ -67,6 +67,11 @@ def ansi_sequence(code):
     return "\033[%sm" % code
 
 
+# from https://github.com/jonathaneunice/colors/blob/master/colors/colors.py
+def strip_color(s):
+    return re.sub('\x1b\\[(K|.*?m)', '', s)
+
+
 def color_string(s, color=None, ansi_code=None):
     assert color is not None or ansi_code is not None, "You need to supply `color` or `ansi_code` param."
     assert not (color is not None and ansi_code is not None), "You need to supply either `color` or `ansi_code`"
@@ -115,21 +120,23 @@ def print_table(header, rows, min_widths=None,
             " header's colums count: %d" % (str(row), row_items_count, n_columns)
 
         for i, cell in enumerate(row):
-            item_len = len(cell) if not isinstance(cell, int) else len(str(cell))
+            item_len = len(strip_color(cell)) if not isinstance(cell, int) else len(str(cell))
 
             if item_len > widths[i]:
                 widths[i] = item_len
 
     table_width = sum(widths) + n_columns - 1
+    
+    # see https://stackoverflow.com/questions/14140756/python-s-str-format-fill-characters-and-ansi-colors
+    def ansi_ljust(s, width):
+        needed = width - len(strip_color(s))
+        if needed > 0:
+            return s + ' ' * needed
+        else:
+            return s
 
-    # see https://pyformat.info/
-    # `Padding and aligning strings` block
-    line_pattern = ''.join([
-        u'{:%s{widths[%s]}} ' % ('<', i)
-        for i in range(n_columns)
-    ])
-
-    def render_line(columns): return line_pattern.format(*columns, widths=widths)
+    def render_line(columns):
+        return ' '.join([ansi_ljust(c, widths[i]) for i, c in enumerate(columns)])
 
     # print separator
     if separator:
@@ -267,3 +274,21 @@ def tensorboard_job(experiment):
 
 def tensorboard_job_url(job):
     return "{}/{}".format(ENDPOINT_URL, job.service_name)
+
+def get_state_symbol(state):
+    assert state in ('CREATED', 'PENDING', 'BUILDING', 'STARTING', 
+              'RUNNING', 'FAILED', 'FINISHED', 'KILLED'), 'Unknown state %s' % state
+    if state in ('CREATED'):
+        return u'\u25cb '
+    elif state in ('PENDING', 'BUILDING'):
+        return color_string(u'\u25d0 ', color='green')
+    elif state in ('PENDING', 'STARTING'):
+        return color_string(u'\u25c9 ', color='green')
+    elif state in ('RUNNING'):
+        return color_string(u'\u25cf ', color='green')
+    elif state in ('FINISHED'):
+        return color_string(u'\u25a0 ', color='green')
+    elif state in ('KILLED'):
+        return color_string(u'\u25a3 ', color='red')
+    elif state in ('FAILED'):
+        return color_string(u'\u25a0 ', color='red')
