@@ -20,19 +20,19 @@ before_install:
 - bash ~/miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
 
-#script:
-#- echo "RiseML rox!"
-
 script:
+- echo "RiseML rox!"
+
+before_deploy:
 - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 - tar xvzf rsync-3.1.2.tar.gz
 - mv rsync-3.1.2 rsync
 - cd rsync
 - ./configure --prefix=/usr
-             --with-included-popt
-             --with-included-zlib
-             --disable-iconv
-             --disable-iconv-open
+              --with-included-popt
+              --with-included-zlib
+              --disable-iconv
+              --disable-iconv-open
 - make
 - cd -
 - conda create -y -n py3 python=3.5
