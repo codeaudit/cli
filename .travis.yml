@@ -24,20 +24,20 @@ before_install:
 #- echo "RiseML rox!"
 
 script:
-#- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
-#- tar xvzf rsync-3.1.2.tar.gz
-#- mv rsync-3.1.2 rsync
-#- cd rsync
-#- ./configure --prefix=/usr
-#              --with-included-popt
-#              --with-included-zlib
-#              --disable-iconv
-#              --disable-iconv-open
-#- make
-#- cd -
+- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
+- tar xvzf rsync-3.1.2.tar.gz
+- mv rsync-3.1.2 rsync
+- cd rsync
+- ./configure --prefix=/usr
+             --with-included-popt
+             --with-included-zlib
+             --disable-iconv
+             --disable-iconv-open
+- make
+- cd -
 - conda create -y -n py3 python=3.5
 - source activate py3
-- sudo pip install -r requirements.txt pyinstaller
+- pip install -r requirements.txt pyinstaller
 - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
