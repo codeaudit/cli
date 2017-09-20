@@ -198,7 +198,7 @@ def get_summary_infos(jobs_stats):
         return '{:>3}/{}'.format(used, 
                                  available.rstrip('0').rstrip('.'))
     rows = []
-    output = StringIO.StringIO()
+    output = StringIO()
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
@@ -300,7 +300,7 @@ def get_gpu_table(job_stats):
 
 
 def get_detailed_info(job_stats):
-    output = StringIO.StringIO()
+    output = StringIO()
     job = job_stats.job    
     caption = bold('%s (STATE: %s)' % (job.short_id, 
                                        '%s%s' % (get_state_symbol(job.state), job.state)))
@@ -319,7 +319,7 @@ def get_detailed_info(job_stats):
 
 
 def get_detailed_infos(jobs_stats):
-    output = StringIO.StringIO()
+    output = StringIO()
     for stats in jobs_stats:
         output.write(get_detailed_info(stats))
         output.write('\n\n')
@@ -367,7 +367,7 @@ class StatsScreen():
 
 def stream_stats(job_id_stats, stream_meta={}):
     global monitor_stream
-    job_ids = job_id_stats.keys()
+    job_ids = list(job_id_stats.keys())
     url = '%s/ws/monitor/?jobId=%s' % (STREAM_URL, job_ids[0])
     if len(job_ids) > 1:
         url += '&' + '&'.join(['jobId=%s' % job_id for job_id in job_ids[1:]])
