@@ -140,7 +140,8 @@ def get_experiments_rows(group, with_project=True, with_type=True, with_params=T
         if with_project:
             values += [experiment.changeset.repository.name]
 
-        values += [experiment.state, util.get_since_str(experiment.created_at)]
+        values += [u'%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
+                   util.get_since_str(experiment.created_at)]
 
         if with_type:
             values += [indent_str + 'Experiment']

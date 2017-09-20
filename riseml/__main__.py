@@ -14,8 +14,8 @@ from riseml.errors import handle_error
 
 import logging
 logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
-sys.stderr = codecs.EncodedFile(sys.stderr, file_encoding='utf-8')
-sys.stdout = codecs.EncodedFile(sys.stdout, file_encoding='utf-8')
+sys.stderr = codecs.EncodedFile(sys.stderr, 'utf-8')
+sys.stdout = codecs.EncodedFile(sys.stdout, 'utf-8')
 
 
 
