@@ -154,7 +154,7 @@ def print_table(header, rows, min_widths=None,
         if isinstance(row, TableRowDelimiter):
             print(row.symbol * table_width, file=file)
         else:
-            print(render_line(row), file=file)
+            print(render_line(row).encode('utf-8'), file=file)
 
 
 def get_since_str(timestamp):

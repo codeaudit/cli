@@ -73,7 +73,7 @@ def show_common_header(entity, type):
     print("ID: {}".format(entity.short_id))
     print("Type: {}".format(type))
     print(u"State: {}{}".format(util.get_state_symbol(entity.state),
-                                entity.state))
+                                entity.state).encode('utf-8'))
 
 def show_job_table(jobs):
     rows = [
@@ -156,7 +156,7 @@ def show_experiment_group(group):
     print("ID: {}".format(group.short_id))
     print("Type: Set")
     print(u"State: {}{}".format(util.get_state_symbol(group.state),
-                                group.state))
+                                group.state).encode('utf-8'))
     print("Project: {}".format(group.changeset.repository.name))
 
     if group.framework == 'tensorflow' and group.framework_config.get('tensorboard', False):
