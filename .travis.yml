@@ -1,3 +1,5 @@
+sudo: true
+
 language: c
 addons:
   apt:
@@ -28,7 +30,7 @@ before_deploy:
               --disable-iconv-open
 - make
 - cd -
-- pip install -r requirements.txt pyinstaller
+- sudo pip install -r requirements.txt pyinstaller
 - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
