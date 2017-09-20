@@ -321,7 +321,7 @@ def get_detailed_info(job_stats):
 def get_detailed_infos(jobs_stats):
     output = StringIO.StringIO()
     for stats in jobs_stats:
-        output.write(get_detailed_info(stats).encode('UTF-8'))
+        output.write(get_detailed_info(stats))
         output.write('\n\n')
     return output.getvalue()
 
