@@ -6,7 +6,10 @@ import sys
 import time
 import websocket
 import threading
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import math
 import traceback
 import os

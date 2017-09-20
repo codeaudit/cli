@@ -124,9 +124,10 @@ def get_project_size(sync_cmd, project_root):
                             cwd=project_root,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT)
-    out = ''
+    bytes = b''
     for buf in proc.stdout:
-        out += buf
+        bytes += buf
+    out = bytes.decode('utf8')
     res = proc.wait()
     if res != 0:
         return None

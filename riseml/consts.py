@@ -1,6 +1,6 @@
 import os
 import sys
-from client.configuration import Configuration
+from riseml.client.configuration import Configuration
 
 try:
     from urllib.parse import urlparse
