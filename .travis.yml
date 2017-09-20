@@ -1,12 +1,10 @@
-sudo: true
+sudo: false
 
 language: c
 addons:
   apt:
     packages:
     - upx
-    - python3.5
-    - python3.5-dev
 
 os:
 - linux
@@ -14,26 +12,31 @@ os:
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew update && \
-    brew install upx && \
-    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/ec545d45d4512ace3570782283df4ecda6bb0044/Formula/python3.rb
+    brew update && brew install upx;
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh;
+  elif [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh;
   fi
+- bash ~/miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
 
 #script:
 #- echo "RiseML rox!"
 
 script:
-- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
-- tar xvzf rsync-3.1.2.tar.gz
-- mv rsync-3.1.2 rsync
-- cd rsync
-- ./configure --prefix=/usr
-              --with-included-popt
-              --with-included-zlib
-              --disable-iconv
-              --disable-iconv-open
-- make
-- cd -
+#- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
+#- tar xvzf rsync-3.1.2.tar.gz
+#- mv rsync-3.1.2 rsync
+#- cd rsync
+#- ./configure --prefix=/usr
+#              --with-included-popt
+#              --with-included-zlib
+#              --disable-iconv
+#              --disable-iconv-open
+#- make
+#- cd -
+- conda create -y -n py3 python=3.5
+- source activate py3
 - sudo pip install -r requirements.txt pyinstaller
 - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
