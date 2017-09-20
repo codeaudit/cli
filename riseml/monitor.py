@@ -273,7 +273,7 @@ def get_gpu_table(job_stats):
         return '{:>3}/{}W'.format(used, 
                                  limit.rstrip('0').rstrip('.'))
     rows = []
-    output = StringIO.StringIO()
+    output = StringIO()
     for gpu_index, gpu_dev in enumerate(job_stats.gpus):
         gpu_stats = job_stats.gpu_stats[gpu_dev]
         row = [gpu_index, gpu_stats.get('name', '%s'),
