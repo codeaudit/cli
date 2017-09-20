@@ -890,6 +890,8 @@ class DefaultApi(object):
         :param str states: 
         :param str desired_states: 
         :param bool only_root: 
+        :param bool only_root2: 
+        :param str kind: 
         :return: list[Job]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -919,12 +921,14 @@ class DefaultApi(object):
         :param str states: 
         :param str desired_states: 
         :param bool only_root: 
+        :param bool only_root2: 
+        :param str kind: 
         :return: list[Job]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['states', 'desired_states', 'only_root']
+        all_params = ['states', 'desired_states', 'only_root', 'only_root2', 'kind']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -952,6 +956,10 @@ class DefaultApi(object):
             query_params['desired_states'] = params['desired_states']
         if 'only_root' in params:
             query_params['only_root'] = params['only_root']
+        if 'only_root2' in params:
+            query_params['only_root'] = params['only_root2']
+        if 'kind' in params:
+            query_params['kind'] = params['kind']
 
         header_params = {}
 
