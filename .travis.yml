@@ -5,6 +5,8 @@ addons:
   apt:
     packages:
     - upx
+    - python3.5
+    - python3.5-dev
 
 os:
 - linux
@@ -12,13 +14,15 @@ os:
 
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    brew update && brew install upx;
+    brew update && \
+    brew install upx && \
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/ec545d45d4512ace3570782283df4ecda6bb0044/Formula/python3.rb
   fi
 
-script:
-- echo "RiseML rox!"
+#script:
+#- echo "RiseML rox!"
 
-before_deploy:
+script:
 - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 - tar xvzf rsync-3.1.2.tar.gz
 - mv rsync-3.1.2 rsync
