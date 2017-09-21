@@ -21,9 +21,12 @@ before_install:
 - export PATH="$HOME/miniconda/bin:$PATH"
 
 script:
-- echo "RiseML rox!"
+# install dependencies
+- conda create -y -n py3 python=3.5
+- source activate py3
+- pip install -r requirements.txt pyinstaller
 
-before_deploy:
+# install rsync from scratch
 - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
 - tar xvzf rsync-3.1.2.tar.gz
 - mv rsync-3.1.2 rsync
@@ -35,9 +38,8 @@ before_deploy:
               --disable-iconv-open
 - make
 - cd -
-- conda create -y -n py3 python=3.5
-- source activate py3
-- pip install -r requirements.txt pyinstaller
+
+# build binary
 - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
