@@ -218,7 +218,7 @@ def get_summary_infos(jobs_stats):
         min_widths=[4, 8, 6, 10, 10, 3, 10],
         rows=rows,
         file=output,
-        col_separator_spaces=2
+        column_spaces=2
     )
     return output.getvalue()
 
@@ -293,7 +293,7 @@ def get_gpu_table(job_stats):
             min_widths=[3, 8, 4, 6, 3, 3, 3, 12],
             rows=rows,
             bold_header=False,
-            col_separator_spaces=2,
+            column_spaces=2,
             file=output
         )
     return output.getvalue().strip()

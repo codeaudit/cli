@@ -60,8 +60,8 @@ def get_color_pairs():
 
 
 for (name, ansi_code) in get_color_pairs():
-    colors[name] = ansi_code
 
+    colors[name] = ansi_code
 
 def ansi_sequence(code):
     return "\033[%sm" % code
@@ -93,16 +93,20 @@ class TableRowDelimiter(TableElement):
         return 'TableRowDelimiter ({})'.format(self.symbol)
 
 
-def print_table(header, rows, min_widths=None, 
-                file=sys.stdout, separator=False, bold_header=True,
-                col_separator_spaces=1):
-      
+def print_table(header, rows, min_widths=None,
+                file=sys.stdout, bold_header=True,
+                column_spaces=1, indent=0):
+    
+    indent_str = ' ' * indent  
     n_columns = len(header)
 
     if not min_widths:
         widths = [5] * n_columns  # 5 is default width
     else:
         widths = list(min_widths)
+        assert len(widths) == len(header), \
+            "Widths must have same length as header"
+        
     
     for i, (h, w) in enumerate(zip(header, widths)):
         if len(h) > w:
@@ -119,12 +123,12 @@ def print_table(header, rows, min_widths=None,
             " header's colums count: %d" % (str(row), row_items_count, n_columns)
 
         for i, cell in enumerate(row):
-            item_len = len(strip_color('%s' % cell))
+            item_len = len(strip_color(str(cell)))
 
             if item_len > widths[i]:
                 widths[i] = item_len
 
-    table_width = sum(widths) + n_columns - 1
+    table_width = sum(widths) + (n_columns - 1) * column_spaces
     
     # see https://stackoverflow.com/questions/14140756/python-s-str-format-fill-characters-and-ansi-colors
     def ansi_ljust(s, width):
@@ -135,26 +139,22 @@ def print_table(header, rows, min_widths=None,
             return s
 
     def render_line(columns):
-        sep = ' ' * col_separator_spaces
-        return sep.join([ansi_ljust('%s' % c, widths[i]) for i, c in enumerate(columns)])
-
-    # print separator
-    if separator:
-        print('-' * len(render_line(header)), file=file)
+        sep = ' ' * column_spaces
+        return sep.join([ansi_ljust(str(c), widths[i]) for i, c in enumerate(columns)])
 
     # print header
     if not bold_header:
         emph = lambda x: x
     else:
         emph = bold
-    print(emph(render_line(header)), file=file)
+    print(indent_str + emph(render_line(header)), file=file)
 
     # print rows
     for row in rows:
         if isinstance(row, TableRowDelimiter):
-            print(row.symbol * table_width, file=file)
+            print(indent_str + row.symbol * table_width, file=file)
         else:
-            print(render_line(row), file=file)
+            print(indent_str + render_line(row), file=file)
 
 
 def get_since_str(timestamp):
@@ -196,6 +196,10 @@ def bytes_to_mib(value):
 
 def bytes_to_kib(value):
     return float(value) / (1024 ** 1)
+
+
+def format_float(f):
+    return "%d" % f if f.is_integer() else "%.1f" %f
 
 
 def get_readable_size(value):
