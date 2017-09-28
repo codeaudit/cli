@@ -13,6 +13,7 @@ from riseml.util import call_api
 def add_train_parser(subparsers):
     parser = subparsers.add_parser('train', help="run new experiment or experiment series")
     parser.add_argument('-f', '--config-file', help="config file to use", type=str, default=DEFAULT_CONFIG_NAME)
+    parser.add_argument('-l', '--logs', help="stream logs", action='store_true')
     parser.set_defaults(run=run_train)
 
 
@@ -29,5 +30,8 @@ def run_train(args):
         project_name, revision,
         kind='train', config=json.dumps(config.train.as_dict())
     ))
-
-    stream_experiment_log(experiment)
+    
+    if args.logs:
+        stream_experiment_log(experiment)
+    else:
+        print('Started experiment %s. To obtain logs, type `riseml logs %s`.' % (experiment.short_id, experiment.short_id))

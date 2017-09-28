@@ -55,6 +55,11 @@ def run(args):
 def params(experiment):
     return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.params).items()])
 
+def result(experiment):
+    if experiment.result:
+        return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.result).items()])
+    return ''
+
 
 def show_dict(dictionary, indentation=2, title=None):
     if not dictionary:
@@ -107,7 +112,8 @@ def show_experiment(experiment):
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in experiment.run_commands]))
     print("Concurrency: {}".format(experiment.concurrency))
-    print("Parameters: {}\n".format(params(experiment)))
+    print("Parameters: {}".format(params(experiment)))
+    print("Result: {}\n".format(result(experiment)))
 
     show_job_table(experiment.jobs)
 
@@ -130,7 +136,8 @@ def show_job(job):
     if job.state == 'FAILED':
         print("Reason: {}".format(job.reason))
 
-def get_experiments_rows(group, with_project=True, with_type=True, with_params=True, indent=True):
+def get_experiments_rows(group, with_project=True, with_type=True, with_params=True,
+                         indent=True, with_result=True):
     rows = []
 
     for i, experiment in enumerate(group.children):
@@ -147,6 +154,8 @@ def get_experiments_rows(group, with_project=True, with_type=True, with_params=T
             values += [indent_str + 'Experiment']
         if with_params:
             values += [params(experiment)]
+        if with_result:
+            values += [result(experiment)]
 
         rows.append(values)
 
@@ -165,8 +174,8 @@ def show_experiment_group(group):
 
     print()
     util.print_table(
-        header=['EXP ID', 'STATE', 'AGE', 'PARAMS'],
-        min_widths=(6, 9, 13, 14),
+        header=['EXP ID', 'STATE', 'AGE', 'PARAMS', 'RESULT'],
+        min_widths=(6, 9, 13, 14, 14),
         rows=get_experiments_rows(group, with_project=False, with_type=False, indent=False)
     )
 
@@ -180,8 +189,8 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
     widths = (6, 14, 10, 13, 15)
 
     if not collapsed:
-        header += ['PARAMS']
-        widths += (14, )
+        header += ['PARAMS' , 'RESULT']
+        widths += (14, 14)
 
     rows = []
 
@@ -198,7 +207,7 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
         ]
 
         if not collapsed:
-            values += ['']
+            values += ['', result(experiment)]
 
         rows.append(values)
 
