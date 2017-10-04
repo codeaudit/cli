@@ -290,7 +290,7 @@ def get_gpu_table(job_stats):
         print_table(
             header=['ID', 'NAME', 'UTIL', 'MEM',
                     'POWER', 'TEMP', 'BUS ID'],
-            min_widths=[3, 8, 4, 6, 3, 3, 3, 12],
+            min_widths=[3, 8, 4, 6, 3, 3, 3],
             rows=rows,
             bold_header=False,
             column_spaces=2,
