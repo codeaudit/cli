@@ -53,7 +53,7 @@ def main():
             args.run(args)
         except HTTPError as e:
             # all uncaught http errors goes here
-            handle_error(e.message)
+            handle_error(str(e))
     else:
         parser.print_usage()
 

@@ -15,7 +15,7 @@ def load_config(config_file, config_section=None):
     try:
         config = RepositoryConfig.from_yml_file(config_file)
     except ConfigError as e:
-        handle_error("invalid config {}\n{}".format(config_file, e.message))
+        handle_error("invalid config {}\n{}".format(config_file, str(e)))
         return
 
     if config_section is None:
