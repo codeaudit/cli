@@ -53,11 +53,13 @@ def run(args):
 
 
 def params(experiment):
-    return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.params).items()])
+    return ', '.join(['{}={}'.format(p, v) for p, v in sorted(json.loads(experiment.params).items())])
+
 
 def result(experiment):
     if experiment.result:
-        return ', '.join(['{}={}'.format(p, v) for p, v in json.loads(experiment.result).items()])
+        return ', '.join(['{}={}'.format(p, v)
+                          for p, v in sorted(json.loads(experiment.result).items())])
     return ''
 
 
