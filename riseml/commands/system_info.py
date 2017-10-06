@@ -28,8 +28,8 @@ def display_gpus(nodes):
             gpu_mem = sum([gpu.mem for gpu in n.gpus])
         if not gpus:
             continue
-      
-        for i, gpu in enumerate(n.gpus):
+        sorted_gpus = sorted(n.gpus, key=lambda x: get_device_id(x.device))
+        for i, gpu in enumerate(sorted_gpus):
             rows.append([n.hostname if i == 0 else '', 
                          n.nvidia_driver if i == 0 else '', 
                          gpu.name, 

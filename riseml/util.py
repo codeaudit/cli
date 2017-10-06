@@ -291,7 +291,7 @@ def get_state_symbol(state):
     elif state in ('RUNNING'):
         return color_string(u'\u25cf ', color='green')
     elif state in ('FINISHED'):
-        return color_string(u'\u25cf ', color='red')
+        return color_string(u'\u25cf ', color='green')
     elif state in ('KILLED'):
         return color_string(u'\u25cf ', color='red')
     elif state in ('FAILED'):

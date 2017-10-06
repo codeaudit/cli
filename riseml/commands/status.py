@@ -56,9 +56,17 @@ def params(experiment):
     return ', '.join(['{}={}'.format(p, v) for p, v in sorted(json.loads(experiment.params).items())])
 
 
+def format_value(v):
+    try:
+       f = float(v)
+       return '%.5G' % f
+    except ValueError:
+       return str(v)
+
+
 def result(experiment):
     if experiment.result:
-        return ', '.join(['{}={}'.format(p, v)
+        return ', '.join(['{}={}'.format(p, format_value(v))
                           for p, v in sorted(json.loads(experiment.result).items())])
     return ''
 
