@@ -15,6 +15,7 @@ def add_status_parser(subparsers):
     parser = subparsers.add_parser('status', help="show (running) experiments")
     parser.add_argument('id', help='id of RiseML entity for which to show status', nargs='?')
     parser.add_argument('-a', '--all', help="show all experiments", action="store_const", const=True)
+    parser.add_argument('-n', '--num-last', help="show n last experiments, 0 for all", default=10, type=int)
     parser.add_argument('-u', '--all-users', help="show experiments for all users (admin only)", action="store_const", const=True)
     parser.add_argument('-l', '--long', help="expand series", action="store_const", const=True)
     parser.set_defaults(run=run)
@@ -41,13 +42,15 @@ def run(args):
         show_job(job)
     elif args.id and util.is_user_id(args.id):
         show_experiments(client.get_experiments(user=args.id[1:]),
-                         all=args.all, collapsed=not args.long, users=args.all_users)
+                         all=args.all, collapsed=not args.long, users=args.all_users,
+                         num=args.num_last)
     elif not args.id:
         query_args = {'all_users': args.all_users}
         if not args.all:
             query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
         show_experiments(client.get_experiments(**query_args),
-                         all=args.all, collapsed=not args.long, users=args.all_users)
+                         all=args.all, collapsed=not args.long, users=args.all_users,
+                         num=args.num_last)
     else:
         handle_error("Id does not identify any RiseML entity!")
 
@@ -194,7 +197,7 @@ def show_experiment_group(group):
         show_job_table(group.jobs)
 
 
-def show_experiments(experiments, all=False, collapsed=True, users=False):
+def show_experiments(experiments, all=False, collapsed=True, users=False, num=10):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
     widths = (6, 14, 10, 13, 15)
 
@@ -203,6 +206,8 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
         widths += (14, 14)
 
     rows = []
+
+    n = 0
 
     for experiment in experiments:
         if not all and experiment.state in ['FINISHED', 'KILLED', 'FAILED']:
@@ -223,6 +228,10 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
 
         if not collapsed and experiment.children:
             rows += get_experiments_rows(experiment)
+
+        n += 1
+        if n == num:
+            break
 
     util.print_table(
         header=header,

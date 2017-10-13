@@ -171,16 +171,16 @@ def get_summary_infos(jobs_stats):
         available = '-'
         if job_stats.get('percpu_percent'):
             available = '%d' % len(job_stats.get('percpu_percent'))
-        return '{:>3}/{} |{:>3}'.format(used, 
-                                        available,
-                                        requested.rstrip('0').rstrip('.'))
+        return '{:>3}/{} |{}'.format(used, 
+                                     available,
+                                     requested.rstrip('0').rstrip('.'))
     def format_mem(jobs_stats):
         available = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
         requested = '%.1f' % mib_to_gib(job_stats.job.mem)
-        return '{:>3}/{} |{:>3}'.format(used, 
-                                         available.rstrip('0').rstrip('.'),
-                                         requested.rstrip('0').rstrip('.'))
+        return '{:>3}/{} |{}'.format(used, 
+                                     available.rstrip('0').rstrip('.'),
+                                     requested.rstrip('0').rstrip('.'))
     def format_gpu(jobs_stats):
         requested = '%d' % job_stats.job.gpus
         if requested == 0 or job_stats.get('gpu_percent') is None:
