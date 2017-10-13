@@ -11,8 +11,8 @@ def add_system_parser(subparsers):
     add_system_info_parser(subsubparsers)
     add_system_user_parser(subsubparsers)
     add_system_test_parser(subsubparsers)
+    def run(args):
+        parser.print_usage()
     parser.set_defaults(run=run)
 
 
-def run(args):
-    parser.print_usage()
