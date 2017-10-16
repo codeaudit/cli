@@ -8,7 +8,7 @@ import sys
 from urllib3.exceptions import HTTPError
 
 from riseml.commands import *
-from riseml.client_config import get_api_url, get_stream_url, get_git_url, get_environment, get_cluster_id, get_rollbar_endpoint
+from riseml.client_config import get_api_url, get_stream_url, get_sync_url, get_git_url, get_environment, get_cluster_id, get_rollbar_endpoint
 from riseml.consts import VERSION
 from riseml.errors import handle_error
 
@@ -16,18 +16,15 @@ import logging
 logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
 
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', help="show endpoints", action='store_const', const=True)
     parser.add_argument('--version', '-V', help="show version", action='version', version='RiseML {}'.format(VERSION))
-
     subparsers = parser.add_subparsers()
 
     # user ops
     add_whoami_parser(subparsers)
     add_user_parser(subparsers)
-
 
     # system ops
     add_system_parser(subparsers)
@@ -46,6 +43,7 @@ def main():
 
     if args.v:
         print('api_url: %s' % get_api_url())
+        print('sync_url: %s' % get_sync_url())        
         print('stream_url: %s' % get_stream_url())
         print('git_url: %s' % get_git_url())
 
@@ -57,6 +55,7 @@ def main():
             handle_error(str(e))
     else:
         parser.print_usage()
+
 
 def entrypoint():
     if get_environment() not in ['development', 'test']:
@@ -75,5 +74,7 @@ def entrypoint():
     else:
         main()
 
+
 if __name__ == '__main__':
+
     entrypoint()

@@ -10,6 +10,7 @@ from riseml.util import call_api, print_table, TableRowDelimiter, get_rsync_path
 from riseml.client import Configuration
 from riseml.user import get_user
 
+
 def add_user_parser(parser):
     subparser = parser.add_parser('user', help="modify users")
     subsubparsers = subparser.add_subparsers()
@@ -60,6 +61,7 @@ def run_login(args):
 
     api_key, api_host, cluster_id = login_api(args)
     print()
+
     rsync_host = login_rsync(args)
     print()
 
