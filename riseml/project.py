@@ -10,7 +10,7 @@ from riseml.util import get_rsync_path, get_readable_size
 from riseml.configs import create_config, get_project_name, get_project_root
 from riseml.errors import handle_error, handle_http_error
 from riseml.client import DefaultApi, ApiClient
-from riseml.consts import API_URL, GIT_URL, SYNC_URL
+from riseml.client_config import get_git_url, get_sync_url
 from riseml.project_template import project_template
 from riseml.util import bytes_to_mib
 
@@ -30,19 +30,26 @@ def create_project(config_file):
     create_config(config_file, project_template)
 
     name = get_project_name(config_file)
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
     project = client.create_repository(name)[0]
     print("project created: %s (%s)" % (project.name, project.id))
 
 
 def push_project(user, project_name, config_file):
-    o = urlparse(GIT_URL)
+    o = urlparse(get_git_url())
     prepare_url = '%s://%s/%s/users/%s/repositories/%s/sync/prepare' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
     done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
 
+    sync_path = prepare_sync(prepare_url)
+    project_root = os.path.join(get_project_root(config_file))
+    sync_project(project_root, sync_path)
+    return complete_sync(done_url, sync_path)
+
+
+def prepare_sync(prepare_url):
     res = requests.post(prepare_url)
     if res.status_code == 412:
         if 'Repository does not exist' in res.json()['message']:
@@ -53,13 +60,17 @@ def push_project(user, project_name, config_file):
         handle_http_error('Connection problem with GIT server:\n' + res.text, res.status_code)
 
     sync_path = res.json()['path']
-    o = urlparse(SYNC_URL)
+    return sync_path
+
+
+def sync_project(project_root, sync_path):
+
+    o = urlparse(get_sync_url())
     rsync_url = '%s://%s%s/%s' % (
         o.scheme, o.netloc, o.path, sync_path)
 
-    project_root = os.path.join(get_project_root(config_file))
     exclude_file = os.path.join(project_root, '.risemlignore')
-    
+
     sync_cmd = [get_rsync_path(),
                 '-rlpt',
                 '--exclude=.git',
@@ -91,6 +102,8 @@ def push_project(user, project_name, config_file):
     if res != 0:
         handle_error('Push code failed, rsync error', exit_code=res)
 
+
+def complete_sync(done_url, sync_path):
     res = requests.post(done_url, params={'path': sync_path})
 
     if res.status_code == 412:
@@ -147,7 +160,7 @@ def get_project_size(sync_cmd, project_root):
 
 
 def get_project(name):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
     for project in client.get_repositories():
         if project.name == name:

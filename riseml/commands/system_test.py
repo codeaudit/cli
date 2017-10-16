@@ -7,7 +7,6 @@ import shutil
 
 from riseml.configs import load_config
 from riseml.client import AdminApi, ApiClient
-from riseml.consts import API_URL
 from riseml.util import bytes_to_gib, print_table, TableRowDelimiter, call_api
 from riseml.client import DefaultApi, ApiClient
 from riseml.user import get_user
@@ -97,7 +96,7 @@ def add_system_test_parser(subparsers):
 
 
 def run(args):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = AdminApi(api_client)
     user = get_user()
     
@@ -115,7 +114,7 @@ def start_job(user, nodename, job_config, stress_script):
     config_path = prepare_project_dir(job_config, stress_script)
     config = load_config(config_path)
     revision = push_project(user, PROJECT_NAME, config_path)
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
     node_selector = ''
     if nodename:

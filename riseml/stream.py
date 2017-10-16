@@ -7,7 +7,7 @@ import websocket
 import stringcase
 
 from riseml.errors import handle_error
-from riseml.consts import STREAM_URL
+from riseml.client_config import get_stream_url
 
 from . import util
 
@@ -112,7 +112,7 @@ class LogPrinter(object):
 
 def stream_job_log(job):
     ids_to_name = {job.id: job.short_id}
-    url = '%s/ws/jobs/%s/stream' % (STREAM_URL, job.id)
+    url = '%s/ws/jobs/%s/stream' % (get_stream_url(), job.id)
     meta = {"job_id": job.short_id}
     if util.is_tensorboard_job(job):
         meta["tensorboard_job"] = job
@@ -125,7 +125,7 @@ def stream_experiment_log(experiment):
         for job in experiment.jobs:
             ids_to_name[job.id] = '{}.{}'.format(experiment.short_id, job.name)
 
-    url = '%s/ws/experiments/%s/stream' % (STREAM_URL, experiment.id)
+    url = '%s/ws/experiments/%s/stream' % (get_stream_url(), experiment.id)
     ids_to_name = {}
     add_experiment_to_log(experiment)
     for child_experiment in experiment.children:

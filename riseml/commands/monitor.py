@@ -2,7 +2,6 @@ from riseml.client import DefaultApi, ApiClient
 from riseml.client.rest import ApiException
 
 from riseml.util import call_api, is_job_id, is_experiment_id
-from riseml.consts import API_URL
 from riseml.errors import handle_error, handle_http_error
 from riseml.monitor import monitor_jobs
 
@@ -23,7 +22,7 @@ def get_experiment_jobs(experiment, roles=('train', 'dist-tf-master',
 
 
 def run(args):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
 
     if args.id:

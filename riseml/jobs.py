@@ -3,11 +3,10 @@ from riseml.client.rest import ApiException
 
 from riseml.errors import handle_http_error
 from riseml.stream import stream_job_log
-from riseml.consts import API_URL
 
 
 def run_job(project_name, revision, kind, config):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
 
     try:

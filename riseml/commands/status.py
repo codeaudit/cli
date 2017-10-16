@@ -5,10 +5,9 @@ from __future__ import print_function
 import json
 
 from riseml.client import DefaultApi, ApiClient
-
+from riseml.client_config import get_api_url
 from riseml import util
 from riseml.errors import handle_error
-from riseml.consts import API_URL, ENDPOINT_URL
 
 
 def add_status_parser(subparsers):
@@ -22,7 +21,7 @@ def add_status_parser(subparsers):
 
 
 def run(args):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
 
     if args.id and util.is_experiment_id(args.id):
@@ -183,7 +182,7 @@ def show_experiment_group(group):
 
     if group.framework == 'tensorflow' and group.framework_config.get('tensorboard', False):
         tensorboard_job = next(job for job in group.jobs if job.role == 'tensorboard')
-        print("Tensorboard: {}/{}".format(ENDPOINT_URL, tensorboard_job.service_name))
+        print("Tensorboard: {}/{}".format(get_api_url(), tensorboard_job.service_name))
 
     print()
     util.print_table(

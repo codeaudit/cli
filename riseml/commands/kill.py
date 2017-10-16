@@ -1,6 +1,6 @@
 from riseml.client import DefaultApi, ApiClient
 
-from riseml.consts import API_URL
+from riseml.client_config import get_api_url
 from riseml.errors import handle_error
 
 from riseml.util import call_api, is_experiment_id
@@ -12,7 +12,7 @@ def add_kill_parser(subparsers):
 
 
 def run(args):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient(host=get_api_url())
     client = DefaultApi(api_client)
 
     if args.ids:

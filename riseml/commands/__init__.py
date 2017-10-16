@@ -8,3 +8,4 @@ from .status import add_status_parser
 from .whoami import add_whoami_parser
 from .init import add_init_parser
 from .monitor import add_monitor_parser
+from .user import add_user_parser

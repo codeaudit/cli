@@ -1,6 +1,6 @@
 from collections import Counter
 from riseml.client import AdminApi, ApiClient
-from riseml.consts import API_URL, VERSION
+from riseml.consts import VERSION
 from riseml.util import bytes_to_gib, print_table, TableRowDelimiter, call_api, format_float
 
 
@@ -133,7 +133,7 @@ def display_clusterinfos(clusterinfos):
 
 
 def run(args):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = AdminApi(api_client)
     nodes = call_api(lambda: client.get_nodes())
     if args.long:
@@ -142,6 +142,7 @@ def run(args):
         display_gpus(nodes)
     else:
         clusterinfos = call_api(lambda: client.get_cluster_infos())
+        print(clusterinfos)
         display_clusterinfos(clusterinfos)
         print('')
         display_short(nodes)

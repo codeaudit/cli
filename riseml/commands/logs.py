@@ -1,7 +1,6 @@
 from riseml.client import DefaultApi, ApiClient
 
 from riseml.util import call_api, is_job_id, is_experiment_id
-from riseml.consts import API_URL
 from riseml.errors import handle_error
 from riseml.stream import stream_experiment_log, stream_job_log
 
@@ -13,7 +12,7 @@ def add_logs_parser(subparsers):
 
 
 def run(args):
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
 
     if args.id:

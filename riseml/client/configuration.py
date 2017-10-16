@@ -21,6 +21,7 @@ import logging
 from six import iteritems
 from six.moves import http_client as httplib
 
+from ..client_config import get_api_key, get_api_url
 
 def singleton(cls, *args, **kw):
     instances = {}
@@ -45,7 +46,7 @@ class Configuration(object):
         Constructor
         """
         # Default Base url
-        self.host = "https://api.riseml.com"
+        self.host = get_api_url()
         # Default api client
         self.api_client = None
         # Temp file folder for downloading files
@@ -53,7 +54,7 @@ class Configuration(object):
 
         # Authentication Settings
         # dict to store API key(s)
-        self.api_key = {'api_key': os.environ.get('RISEML_APIKEY')}
+        self.api_key = {'api_key': get_api_key()}
         # dict to store API prefix (e.g. Bearer)
         self.api_key_prefix = {}
         # Username for HTTP basic authentication

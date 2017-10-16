@@ -8,7 +8,8 @@ import sys
 from urllib3.exceptions import HTTPError
 
 from riseml.commands import *
-from riseml.consts import API_URL, STREAM_URL, GIT_URL, USER_URL, ROLLBAR_ENDPOINT, CLUSTER_ID, ENVIRONMENT, VERSION
+from riseml.client_config import get_api_url, get_stream_url, get_git_url, get_environment, get_cluster_id, get_rollbar_endpoint
+from riseml.consts import VERSION
 from riseml.errors import handle_error
 
 import logging
@@ -25,6 +26,8 @@ def main():
 
     # user ops
     add_whoami_parser(subparsers)
+    add_user_parser(subparsers)
+
 
     # system ops
     add_system_parser(subparsers)
@@ -42,11 +45,9 @@ def main():
     args = parser.parse_args(sys.argv[1:])
 
     if args.v:
-        print('api_url: %s' % API_URL)
-        print('stream_url: %s' % STREAM_URL)
-        # print('RISEML_SCRATCH_ENDPOINT: %s' % scratch_url)
-        print('git_url: %s' % GIT_URL)
-        print('user_url: %s' % USER_URL)
+        print('api_url: %s' % get_api_url())
+        print('stream_url: %s' % get_stream_url())
+        print('git_url: %s' % get_git_url())
 
     if hasattr(args, 'run'):
         try:
@@ -58,13 +59,13 @@ def main():
         parser.print_usage()
 
 def entrypoint():
-    if ENVIRONMENT not in ['development', 'test']:
-        if not CLUSTER_ID:
-            handle_error("Environment variable RISEML_CLUSTER_ID has to be set!")
+    if get_environment() not in ['development', 'test']:
+        if not get_cluster_id():
+            handle_error("RiseML cluster ID ist not available")
         rollbar.init(
-            CLUSTER_ID, # Use cluster id as access token
-            ENVIRONMENT,
-            endpoint=ROLLBAR_ENDPOINT,
+            get_cluster_id(), # Use cluster id as access token
+            get_environment(),
+            endpoint=get_rollbar_endpoint(),
             root=os.path.dirname(os.path.realpath(__file__)))
         try:
             main()

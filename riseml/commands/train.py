@@ -5,7 +5,7 @@ from riseml.client import DefaultApi, ApiClient
 from riseml.configs import load_config
 from riseml.user import get_user
 from riseml.project import push_project
-from riseml.consts import API_URL, DEFAULT_CONFIG_NAME
+from riseml.consts import DEFAULT_CONFIG_NAME
 from riseml.stream import stream_experiment_log
 from riseml.util import call_api
 
@@ -23,7 +23,7 @@ def run_train(args):
 
     user = get_user()
     revision = push_project(user, project_name, args.config_file)
-    api_client = ApiClient(host=API_URL)
+    api_client = ApiClient()
     client = DefaultApi(api_client)
 
     experiment = call_api(lambda: client.create_experiment(

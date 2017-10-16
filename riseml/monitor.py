@@ -17,7 +17,7 @@ import subprocess
 from collections import OrderedDict
 
 from riseml.errors import handle_error
-from riseml.consts import STREAM_URL
+from riseml.client_config import get_stream_url
 from riseml.util import bytes_to_gib, print_table, bold, JobState, mib_to_gib, get_state_symbol
 
 stats_lock = threading.Lock()
@@ -368,7 +368,7 @@ class StatsScreen():
 def stream_stats(job_id_stats, stream_meta={}):
     global monitor_stream
     job_ids = list(job_id_stats.keys())
-    url = '%s/ws/monitor/?jobId=%s' % (STREAM_URL, job_ids[0])
+    url = '%s/ws/monitor/?jobId=%s' % (get_stream_url(), job_ids[0])
     if len(job_ids) > 1:
         url += '&' + '&'.join(['jobId=%s' % job_id for job_id in job_ids[1:]])
 

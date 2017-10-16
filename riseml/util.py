@@ -8,7 +8,8 @@ import platform
 
 from datetime import datetime
 
-from riseml.consts import IS_BUNDLE, ENDPOINT_URL
+from riseml.consts import IS_BUNDLE
+from riseml.client_config import get_api_url
 
 USER_ONLY_REGEX = re.compile(r'^\.[^\.]+$')
 EXPERIMENT_ID_REGEX = re.compile(r'^(\.[^\.]+\.)?\d+(\.\d+)?$')
@@ -277,7 +278,7 @@ def tensorboard_job(experiment):
     return next((job for job in experiment.jobs if is_tensorboard_job(job)), None)
 
 def tensorboard_job_url(job):
-    return "{}/{}".format(ENDPOINT_URL, job.service_name)
+    return "{}/{}".format(get_api_url(), job.service_name)
 
 def get_state_symbol(state):
     assert state in ('CREATED', 'PENDING', 'BUILDING', 'STARTING', 
