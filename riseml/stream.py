@@ -41,11 +41,13 @@ class LogPrinter(object):
     def _on_message(self, _, message):
         msg = json.loads(message)
         msg_type = msg['type']
-
+        
         if msg_type == 'log':
             self.print_log_message(msg)
         elif msg_type == 'state':
             self.print_state_message(msg)
+        elif msg_type == 'error':
+            self.print_error_message(msg)
 
     def _on_error(self, _, error):
         if isinstance(error, (KeyboardInterrupt, SystemExit)):
@@ -109,6 +111,8 @@ class LogPrinter(object):
                 message = "[{}] {}: {}".format(time, stringcase.titlecase(key), msg[key])
                 print("{}{}".format(self._message_prefix(msg), util.color_string(message, color="bold_white")))
 
+    def print_error_message(self, msg):
+        print(util.color_string("Error: {}".format(msg['error']), color="red"))
 
 def stream_job_log(job):
     ids_to_name = {job.id: job.short_id}
