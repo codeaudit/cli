@@ -23,6 +23,7 @@ from six.moves import http_client as httplib
 
 from ..client_config import get_api_key, get_api_url
 
+
 def singleton(cls, *args, **kw):
     instances = {}
 

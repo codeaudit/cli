@@ -158,6 +158,10 @@ def write_config(api_key, api_host, rsync_host, cluster_id,
         f.write(config)
 
 
+def get_api_server():
+    return get_client_config()['cluster']['api-server']
+
+
 def get_sync_url():
     return get_client_config()['cluster']['sync-server']
 
