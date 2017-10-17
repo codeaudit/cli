@@ -43,13 +43,13 @@ def push_project(user, project_name, config_file):
     done_url = '%s://%s/%s/users/%s/repositories/%s/sync/done' % (
         o.scheme, o.netloc, o.path, user.id, project_name)
 
-    sync_path = prepare_sync(prepare_url)
+    sync_path = prepare_sync(prepare_url, config_file)
     project_root = os.path.join(get_project_root(config_file))
     sync_project(project_root, sync_path)
     return complete_sync(done_url, sync_path)
 
 
-def prepare_sync(prepare_url):
+def prepare_sync(prepare_url, config_file):
     res = requests.post(prepare_url)
     if res.status_code == 412:
         if 'Repository does not exist' in res.json()['message']:
