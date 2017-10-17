@@ -119,7 +119,10 @@ def show_experiment(experiment):
     if util.has_tensorboard(experiment):
         tensorboard_job = util.tensorboard_job(experiment)
         if tensorboard_job:
-            print("Tensorboard: {}".format(util.tensorboard_job_url(tensorboard_job)))
+            if tensorboard_job.state in ['RUNNING']:
+                print("Tensorboard: {}".format(util.tensorboard_job_url(tensorboard_job)))
+            else:
+                print("Tensorboard: OFFLINE")
 
     print("Run Commands:")
     print(''.join(["  {}".format(command) for command in experiment.run_commands]))
@@ -182,7 +185,10 @@ def show_experiment_group(group):
 
     if group.framework == 'tensorflow' and group.framework_config.get('tensorboard', False):
         tensorboard_job = next(job for job in group.jobs if job.role == 'tensorboard')
-        print("Tensorboard: {}/{}".format(get_api_url(), tensorboard_job.service_name))
+        if tensorboard_job.state in ['RUNNING']:
+            print("Tensorboard: {}".format(util.tensorboard_job_url(tensorboard_job)))
+        else:
+            print("Tensorboard: OFFLINE")
 
     print()
     util.print_table(
