@@ -59,15 +59,18 @@ def add_login_parser(subparsers):
 
 def run_login(args):
     print('Configuring new user login. This may overwrite existing configuration. \n')
+    try:
+        api_key, api_host, cluster_id = login_api(args)
+        print()
 
-    api_key, api_host, cluster_id = login_api(args)
-    print()
+        rsync_host = login_rsync(args)
+        print()
 
-    rsync_host = login_rsync(args)
-    print()
-
-    write_config(api_key, api_host, rsync_host, cluster_id)
-    print('Login succeeded, config updated.')
+        write_config(api_key, api_host, rsync_host, cluster_id)
+        print('Login succeeded, config updated.')
+    except KeyboardInterrupt as e:
+        print('Aborting login. Configuration unchanged.')
+        sys. exit(1)
 
 
 def login_api(args):
@@ -140,15 +143,12 @@ def check_api_config(api_url, api_key, timeout=180):
             if exc.reason == 'UNAUTHORIZED':
                 print(exc.status, 'Unauthorized - wrong api key?')
                 sys.exit(1)
-            elif: time.time() - start < timeout:
+            elif time.time() - start < timeout:
                 time.sleep(1)
                 continue
             else:
                 print(exc.status, exc.reason)
                 sys.exit(1)
-        except KeyboardInterrupt as e:
-            print('Aborting login. Configuration unchanged.')
-            sys. exit(1)
         except HTTPError as e:
             if time.time() - start < timeout:
                 time.sleep(1)
