@@ -142,7 +142,6 @@ def run(args):
         display_gpus(nodes)
     else:
         clusterinfos = call_api(lambda: client.get_cluster_infos())
-        print(clusterinfos)
         display_clusterinfos(clusterinfos)
         print('')
         display_short(nodes)
