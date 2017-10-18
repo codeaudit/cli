@@ -140,6 +140,9 @@ def check_api_config(api_url, api_key, timeout=180):
             if exc.reason == 'UNAUTHORIZED':
                 print(exc.status, 'Unauthorized - wrong api key?')
                 sys.exit(1)
+            elif: time.time() - start < timeout:
+                time.sleep(1)
+                continue
             else:
                 print(exc.status, exc.reason)
                 sys.exit(1)
