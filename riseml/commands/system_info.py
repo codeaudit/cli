@@ -128,7 +128,9 @@ def display_clusterinfos(clusterinfos):
     k8s_version = clusterinfos.get('k8s_version', 'N/A')
     k8s_build_date = clusterinfos.get('k8s_build_date', 'N/A')
     k8s_git_commit = clusterinfos.get('k8s_git_commit', 'N/A')
+    cluster_id = clusterinfos.get('cluster_id', 'N/A')
     print('RiseML Client/Server Version: {}/{}'.format(VERSION, server_version))
+    print('RiseML Cluster ID: {}'.format(cluster_id))
     print('Kubernetes Version %s (Build Date: %s)' % (k8s_version, k8s_build_date))
 
 
