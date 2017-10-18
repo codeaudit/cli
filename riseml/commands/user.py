@@ -93,7 +93,7 @@ def login_rsync(args):
     if not args.sync_host:
         print('Please provide the DNS name or IP of your RiseML sync server.')
         print('Examples: 54.131.125.43, 54.131.125.42:31876')
-        rsync_host = input('--> ')
+        rsync_host = input('--> ').strip()
         print()
 
     check_sync_config('rsync://%s/sync' % rsync_host)
