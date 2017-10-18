@@ -1,5 +1,6 @@
 import sys
 import subprocess
+import time
 from urllib3.exceptions import HTTPError
 
 from riseml.errors import handle_error
@@ -117,8 +118,8 @@ def check_sync_config(rsync_url):
         print('Success!')
 
 
-def check_api_config(api_url, api_key):
-    print('Logging in to %s with API key \'%s\' ...' % (api_url, api_key))
+def check_api_config(api_url, api_key, timeout=180):
+    print('Waiting for successful login to %s with API key \'%s\' ...' % (api_url, api_key))
     config = Configuration()
     old_api_host = config.host
     old_api_key = config.api_key['api_key']
@@ -126,27 +127,34 @@ def check_api_config(api_url, api_key):
     config.api_key['api_key'] = api_key
     api_client = ApiClient()
     client = AdminApi(api_client)
-    
-    try:
-        cluster_infos = client.get_cluster_infos()
-        cluster_id = get_cluster_id(cluster_infos)
-        print('Success! Cluster ID: %s' % cluster_id)
-        return cluster_id
-    except ApiException as exc:
-        if exc.reason == 'UNAUTHORIZED':
-            print(exc.status, 'Unauthorized - wrong api key?')
-            sys.exit(1)
-        else:
-            print(exc.status, exc.reason)
-            sys.exit(1)
-    except HTTPError as e:
-        print('Unable to connecto to %s ' % api_url)
-        # all uncaught http errors goes here
-        print(e.reason)
-        sys.exit(1)
-    finally:
-        config.host = old_api_host
-        config.api_key['api_key'] = old_api_key
+    start = time.time()
+    while True:
+        try:
+            cluster_infos = client.get_cluster_infos()
+            cluster_id = get_cluster_id(cluster_infos)
+            print('Success! Cluster ID: %s' % cluster_id)
+            config.api_key['api_key'] = old_api_key
+            config.host = old_api_host
+            return cluster_id
+        except ApiException as exc:
+            if exc.reason == 'UNAUTHORIZED':
+                print(exc.status, 'Unauthorized - wrong api key?')
+                sys.exit(1)
+            else:
+                print(exc.status, exc.reason)
+                sys.exit(1)
+        except KeyboardInterrupt as e:
+            print('Aborting login. Configuration unchanged.')
+            sys. exit(1)
+        except HTTPError as e:
+            if time.time() - start < timeout:
+                time.sleep(1)
+                continue
+            else:
+                print('Unable to connecto to %s ' % api_url)
+                # all uncaught http errors goes here
+                print(e.reason)
+                sys.exit(1)
 
 
 def get_cluster_id(cluster_infos):
