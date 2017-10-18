@@ -74,14 +74,14 @@ def login_api(args):
     if not args.api_host:
         print('Please provide the DNS name or IP of your RiseML API server.')
         print('Examples: 54.131.125.42, 54.131.125.42:31213')
-        api_host = input('--> ')
+        api_host = input('--> ').strip()
         print()
   
     api_key = args.api_key
     if not args.api_key:
         print('Please provide your API key.')
         print('Example: krlo2oxrtd2084zs7jahwyqu12b7mozg')
-        api_key = input('--> ')
+        api_key = input('--> ').strip()
         print()
 
     cluster_id = check_api_config(get_api_url(api_host), api_key)
