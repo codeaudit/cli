@@ -119,7 +119,7 @@ def check_sync_config(rsync_url):
 
 
 def check_api_config(api_url, api_key, timeout=180):
-    print('Waiting for successful login to %s with API key \'%s\' ...' % (api_url, api_key))
+    print('Waiting %ss for successful login to %s with API key \'%s\' ...' % (timeout, api_url, api_key))
     config = Configuration()
     old_api_host = config.host
     old_api_key = config.api_key['api_key']
