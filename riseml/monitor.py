@@ -202,14 +202,14 @@ def get_summary_infos(jobs_stats):
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
-            rows.append([job.short_id, job.changeset.repository.name, 
+            rows.append([job.short_id, job.project.name, 
                          '%s%s' % (get_state_symbol(job.state), job.state),
                          format_cpu(job_stats),
                          format_mem(job_stats),
                          format_gpu(job_stats),
                          format_gpu_mem(job_stats)])
         else:
-            rows.append([job.short_id, job.changeset.repository.name,
+            rows.append([job.short_id, job.project.name,
                          '%s%s' % (get_state_symbol(job.state), job.state)] + \
                          ['', '', '', ''])
     print_table(

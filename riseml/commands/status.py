@@ -146,7 +146,8 @@ def show_job(job):
     print("Requested mem: {}".format(job.mem))
     print("Requested gpus: {}".format(job.gpus))
     print("Run Commands:")
-    print(''.join(["  {}".format(command) for command in json.loads(job.commands)]))
+    if json.loads(job.commands):
+        print(''.join(["  {}".format(command) for command in json.loads(job.commands)]))
     show_dict(json.loads(job.environment), title="Environment:")
     if job.state == 'FAILED':
         print("Reason: {}".format(job.reason))
@@ -160,7 +161,7 @@ def get_experiments_rows(group, with_project=True, with_type=True, with_params=T
         values = [indent_str + experiment.short_id]
 
         if with_project:
-            values += [experiment.changeset.repository.name]
+            values += [experiment.changeset.project.name]
 
         values += [u'%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
                    util.get_since_str(experiment.created_at)]
@@ -181,7 +182,7 @@ def show_experiment_group(group):
     print("Type: Set")
     print("State: {}{}".format(util.get_state_symbol(group.state),
                                group.state))
-    print("Project: {}".format(group.changeset.repository.name))
+    print("Project: {}".format(group.project.name))
 
     if group.framework == 'tensorflow' and group.framework_config.get('tensorboard', False):
         tensorboard_job = next(job for job in group.jobs if job.role == 'tensorboard')
@@ -220,7 +221,7 @@ def show_experiments(experiments, all=False, collapsed=True, users=False, num=10
 
         values = [
             '.{}.{}'.format(experiment.user.username, experiment.short_id) if users else experiment.short_id,
-            experiment.changeset.repository.name,
+            experiment.project.name,
             '%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
             util.get_since_str(experiment.created_at),
             experiment.type

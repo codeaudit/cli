@@ -13,12 +13,11 @@
 from __future__ import absolute_import
 
 # import models into model package
-from .changeset import Changeset
 from .cluster_info import ClusterInfo
 from .error import Error
 from .experiment import Experiment
 from .gpu import GPU
 from .job import Job
 from .node import Node
-from .repository import Repository
+from .project import Project
 from .user import User
