@@ -162,7 +162,7 @@ class JobStats(Stats):
             return (float(usage) / float(total)) * 100
 
 
-def get_summary_infos(jobs_stats):
+def get_summary_infos(project_name, jobs_stats):
     def format_cpu(job_stats):
         if job_stats.get('cpu_percent') is None:
             return '-'        
@@ -202,14 +202,15 @@ def get_summary_infos(jobs_stats):
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
-            rows.append([job.short_id, job.project.name, 
+            print(job)
+            rows.append([job.short_id, project_name, 
                          '%s%s' % (get_state_symbol(job.state), job.state),
                          format_cpu(job_stats),
                          format_mem(job_stats),
                          format_gpu(job_stats),
                          format_gpu_mem(job_stats)])
         else:
-            rows.append([job.short_id, job.project.name,
+            rows.append([job.short_id, project_name,
                          '%s%s' % (get_state_symbol(job.state), job.state)] + \
                          ['', '', '', ''])
     print_table(
@@ -328,8 +329,9 @@ def get_detailed_infos(jobs_stats):
 
 class StatsScreen():
 
-    def __init__(self, jobs_stats):
+    def __init__(self, project, jobs_stats):
         self.jobs_stats = jobs_stats
+        self.project = project
 
     def _display(self, detailed):
             while True:
@@ -338,7 +340,8 @@ class StatsScreen():
                     if detailed:
                         stats_screen = get_detailed_infos(sorted_stats)
                     else:
-                        stats_screen = get_summary_infos(sorted_stats)            
+                        stats_screen = get_summary_infos(self.project.name,
+                                                         sorted_stats)            
                 if monitor_stream.isAlive():
                     os.system('cls' if os.name == 'nt' else 'clear')
                     print(self._fit_terminal(stats_screen.strip()))
@@ -419,9 +422,9 @@ def stream_stats(job_id_stats, stream_meta={}):
         handle_error('Unable to connect to monitor stream')
 
 
-def monitor_jobs(jobs, detailed=False, stream_meta={}):
+def monitor_jobs(project, jobs, detailed=False, stream_meta={}):
     job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs})
     stream_stats(job_id_stats, stream_meta)
     jobs_stats = job_id_stats.values()
-    screen = StatsScreen(jobs_stats)
+    screen = StatsScreen(project, jobs_stats)
     screen.display(detailed, stream_meta)

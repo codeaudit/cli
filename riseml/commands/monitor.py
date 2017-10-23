@@ -32,11 +32,11 @@ def run(args):
             jobs = get_experiment_jobs(experiment)
             if not jobs:
                 handle_error('Experiment has no jobs.')
-            monitor_jobs(jobs, detailed=args.gpu, 
+            monitor_jobs(experiment.project, jobs, detailed=args.gpu, 
                          stream_meta={"experiment_id": experiment.short_id})
         elif is_job_id(args.id):
             job = call_api(lambda: client.get_job(args.id))
-            monitor_jobs([job], detailed=args.gpu, stream_meta={"job_id": job.short_id})
+            monitor_jobs(job.project, [job], detailed=args.gpu, stream_meta={"job_id": job.short_id})
         else:
             handle_error("Id is neither an experiment id nor a job id!")
 
@@ -48,5 +48,5 @@ def run(args):
         jobs = get_experiment_jobs(experiment)
         if not jobs:
             handle_error('Last experiment has no jobs.')
-        monitor_jobs(jobs, detailed=args.gpu, 
+        monitor_jobs(experiment.project, jobs, detailed=args.gpu, 
                      stream_meta={"experiment_id": experiments[0].short_id})
