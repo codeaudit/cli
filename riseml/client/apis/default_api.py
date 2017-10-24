@@ -39,7 +39,7 @@ class DefaultApi(object):
                 config.api_client = ApiClient()
             self.api_client = config.api_client
 
-    def create_experiment(self, repository, revision, kind, config, **kwargs):
+    def create_experiment(self, project, revision, kind, config, **kwargs):
         """
         
         
@@ -50,11 +50,11 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_experiment(repository, revision, kind, config, callback=callback_function)
+        >>> thread = api.create_experiment(project, revision, kind, config, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository:  (required)
+        :param str project:  (required)
         :param str revision:  (required)
         :param str kind:  (required)
         :param str config:  (required)
@@ -65,12 +65,12 @@ class DefaultApi(object):
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.create_experiment_with_http_info(repository, revision, kind, config, **kwargs)
+            return self.create_experiment_with_http_info(project, revision, kind, config, **kwargs)
         else:
-            (data) = self.create_experiment_with_http_info(repository, revision, kind, config, **kwargs)
+            (data) = self.create_experiment_with_http_info(project, revision, kind, config, **kwargs)
             return data
 
-    def create_experiment_with_http_info(self, repository, revision, kind, config, **kwargs):
+    def create_experiment_with_http_info(self, project, revision, kind, config, **kwargs):
         """
         
         
@@ -81,11 +81,11 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_experiment_with_http_info(repository, revision, kind, config, callback=callback_function)
+        >>> thread = api.create_experiment_with_http_info(project, revision, kind, config, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository:  (required)
+        :param str project:  (required)
         :param str revision:  (required)
         :param str kind:  (required)
         :param str config:  (required)
@@ -95,7 +95,7 @@ class DefaultApi(object):
                  returns the request thread.
         """
 
-        all_params = ['repository', 'revision', 'kind', 'config', 'node_selectors']
+        all_params = ['project', 'revision', 'kind', 'config', 'node_selectors']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -109,9 +109,9 @@ class DefaultApi(object):
                 )
             params[key] = val
         del params['kwargs']
-        # verify the required parameter 'repository' is set
-        if ('repository' not in params) or (params['repository'] is None):
-            raise ValueError("Missing the required parameter `repository` when calling `create_experiment`")
+        # verify the required parameter 'project' is set
+        if ('project' not in params) or (params['project'] is None):
+            raise ValueError("Missing the required parameter `project` when calling `create_experiment`")
         # verify the required parameter 'revision' is set
         if ('revision' not in params) or (params['revision'] is None):
             raise ValueError("Missing the required parameter `revision` when calling `create_experiment`")
@@ -134,8 +134,8 @@ class DefaultApi(object):
 
         form_params = []
         local_var_files = {}
-        if 'repository' in params:
-            form_params.append(('repository', params['repository']))
+        if 'project' in params:
+            form_params.append(('project', params['project']))
         if 'revision' in params:
             form_params.append(('revision', params['revision']))
         if 'kind' in params:
@@ -174,7 +174,7 @@ class DefaultApi(object):
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
-    def create_job(self, repository, revision, kind, config, **kwargs):
+    def create_job(self, project, revision, kind, config, **kwargs):
         """
         
         
@@ -185,11 +185,11 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_job(repository, revision, kind, config, callback=callback_function)
+        >>> thread = api.create_job(project, revision, kind, config, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository:  (required)
+        :param str project:  (required)
         :param str revision:  (required)
         :param str kind:  (required)
         :param str config:  (required)
@@ -199,12 +199,12 @@ class DefaultApi(object):
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.create_job_with_http_info(repository, revision, kind, config, **kwargs)
+            return self.create_job_with_http_info(project, revision, kind, config, **kwargs)
         else:
-            (data) = self.create_job_with_http_info(repository, revision, kind, config, **kwargs)
+            (data) = self.create_job_with_http_info(project, revision, kind, config, **kwargs)
             return data
 
-    def create_job_with_http_info(self, repository, revision, kind, config, **kwargs):
+    def create_job_with_http_info(self, project, revision, kind, config, **kwargs):
         """
         
         
@@ -215,11 +215,11 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_job_with_http_info(repository, revision, kind, config, callback=callback_function)
+        >>> thread = api.create_job_with_http_info(project, revision, kind, config, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository:  (required)
+        :param str project:  (required)
         :param str revision:  (required)
         :param str kind:  (required)
         :param str config:  (required)
@@ -228,7 +228,7 @@ class DefaultApi(object):
                  returns the request thread.
         """
 
-        all_params = ['repository', 'revision', 'kind', 'config']
+        all_params = ['project', 'revision', 'kind', 'config']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -242,9 +242,9 @@ class DefaultApi(object):
                 )
             params[key] = val
         del params['kwargs']
-        # verify the required parameter 'repository' is set
-        if ('repository' not in params) or (params['repository'] is None):
-            raise ValueError("Missing the required parameter `repository` when calling `create_job`")
+        # verify the required parameter 'project' is set
+        if ('project' not in params) or (params['project'] is None):
+            raise ValueError("Missing the required parameter `project` when calling `create_job`")
         # verify the required parameter 'revision' is set
         if ('revision' not in params) or (params['revision'] is None):
             raise ValueError("Missing the required parameter `revision` when calling `create_job`")
@@ -267,8 +267,8 @@ class DefaultApi(object):
 
         form_params = []
         local_var_files = {}
-        if 'repository' in params:
-            form_params.append(('repository', params['repository']))
+        if 'project' in params:
+            form_params.append(('project', params['project']))
         if 'revision' in params:
             form_params.append(('revision', params['revision']))
         if 'kind' in params:
@@ -305,7 +305,7 @@ class DefaultApi(object):
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
-    def create_repository(self, name, **kwargs):
+    def create_project(self, name, **kwargs):
         """
         
         
@@ -316,7 +316,7 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_repository(name, callback=callback_function)
+        >>> thread = api.create_project(name, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
@@ -324,18 +324,18 @@ class DefaultApi(object):
         :param str description: 
         :param str username: 
         :param str default_branch: 
-        :return: list[Repository]
+        :return: list[Project]
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.create_repository_with_http_info(name, **kwargs)
+            return self.create_project_with_http_info(name, **kwargs)
         else:
-            (data) = self.create_repository_with_http_info(name, **kwargs)
+            (data) = self.create_project_with_http_info(name, **kwargs)
             return data
 
-    def create_repository_with_http_info(self, name, **kwargs):
+    def create_project_with_http_info(self, name, **kwargs):
         """
         
         
@@ -346,7 +346,7 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.create_repository_with_http_info(name, callback=callback_function)
+        >>> thread = api.create_project_with_http_info(name, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
@@ -354,7 +354,7 @@ class DefaultApi(object):
         :param str description: 
         :param str username: 
         :param str default_branch: 
-        :return: list[Repository]
+        :return: list[Project]
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -369,18 +369,18 @@ class DefaultApi(object):
             if key not in all_params:
                 raise TypeError(
                     "Got an unexpected keyword argument '%s'"
-                    " to method create_repository" % key
+                    " to method create_project" % key
                 )
             params[key] = val
         del params['kwargs']
         # verify the required parameter 'name' is set
         if ('name' not in params) or (params['name'] is None):
-            raise ValueError("Missing the required parameter `name` when calling `create_repository`")
+            raise ValueError("Missing the required parameter `name` when calling `create_project`")
 
 
         collection_formats = {}
 
-        resource_path = '/repositories'.replace('{format}', 'json')
+        resource_path = '/projects'.replace('{format}', 'json')
         path_params = {}
 
         query_params = {}
@@ -420,14 +420,14 @@ class DefaultApi(object):
                                             body=body_params,
                                             post_params=form_params,
                                             files=local_var_files,
-                                            response_type='list[Repository]',
+                                            response_type='list[Project]',
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
-    def delete_repository(self, repository_id, **kwargs):
+    def delete_project(self, project_id, **kwargs):
         """
         
         
@@ -438,23 +438,23 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.delete_repository(repository_id, callback=callback_function)
+        >>> thread = api.delete_project(project_id, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository_id:  (required)
+        :param str project_id:  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.delete_repository_with_http_info(repository_id, **kwargs)
+            return self.delete_project_with_http_info(project_id, **kwargs)
         else:
-            (data) = self.delete_repository_with_http_info(repository_id, **kwargs)
+            (data) = self.delete_project_with_http_info(project_id, **kwargs)
             return data
 
-    def delete_repository_with_http_info(self, repository_id, **kwargs):
+    def delete_project_with_http_info(self, project_id, **kwargs):
         """
         
         
@@ -465,17 +465,17 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.delete_repository_with_http_info(repository_id, callback=callback_function)
+        >>> thread = api.delete_project_with_http_info(project_id, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository_id:  (required)
+        :param str project_id:  (required)
         :return: None
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['repository_id']
+        all_params = ['project_id']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -485,21 +485,21 @@ class DefaultApi(object):
             if key not in all_params:
                 raise TypeError(
                     "Got an unexpected keyword argument '%s'"
-                    " to method delete_repository" % key
+                    " to method delete_project" % key
                 )
             params[key] = val
         del params['kwargs']
-        # verify the required parameter 'repository_id' is set
-        if ('repository_id' not in params) or (params['repository_id'] is None):
-            raise ValueError("Missing the required parameter `repository_id` when calling `delete_repository`")
+        # verify the required parameter 'project_id' is set
+        if ('project_id' not in params) or (params['project_id'] is None):
+            raise ValueError("Missing the required parameter `project_id` when calling `delete_project`")
 
 
         collection_formats = {}
 
-        resource_path = '/repositories/{repository_id}'.replace('{format}', 'json')
+        resource_path = '/projects/{project_id}'.replace('{format}', 'json')
         path_params = {}
-        if 'repository_id' in params:
-            path_params['repository_id'] = params['repository_id']
+        if 'project_id' in params:
+            path_params['project_id'] = params['project_id']
 
         query_params = {}
 
@@ -995,7 +995,7 @@ class DefaultApi(object):
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
-    def get_repositories(self, **kwargs):
+    def get_project_experiments(self, project_id, **kwargs):
         """
         
         
@@ -1006,24 +1006,24 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.get_repositories(callback=callback_function)
+        >>> thread = api.get_project_experiments(project_id, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str name: 
-        :param str username: 
-        :return: list[Repository]
+        :param str project_id:  (required)
+        :param str states: 
+        :return: list[Experiment]
                  If the method is called asynchronously,
                  returns the request thread.
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.get_repositories_with_http_info(**kwargs)
+            return self.get_project_experiments_with_http_info(project_id, **kwargs)
         else:
-            (data) = self.get_repositories_with_http_info(**kwargs)
+            (data) = self.get_project_experiments_with_http_info(project_id, **kwargs)
             return data
 
-    def get_repositories_with_http_info(self, **kwargs):
+    def get_project_experiments_with_http_info(self, project_id, **kwargs):
         """
         
         
@@ -1034,18 +1034,18 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.get_repositories_with_http_info(callback=callback_function)
+        >>> thread = api.get_project_experiments_with_http_info(project_id, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str name: 
-        :param str username: 
-        :return: list[Repository]
+        :param str project_id:  (required)
+        :param str states: 
+        :return: list[Experiment]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['name', 'username']
+        all_params = ['project_id', 'states']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -1055,132 +1055,21 @@ class DefaultApi(object):
             if key not in all_params:
                 raise TypeError(
                     "Got an unexpected keyword argument '%s'"
-                    " to method get_repositories" % key
+                    " to method get_project_experiments" % key
                 )
             params[key] = val
         del params['kwargs']
+        # verify the required parameter 'project_id' is set
+        if ('project_id' not in params) or (params['project_id'] is None):
+            raise ValueError("Missing the required parameter `project_id` when calling `get_project_experiments`")
 
 
         collection_formats = {}
 
-        resource_path = '/repositories'.replace('{format}', 'json')
+        resource_path = '/projects/{project_id}/experiments'.replace('{format}', 'json')
         path_params = {}
-
-        query_params = {}
-        if 'name' in params:
-            query_params['name'] = params['name']
-        if 'username' in params:
-            query_params['username'] = params['username']
-
-        header_params = {}
-
-        form_params = []
-        local_var_files = {}
-
-        body_params = None
-
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.\
-            select_header_accept(['application/json'])
-        if not header_params['Accept']:
-            del header_params['Accept']
-
-        # HTTP header `Content-Type`
-        header_params['Content-Type'] = self.api_client.\
-            select_header_content_type(['application/json'])
-
-        # Authentication setting
-        auth_settings = ['api_key']
-
-        return self.api_client.call_api(resource_path, 'GET',
-                                            path_params,
-                                            query_params,
-                                            header_params,
-                                            body=body_params,
-                                            post_params=form_params,
-                                            files=local_var_files,
-                                            response_type='list[Repository]',
-                                            auth_settings=auth_settings,
-                                            callback=params.get('callback'),
-                                            _return_http_data_only=params.get('_return_http_data_only'),
-                                            _preload_content=params.get('_preload_content', True),
-                                            collection_formats=collection_formats)
-
-    def get_repository_experiments(self, repository_id, **kwargs):
-        """
-        
-        
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please define a `callback` function
-        to be invoked when receiving the response.
-        >>> def callback_function(response):
-        >>>     pprint(response)
-        >>>
-        >>> thread = api.get_repository_experiments(repository_id, callback=callback_function)
-
-        :param callback function: The callback function
-            for asynchronous request. (optional)
-        :param str repository_id:  (required)
-        :param str states: 
-        :return: list[Experiment]
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-        kwargs['_return_http_data_only'] = True
-        if kwargs.get('callback'):
-            return self.get_repository_experiments_with_http_info(repository_id, **kwargs)
-        else:
-            (data) = self.get_repository_experiments_with_http_info(repository_id, **kwargs)
-            return data
-
-    def get_repository_experiments_with_http_info(self, repository_id, **kwargs):
-        """
-        
-        
-
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please define a `callback` function
-        to be invoked when receiving the response.
-        >>> def callback_function(response):
-        >>>     pprint(response)
-        >>>
-        >>> thread = api.get_repository_experiments_with_http_info(repository_id, callback=callback_function)
-
-        :param callback function: The callback function
-            for asynchronous request. (optional)
-        :param str repository_id:  (required)
-        :param str states: 
-        :return: list[Experiment]
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-
-        all_params = ['repository_id', 'states']
-        all_params.append('callback')
-        all_params.append('_return_http_data_only')
-        all_params.append('_preload_content')
-
-        params = locals()
-        for key, val in iteritems(params['kwargs']):
-            if key not in all_params:
-                raise TypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_repository_experiments" % key
-                )
-            params[key] = val
-        del params['kwargs']
-        # verify the required parameter 'repository_id' is set
-        if ('repository_id' not in params) or (params['repository_id'] is None):
-            raise ValueError("Missing the required parameter `repository_id` when calling `get_repository_experiments`")
-
-
-        collection_formats = {}
-
-        resource_path = '/repositories/{repository_id}/experiments'.replace('{format}', 'json')
-        path_params = {}
-        if 'repository_id' in params:
-            path_params['repository_id'] = params['repository_id']
+        if 'project_id' in params:
+            path_params['project_id'] = params['project_id']
 
         query_params = {}
         if 'states' in params:
@@ -1220,7 +1109,7 @@ class DefaultApi(object):
                                             _preload_content=params.get('_preload_content', True),
                                             collection_formats=collection_formats)
 
-    def get_repository_jobs(self, repository_id, **kwargs):
+    def get_project_jobs(self, project_id, **kwargs):
         """
         
         
@@ -1231,11 +1120,11 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.get_repository_jobs(repository_id, callback=callback_function)
+        >>> thread = api.get_project_jobs(project_id, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository_id:  (required)
+        :param str project_id:  (required)
         :param str states: 
         :param str desired_states: 
         :param bool only_root: 
@@ -1245,12 +1134,12 @@ class DefaultApi(object):
         """
         kwargs['_return_http_data_only'] = True
         if kwargs.get('callback'):
-            return self.get_repository_jobs_with_http_info(repository_id, **kwargs)
+            return self.get_project_jobs_with_http_info(project_id, **kwargs)
         else:
-            (data) = self.get_repository_jobs_with_http_info(repository_id, **kwargs)
+            (data) = self.get_project_jobs_with_http_info(project_id, **kwargs)
             return data
 
-    def get_repository_jobs_with_http_info(self, repository_id, **kwargs):
+    def get_project_jobs_with_http_info(self, project_id, **kwargs):
         """
         
         
@@ -1261,11 +1150,11 @@ class DefaultApi(object):
         >>> def callback_function(response):
         >>>     pprint(response)
         >>>
-        >>> thread = api.get_repository_jobs_with_http_info(repository_id, callback=callback_function)
+        >>> thread = api.get_project_jobs_with_http_info(project_id, callback=callback_function)
 
         :param callback function: The callback function
             for asynchronous request. (optional)
-        :param str repository_id:  (required)
+        :param str project_id:  (required)
         :param str states: 
         :param str desired_states: 
         :param bool only_root: 
@@ -1274,7 +1163,7 @@ class DefaultApi(object):
                  returns the request thread.
         """
 
-        all_params = ['repository_id', 'states', 'desired_states', 'only_root']
+        all_params = ['project_id', 'states', 'desired_states', 'only_root']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -1284,21 +1173,21 @@ class DefaultApi(object):
             if key not in all_params:
                 raise TypeError(
                     "Got an unexpected keyword argument '%s'"
-                    " to method get_repository_jobs" % key
+                    " to method get_project_jobs" % key
                 )
             params[key] = val
         del params['kwargs']
-        # verify the required parameter 'repository_id' is set
-        if ('repository_id' not in params) or (params['repository_id'] is None):
-            raise ValueError("Missing the required parameter `repository_id` when calling `get_repository_jobs`")
+        # verify the required parameter 'project_id' is set
+        if ('project_id' not in params) or (params['project_id'] is None):
+            raise ValueError("Missing the required parameter `project_id` when calling `get_project_jobs`")
 
 
         collection_formats = {}
 
-        resource_path = '/repositories/{repository_id}/jobs'.replace('{format}', 'json')
+        resource_path = '/projects/{project_id}/jobs'.replace('{format}', 'json')
         path_params = {}
-        if 'repository_id' in params:
-            path_params['repository_id'] = params['repository_id']
+        if 'project_id' in params:
+            path_params['project_id'] = params['project_id']
 
         query_params = {}
         if 'states' in params:
@@ -1336,6 +1225,117 @@ class DefaultApi(object):
                                             post_params=form_params,
                                             files=local_var_files,
                                             response_type='list[Job]',
+                                            auth_settings=auth_settings,
+                                            callback=params.get('callback'),
+                                            _return_http_data_only=params.get('_return_http_data_only'),
+                                            _preload_content=params.get('_preload_content', True),
+                                            collection_formats=collection_formats)
+
+    def get_repositories(self, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.get_repositories(callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str name: 
+        :param str username: 
+        :return: list[Project]
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('callback'):
+            return self.get_repositories_with_http_info(**kwargs)
+        else:
+            (data) = self.get_repositories_with_http_info(**kwargs)
+            return data
+
+    def get_repositories_with_http_info(self, **kwargs):
+        """
+        
+        
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please define a `callback` function
+        to be invoked when receiving the response.
+        >>> def callback_function(response):
+        >>>     pprint(response)
+        >>>
+        >>> thread = api.get_repositories_with_http_info(callback=callback_function)
+
+        :param callback function: The callback function
+            for asynchronous request. (optional)
+        :param str name: 
+        :param str username: 
+        :return: list[Project]
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['name', 'username']
+        all_params.append('callback')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+
+        params = locals()
+        for key, val in iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_repositories" % key
+                )
+            params[key] = val
+        del params['kwargs']
+
+
+        collection_formats = {}
+
+        resource_path = '/projects'.replace('{format}', 'json')
+        path_params = {}
+
+        query_params = {}
+        if 'name' in params:
+            query_params['name'] = params['name']
+        if 'username' in params:
+            query_params['username'] = params['username']
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.\
+            select_header_accept(['application/json'])
+        if not header_params['Accept']:
+            del header_params['Accept']
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.\
+            select_header_content_type(['application/json'])
+
+        # Authentication setting
+        auth_settings = ['api_key']
+
+        return self.api_client.call_api(resource_path, 'GET',
+                                            path_params,
+                                            query_params,
+                                            header_params,
+                                            body=body_params,
+                                            post_params=form_params,
+                                            files=local_var_files,
+                                            response_type='list[Project]',
                                             auth_settings=auth_settings,
                                             callback=params.get('callback'),
                                             _return_http_data_only=params.get('_return_http_data_only'),

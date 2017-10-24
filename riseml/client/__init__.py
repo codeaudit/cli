@@ -13,14 +13,13 @@
 from __future__ import absolute_import
 
 # import models into sdk package
-from .models.changeset import Changeset
 from .models.cluster_info import ClusterInfo
 from .models.error import Error
 from .models.experiment import Experiment
 from .models.gpu import GPU
 from .models.job import Job
 from .models.node import Node
-from .models.repository import Repository
+from .models.project import Project
 from .models.user import User
 
 # import apis into sdk package

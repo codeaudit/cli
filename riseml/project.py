@@ -32,7 +32,7 @@ def create_project(config_file):
     name = get_project_name(config_file)
     api_client = ApiClient()
     client = DefaultApi(api_client)
-    project = client.create_repository(name)[0]
+    project = client.create_project(name)[0]
     print("project created: %s (%s)" % (project.name, project.id))
 
 
