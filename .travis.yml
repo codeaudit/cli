@@ -40,7 +40,7 @@ script:
 - cd -
 
 # build binary
-- pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
+- LD_LIBRARY_PATH=$HOME/miniconda/envs/py3/lib pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
 deploy:
