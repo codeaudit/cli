@@ -19,6 +19,7 @@ before_install:
   fi
 - bash ~/miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
+- export LD_LIBRARY_PATH="$HOME/miniconda/envs/py3/lib:$LD_LIBRARY_PATH"
 
 script:
 # install dependencies
@@ -40,7 +41,7 @@ script:
 - cd -
 
 # build binary
-- LD_LIBRARY_PATH=$HOME/miniconda/envs/py3/lib pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
+- pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
 deploy:
