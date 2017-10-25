@@ -50,7 +50,7 @@ def format_float(f):
 
 def display_short(nodes):
     rows = []
-    nodes = filter(lambda n: n.role != 'master', nodes)
+    #nodes = filter(lambda n: n.role != 'master', nodes)
     total_cpus = 0
     total_mem = 0
     total_gpus = 0
