@@ -13,7 +13,7 @@ def add_system_info_parser(subparsers):
 
 def display_gpus(nodes):
 
-    nodes = filter(lambda n: n.role != 'master', nodes)
+    #nodes = filter(lambda n: n.role != 'master', nodes)
 
     def get_device_id(device_name):
         if device_name.startswith('/dev/nvidia'):
@@ -84,7 +84,7 @@ def display_short(nodes):
 def display_long(nodes):
 
     rows = []
-    nodes = filter(lambda n: n.role != 'master', nodes)
+    #nodes = filter(lambda n: n.role != 'master', nodes)
     total_cpus = 0
     total_mem = 0
     total_gpus = 0
