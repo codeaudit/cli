@@ -19,6 +19,7 @@ before_install:
   fi
 - bash ~/miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
+- export LD_LIBRARY_PATH="$HOME/miniconda/envs/py3/lib:$LD_LIBRARY_PATH"
 
 script:
 # install dependencies
@@ -63,3 +64,7 @@ deploy:
     upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
     on:
       tags: true
+
+notifications:
+  slack:
+    secure: OpF4eN076hICS8hf/cE2q0kTsSxfhHO83txcAJm8QgCv8NomRvp/uQTWPCDWUhkN6ufo94GwpM4XkfUXcrpOps+y8JsREZtExi2tQjni4jOKxZmacS1OuJ/hK1m1tVs/eY9WJQscFlykWpPJzlIZghpu1JU7Cwe2MfYW0IdKl0WHhfMtzthaB6o6ZICF9WQtoKS5eTZ4/S5sOAdfw2jcELlGclCxkZCW2OF7eeodbkCWtTEfaOxwkNz1Ty8gjXRMIk+5ZCYGh/NVA9peUOTMXL9/LIKz7nnbnBZwiElNUOT1R4mNDrgoVIs0CgyLWk89JH6FaYD4McbxJwlF2MN52lSOu1nKgBtfj3h2dyYwLs7YNt+VaErIQXALz1yUbagA+SOMqxifW7KJpdCzs3HOJ/evzai+KH1TwVyIEw7zNudEeYLj8yDOxZT3taGH8Bf2hGh1PSUlJtV9JWBp/6JZivkCEcniO9orZZuhYQFizuwq6hklHgiIJuN+8COXZBz51cV+ukHhxQJWcT+hZDX/zq00QiR1czAyqyGpZzSqhh2bbUhYpLlrn6sAJgkNM7J+Y+4EQUGyXB0h2i7I9/ZOP5TZsRJnUDwKDtCPF0aiLnGvQX7PmR72OLxrAQFL5dFHRxFi9zHHXZd7g1Pwetyj4mWNYrblPSi7o2Q8rBtkogY=
