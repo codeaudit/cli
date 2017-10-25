@@ -40,16 +40,15 @@ def run(args):
         )
         show_job(job)
     elif args.id and util.is_user_id(args.id):
-        show_experiments(client.get_experiments(user=args.id[1:]),
-                         all=args.all, collapsed=not args.long, users=args.all_users,
-                         num=args.num_last)
+        show_experiments(client.get_experiments(user=args.id[1:], count=args.num_last),
+                         all=args.all, collapsed=not args.long, users=args.all_users)
     elif not args.id:
         query_args = {'all_users': args.all_users}
         if not args.all:
             query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
+            query_args['count'] = args.num_last
         show_experiments(client.get_experiments(**query_args),
-                         all=args.all, collapsed=not args.long, users=args.all_users,
-                         num=args.num_last)
+                         all=args.all, collapsed=not args.long, users=args.all_users)
     else:
         handle_error("Id does not identify any RiseML entity!")
 
@@ -203,7 +202,7 @@ def show_experiment_group(group):
         show_job_table(group.jobs)
 
 
-def show_experiments(experiments, all=False, collapsed=True, users=False, num=10):
+def show_experiments(experiments, all=False, collapsed=True, users=False):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
     widths = (6, 14, 10, 13, 15)
 
@@ -236,8 +235,6 @@ def show_experiments(experiments, all=False, collapsed=True, users=False, num=10
             rows += get_experiments_rows(experiment)
 
         n += 1
-        if n == num:
-            break
 
     util.print_table(
         header=header,

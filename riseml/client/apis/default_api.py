@@ -665,6 +665,7 @@ class DefaultApi(object):
         :param str states: 
         :param str all_users: 
         :param str user: 
+        :param int count: 
         :return: list[Experiment]
                  If the method is called asynchronously,
                  returns the request thread.
@@ -694,12 +695,13 @@ class DefaultApi(object):
         :param str states: 
         :param str all_users: 
         :param str user: 
+        :param int count: 
         :return: list[Experiment]
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['states', 'all_users', 'user']
+        all_params = ['states', 'all_users', 'user', 'count']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -727,6 +729,8 @@ class DefaultApi(object):
             query_params['all_users'] = params['all_users']
         if 'user' in params:
             query_params['user'] = params['user']
+        if 'count' in params:
+            query_params['count'] = params['count']
 
         header_params = {}
 
@@ -1461,6 +1465,7 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str experiment_id:  (required)
+        :param bool force: 
         :return: Experiment
                  If the method is called asynchronously,
                  returns the request thread.
@@ -1488,12 +1493,13 @@ class DefaultApi(object):
         :param callback function: The callback function
             for asynchronous request. (optional)
         :param str experiment_id:  (required)
+        :param bool force: 
         :return: Experiment
                  If the method is called asynchronously,
                  returns the request thread.
         """
 
-        all_params = ['experiment_id']
+        all_params = ['experiment_id', 'force']
         all_params.append('callback')
         all_params.append('_return_http_data_only')
         all_params.append('_preload_content')
@@ -1520,6 +1526,8 @@ class DefaultApi(object):
             path_params['experiment_id'] = params['experiment_id']
 
         query_params = {}
+        if 'force' in params:
+            query_params['force'] = params['force']
 
         header_params = {}
 

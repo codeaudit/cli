@@ -8,6 +8,7 @@ from riseml.util import call_api, is_experiment_id
 def add_kill_parser(subparsers):
     parser = subparsers.add_parser('kill', help="kill on-going experiment or experiment series")
     parser.add_argument('ids', help="experiment/series identifiers (optional)", nargs='*')
+    parser.add_argument('-f', '--force', help="force kill experiment", action="store_const", const=True)    
     parser.set_defaults(run=run)
 
 
@@ -19,7 +20,7 @@ def run(args):
         if any(not is_experiment_id(experiment_id) for experiment_id in args.ids):
             handle_error("Can only kill experiments!")
         for experiment_id in args.ids:
-            kill_experiment(client, experiment_id)
+            kill_experiment(client, experiment_id, args.force)
     else:
         experiments = call_api(lambda: client.get_experiments())
 
@@ -29,11 +30,11 @@ def run(args):
         if experiments[0].state in ('FINISHED', 'FAILED', 'KILLED'):
             handle_error('No experiments to kill!')
 
-        kill_experiment(client, experiments[0].id)
+        kill_experiment(client, experiments[0].id, args.force)
         
 
-def kill_experiment(client, experiment_id):
-    experiment = call_api(lambda: client.kill_experiment(experiment_id),
+def kill_experiment(client, experiment_id, force):
+    experiment = call_api(lambda: client.kill_experiment(experiment_id, force=force),
                           not_found=lambda: handle_error("Could not find experiment!"))
     if experiment.children:
         print("killed series {}".format(experiment.short_id))
