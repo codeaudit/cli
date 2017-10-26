@@ -212,7 +212,7 @@ def run_disable(args):
         print("Apparently not...")
         exit(0)
     try:
-        choice = raw_input()
+        choice = input()
     except KeyboardInterrupt:
         user_exit()
     if choice.strip() != 'y':
