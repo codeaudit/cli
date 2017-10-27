@@ -1,65 +1,43 @@
-# RiseML Client
+# RiseML Command Line Client
 
-## Setup
+This is the command-line client for RiseML.
 
+## Installation
+
+The latest version is available for download as a single binary (provided via pyInstaller).
+
+For Linux:
+```bash
+wget https://cdn.riseml.com/releases/latest/linux/riseml
 ```
+
+For macOS:
+```bash
+wget https://cdn.riseml.com/releases/latest/osx/riseml
+```
+
+Make the file executable and move the binary in to your PATH:
+```bash
+chmod a+x riseml
+sudo mv riseml /usr/local/bin/riseml
+```
+
+## Development
+
+The client is written for Python3.
+
+Follow these steps to create a virtual environment with the client:
+
+```bash
+virtualenv venv -p python3
+source ./venv/bin/activate
 git clone https://github.com/riseml/client
-pip install -e client --process-dependency-links
+pip install -e client
+pip install -r client/requirements.txt
 ```
+The client will be available via `riseml-dev` in the virtual environment!
 
-## Environment settings
-```
-# develop settings
-export RISEML_APIKEY=admin_key
-export RISEML_SYNC_ENDPOINT=rsync://192.168.99.100:31876/sync
-export RISEML_ENDPOINT=http://localhost:80
-export RISEML_CLUSTER_ID=?
-export RISEML_ENVIRONMENT=?
-```
-
-## Check setup
-
-Check connection to API, run:
-
-```
-riseml whoami
-
-# should output something like this:
-admin (0b687763-0757-11e7-875b-80e65006b9ce)
-```
-
-## Deploy repository
-
-```
-mkdir test-deploy && cd test-deploy
-```
-
-Add `riseml.yml` to test-deploy dir:
-
-```yml
-project: test-deploy
-train:
-  image:
-    name: ubuntu:16.10
-  framework: tensorflow
-  tensorflow:
-    distributed: false
-    tensorboard: 'true'
-  run:
-    - echo hello
-  resources:
-    cpus: 1
-    mem: 1024
-    gpus: 0
-```
-
-Run train job:
-
-```
-riseml train 
-```
-
-## Build a standalone bundle
+### Build a standalone bundle
 
 ```bash
 git clone https://github.com/riseml/client
@@ -68,3 +46,8 @@ virtualenv env && source env/bin/activate
 pip install -r requirements.txt pyinstaller
 pyinstaller riseml.spec
 ```
+
+## Configuration
+
+The client stores its configuration in the file `$HOME/.riseml/config`.
+The syntax is similar to the kubeconfig file of kubectl.
