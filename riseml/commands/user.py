@@ -1,5 +1,7 @@
+import re
 import sys
 import subprocess
+
 import time
 from urllib3.exceptions import HTTPError
 
@@ -169,9 +171,9 @@ def get_cluster_id(cluster_infos):
 def run_create(args):
     api_client = ApiClient()
     client = AdminApi(api_client)
-
+    validate_username(args.username)
+    validate_email(args.email)
     user = call_api(lambda: client.update_or_create_user(username=args.username, email=args.email))[0]
-
     print('Created user %s' % user.username)
     print(' email: %s' % user.email)
     print(' api_key: %s' % user.api_key_plaintext)
@@ -221,3 +223,13 @@ def run_disable(args):
     client = AdminApi(api_client)
     call_api(lambda: client.delete_user(username=args.username))
     print('User %s disabled.' % args.username)
+
+
+def validate_username(username):
+    if not re.match(r'^[A-Za-z0-9]+-?[A-Za-z0-9]+$', username):
+        handle_error('Username must only contain alphanumeric characters with at most a single enclosed hyphen')
+
+def validate_email(email):
+    if '@' not in email:
+        handle_error('Invalid email')
+    

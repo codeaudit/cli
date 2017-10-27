@@ -25,11 +25,17 @@ except AttributeError:
     stdout = sys.stdout
 
 
+def validate_project_name(project_name):
+    if not re.match(r'^[A-Za-z0-9]+-?[A-Za-z0-9]+$', project_name):
+        handle_error('Project name must only contain alphanumeric characters with at most a single enclosed hyphen')
+
+
 def create_project(config_file):
     # create, if not exists
     create_config(config_file, project_template)
 
     name = get_project_name(config_file)
+    validate_project_name(name)
     api_client = ApiClient()
     client = DefaultApi(api_client)
     project = client.create_project(name)[0]
