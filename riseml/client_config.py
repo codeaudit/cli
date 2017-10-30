@@ -187,7 +187,10 @@ def get_stream_url():
 
 
 def get_rollbar_endpoint():
-    return get_client_config()['cluster'].get('rollbar-server', 'https://backend.riseml.com/errors/client/')
+    default = 'https://backend.riseml.com/errors/client/'
+    if get_environment() == 'staging':
+        default = 'https://backend.riseml-staging.com/errors/client/'
+    return get_client_config()['cluster'].get('rollbar-server', default)
 
 
 def get_cluster_id():
