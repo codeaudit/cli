@@ -18,7 +18,7 @@ setup(
     keywords=["RiseML"],
     entry_points={
         'console_scripts': [
-            'riseml-dev = riseml.__main__:main'
+            'riseml-dev = riseml.__main__:entrypoint'
         ]
     },
     install_requires=REQUIRES,
