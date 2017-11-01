@@ -24,5 +24,14 @@ def run_register(args):
     account_key = input('--> ').strip()
     api_client = ApiClient()
     client = AdminApi(api_client)
-    call_api(lambda: client.update_or_create_cluster_info({'account_key': account_key}))        
-    print("Account key set to: %s" % account_key)
+    data = {'account_key': account_key}
+    res = call_api(lambda: client.update_or_create_cluster_info(data))
+    infos = {r.key: r.value for r in res}
+    account_name = infos.get('account_name')
+    if account_name == 'NOT FOUND':
+        print('Account key set, but no corresponding account found.'
+              ' Is the account key correct?')
+    elif account_name == 'NOT VERIFIED':
+        print('Account key set, but could not verify account due to network issues.')
+    else:
+        print("Account %s registered" % account_name)
