@@ -106,21 +106,29 @@ def login_rsync(args):
     return rsync_host
 
 
-def check_sync_config(rsync_url):
-    print('Checking connection to sync server %s ...' % rsync_url)
+def check_sync_config(rsync_url, timeout=20):
+    print('Waiting %ss for connection to sync server %s ...' % (timeout, rsync_url))
     
-    sync_cmd = [get_rsync_path(),
-            '--dry-run',
-            '.',
-            rsync_url]
-    proc = subprocess.Popen(sync_cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.STDOUT)    
-    res = proc.wait()
-    if res != 0:
-        handle_error('Could not connect to sync server: %s' % proc.stdout.read().decode('utf-8'))
-    else:
-        print('Success!')
+    start = time.time()
+    while True:
+        sync_cmd = [get_rsync_path(),
+                '--dry-run',
+                '--timeout=5',
+                '--contimeout=5',
+                '.',
+                rsync_url]
+        proc = subprocess.Popen(sync_cmd,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)    
+        res = proc.wait()
+        if res != 0:
+            if time.time() - start < timeout:
+                time.sleep(1)
+                continue
+            else:
+                handle_error('Could not connect to sync server: %s' % proc.stdout.read().decode('utf-8'))
+        else:
+            print('Success!')
 
 
 def check_api_config(api_url, api_key, timeout=180):
