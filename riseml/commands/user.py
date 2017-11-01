@@ -129,6 +129,7 @@ def check_sync_config(rsync_url, timeout=20):
                 handle_error('Could not connect to sync server: %s' % proc.stdout.read().decode('utf-8'))
         else:
             print('Success!')
+            break
 
 
 def check_api_config(api_url, api_key, timeout=180):
