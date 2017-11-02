@@ -17,11 +17,10 @@ PROJECT_NAME = 'smoke-test'
 
 JOB_CONFIG = """project: {project_name}
 train:
-    image:
-        name: ubuntu:16.04
-        install:
-        - apt-get -y update {more_steps}
-        - apt-get -y install stress fortune
+    image: ubuntu:16.04
+    install:
+    - apt-get -y update {more_steps}
+    - apt-get -y install stress fortune
     resources:
         cpus: {num_cpus:.2f}
         mem: {memory}
