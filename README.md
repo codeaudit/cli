@@ -1,6 +1,6 @@
 # RiseML Command Line Client
 
-This is the command-line client for RiseML.
+This is the command-line client for RiseML, which allows you to run and manage experiments.
 
 ## Installation
 
