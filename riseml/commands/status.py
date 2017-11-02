@@ -43,10 +43,9 @@ def run(args):
         show_experiments(client.get_experiments(user=args.id[1:], count=args.num_last),
                          all=args.all, collapsed=not args.long, users=args.all_users)
     elif not args.id:
-        query_args = {'all_users': args.all_users}
+        query_args = {'all_users': args.all_users, 'count': args.num_last}
         if not args.all:
             query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
-            query_args['count'] = args.num_last
         show_experiments(client.get_experiments(**query_args),
                          all=args.all, collapsed=not args.long, users=args.all_users)
     else:
