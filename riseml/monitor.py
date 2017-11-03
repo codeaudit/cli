@@ -202,7 +202,6 @@ def get_summary_infos(project_name, jobs_stats):
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
-            print(job)
             rows.append([job.short_id, project_name, 
                          '%s%s' % (get_state_symbol(job.state), job.state),
                          format_cpu(job_stats),
@@ -332,6 +331,7 @@ class StatsScreen():
     def __init__(self, project, jobs_stats):
         self.jobs_stats = jobs_stats
         self.project = project
+        self.update_interval = 1
 
     def _display(self, detailed):
             while True:
@@ -342,14 +342,11 @@ class StatsScreen():
                     else:
                         stats_screen = get_summary_infos(self.project.name,
                                                          sorted_stats)            
-                if monitor_stream.isAlive():
-                    os.system('cls' if os.name == 'nt' else 'clear')
-                    print(self._fit_terminal(stats_screen.strip()))
-                    sys.stdout.flush()
-                else:
-                    sys.stderr.write('Monitor stream disconnected\n')
-                    break
-                time.sleep(1)      
+
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print(self._fit_terminal(stats_screen.strip()))
+                sys.stdout.flush()
+                time.sleep(self.update_interval)
 
     def _fit_terminal(self, output):
         try:
@@ -370,6 +367,7 @@ class StatsScreen():
 
 def stream_stats(job_id_stats, stream_meta={}):
     global monitor_stream
+    stream_connected = False
     job_ids = list(job_id_stats.keys())
     url = '%s/ws/monitor/?jobId=%s' % (get_stream_url(), job_ids[0])
     if len(job_ids) > 1:
@@ -401,12 +399,17 @@ def stream_stats(job_id_stats, stream_meta={}):
 
     def on_close(ws):
         sys.exit(0)
-
+    
+    def on_open(ws):
+        nonlocal stream_connected
+        stream_connected = True 
+    
     ws = websocket.WebSocketApp(
         url,
         on_message=on_message,
         on_error=on_error,
-        on_close=on_close
+        on_close=on_close,
+        on_open=on_open
     )
 
     # FIXME: {'Authorization': os.environ.get('RISEML_APIKEY')}
@@ -414,11 +417,11 @@ def stream_stats(job_id_stats, stream_meta={}):
     monitor_stream.daemon = True
     monitor_stream.start()
     conn_timeout = 10
-    while ws.sock is None or \
-            not ws.sock.connected and conn_timeout > 0 and monitor_stream.isAlive():
+    time.sleep(0.1)
+    while not stream_connected:
         time.sleep(0.5)
         conn_timeout -= 1
-    if not ws.sock.connected:
+    if not stream_connected:
         handle_error('Unable to connect to monitor stream')
 
 
