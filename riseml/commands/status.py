@@ -151,15 +151,18 @@ def show_job(job):
         print("Reason: {}".format(job.reason))
 
 def get_experiments_rows(group, with_project=True, with_type=True, with_params=True,
-                         indent=True, with_result=True):
+                         with_user=False, indent=True, with_result=True):
     rows = []
 
     for i, experiment in enumerate(group.children):
         indent_str = (u'├╴' if i < len(group.children) - 1 else u'╰╴') if indent else ''
         values = [indent_str + experiment.short_id]
 
+        if with_user:
+            values += [experiment.user.username]
+
         if with_project:
-            values += [experiment.changeset.project.name]
+            values += [experiment.project.name]
 
         values += [u'%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
                    util.get_since_str(experiment.created_at)]
@@ -202,23 +205,36 @@ def show_experiment_group(group):
 
 
 def show_experiments(experiments, all=False, collapsed=True, users=False):
+    headers, widths = _get_status_headers(collapsed, users)
+    rows = _get_experiment_rows(experiments, all, collapsed, users)
+    util.print_table(
+        header=headers,
+        min_widths=widths,
+        rows=rows
+    )
+
+def _get_status_headers(collapsed=False, users=False):
     header = ['ID', 'PROJECT', 'STATE', 'AGE', 'TYPE']
     widths = (6, 14, 10, 13, 15)
-
+    if users:
+        header = ['ID', 'USER', 'PROJECT', 'STATE', 'AGE', 'TYPE']
+        widths = (6, 6, 14, 10, 13, 15)
     if not collapsed:
         header += ['PARAMS' , 'RESULT']
         widths += (14, 14)
+    return header, widths
 
+
+def _get_experiment_rows(experiments, all=False, collapsed=True, users=False):
     rows = []
-
-    n = 0
-
     for experiment in experiments:
         if not all and experiment.state in ['FINISHED', 'KILLED', 'FAILED']:
             continue
 
-        values = [
-            '.{}.{}'.format(experiment.user.username, experiment.short_id) if users else experiment.short_id,
+        values = [experiment.short_id]
+        if users:
+            values += [experiment.user.username]
+        values += [
             experiment.project.name,
             '%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
             util.get_since_str(experiment.created_at),
@@ -231,12 +247,6 @@ def show_experiments(experiments, all=False, collapsed=True, users=False):
         rows.append(values)
 
         if not collapsed and experiment.children:
-            rows += get_experiments_rows(experiment)
+            rows += get_experiments_rows(experiment, with_user=users)
 
-        n += 1
-
-    util.print_table(
-        header=header,
-        min_widths=widths,
-        rows=rows
-    )
+    return rows
