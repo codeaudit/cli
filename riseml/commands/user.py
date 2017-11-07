@@ -18,6 +18,7 @@ def add_user_parser(parser):
     subparser = parser.add_parser('user', help="modify users")
     subsubparsers = subparser.add_subparsers()
     add_create_parser(subsubparsers)
+    add_update_parser(subsubparsers)
     add_disable_parser(subsubparsers)
     add_list_parser(subsubparsers)
     add_display_parser(subsubparsers)
@@ -32,6 +33,13 @@ def add_create_parser(subparsers):
     parser.add_argument('--username', help="a person's username", required=True)
     parser.add_argument('--email', help="a person's email", required=True)
     parser.set_defaults(run=run_create)
+
+
+def add_update_parser(subparsers):
+    parser = subparsers.add_parser('update', help="update user")
+    parser.add_argument('--username', help="the person's username", required=True)
+    parser.add_argument('--email', help="the person's new email", required=True)
+    parser.set_defaults(run=run_update)
 
 
 def add_disable_parser(subparsers):
@@ -182,10 +190,20 @@ def run_create(args):
     client = AdminApi(api_client)
     validate_username(args.username)
     validate_email(args.email)
-    user = call_api(lambda: client.update_or_create_user(username=args.username, email=args.email))[0]
+    user = call_api(lambda: client.create_user(username=args.username, email=args.email))[0]
     print('Created user %s' % user.username)
     print(' email: %s' % user.email)
     print(' api_key: %s' % user.api_key_plaintext)
+
+
+def run_update(args):
+    api_client = ApiClient()
+    client = AdminApi(api_client)
+    validate_username(args.username)
+    validate_email(args.email)
+    user = call_api(lambda: client.update_user(username=args.username, email=args.email))
+    print('Updated user {}'.format(user.username))
+    print(' email: {}'.format(user.email))
 
 
 def run_list(args):
