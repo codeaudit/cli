@@ -8,7 +8,7 @@ from urllib3.exceptions import HTTPError
 from riseml.errors import handle_error
 from riseml.client import AdminApi, ApiClient
 from riseml.client.rest import ApiException
-from riseml.client_config import get_api_url, get_api_key, write_config
+from riseml.client_config import get_api_url, get_api_key, write_config, get_api_server, get_sync_url
 from riseml.util import call_api, print_table, TableRowDelimiter, get_rsync_path
 from riseml.client import Configuration
 from riseml.user import get_user
@@ -86,16 +86,33 @@ def run_login(args):
 def login_api(args):
     api_host = args.api_host
     if not args.api_host:
+        current_api_server = get_api_server()
+        default = re.match(r'^http://(.*)$', current_api_server).group(1) if current_api_server else ''
         print('Please provide the DNS name or IP of your RiseML API server.')
-        print('Examples: 54.131.125.42, 54.131.125.42:31213')
-        api_host = input('--> ').strip()
+        if default:
+            print('Default: {}'.format(default))
+        else:
+            print('Examples: 54.131.125.42, 54.131.125.42:31213')
+        while True:
+            api_host = input('--> ').strip() or default
+            if api_host:
+                break
+            print('You need to enter a value!')
         print()
   
     api_key = args.api_key
     if not args.api_key:
+        default = get_api_key()
         print('Please provide your API key.')
-        print('Example: krlo2oxrtd2084zs7jahwyqu12b7mozg')
-        api_key = input('--> ').strip()
+        if default:
+            print('Default: {}'.format(default))
+        else:
+            print('Example: krlo2oxrtd2084zs7jahwyqu12b7mozg')
+        while True:
+            api_key = input('--> ').strip() or default or ''
+            if api_key:
+                break
+            print('You need to enter a value!')
         print()
 
     cluster_id = check_api_config(get_api_url(api_host), api_key)
@@ -105,9 +122,18 @@ def login_api(args):
 def login_rsync(args):
     rsync_host = args.sync_host
     if not args.sync_host:
+        current_sync_url = get_sync_url()
+        default = re.match(r'^rsync://(.*)/sync$', current_sync_url).group(1) if current_sync_url else ''
         print('Please provide the DNS name or IP of your RiseML sync server.')
-        print('Examples: 54.131.125.43, 54.131.125.42:31876')
-        rsync_host = input('--> ').strip()
+        if default:
+            print('Default: {}'.format(default))
+        else:
+            print('Examples: 54.131.125.43, 54.131.125.42:31876')
+        while True:
+            rsync_host = input('--> ').strip() or default
+            if rsync_host:
+                break
+            print('You need to enter a value!')
         print()
 
     check_sync_config('rsync://%s/sync' % rsync_host)

@@ -5,6 +5,7 @@ import sys
 import time
 import re
 import platform
+from urllib3.exceptions import LocationValueError
 
 from datetime import datetime
 
@@ -250,6 +251,8 @@ def call_api(api_fn, not_found=None):
             not_found()
         else:
             handle_http_error(e.body, e.status)
+    except LocationValueError as e:
+        handle_error("RiseML is not configured! Please run 'riseml user login' first!")
     except HTTPError as e:
         handle_error('Could not connect to API ({host}:{port}{url}) — {exc_type}'.format(
             host=e.pool.host,

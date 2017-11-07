@@ -14,7 +14,7 @@ except ImportError:
 CONFIG_PATH = '.riseml'
 CONFIG_FILE = 'config'
 
-DEFAULT_CONFIG = """
+EMPTY_CONFIG = """
 current-context: default
 
 contexts:
@@ -26,15 +26,15 @@ contexts:
 clusters:
   - name: default
     cluster:
-      api-server: http://localhost
-      sync-server: rsync://192.168.99.100:31876/sync
-      cluster-id: 1b573506-94e6-46ec-a5c7-220e9a51a9f3
+      api-server: ""
+      sync-server: ""
+      cluster-id: ""
       environment: development
 
 users:
 - name: default
   user:  
-    api-key: dev_key
+    api-key: ""
 """
 
 def get_config_file():
@@ -51,7 +51,7 @@ def read_config():
                 handle_error('client configuration has invalid syntax: %s' % yml_error)
             return config
     except FileNotFoundError as e:
-        return yaml.safe_load(DEFAULT_CONFIG)
+        return yaml.safe_load(EMPTY_CONFIG)
 
 
 def get_cluster_config(cluster, config):
@@ -90,7 +90,7 @@ def get_current_context(config):
         validate_cluster_config(cluster)
         return user, cluster
     else:
-        handler_error('current context not available in client configuration')
+        handle_error('current context not available in client configuration')
 
 
 def assert_exists(key, config):

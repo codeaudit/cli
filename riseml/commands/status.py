@@ -5,7 +5,6 @@ from __future__ import print_function
 import json
 
 from riseml.client import DefaultApi, ApiClient
-from riseml.client_config import get_api_url
 from riseml import util
 from riseml.errors import handle_error
 
@@ -40,14 +39,14 @@ def run(args):
         )
         show_job(job)
     elif args.id and util.is_user_id(args.id):
-        show_experiments(client.get_experiments(user=args.id[1:], count=args.num_last),
-                         all=args.all, collapsed=not args.long, users=args.all_users)
+        experiments = util.call_api(lambda: client.get_experiments(user=args.id[1:], count=args.num_last))
+        show_experiments(experiments, all=args.all, collapsed=not args.long, users=args.all_users)
     elif not args.id:
         query_args = {'all_users': args.all_users, 'count': args.num_last}
         if not args.all:
             query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
-        show_experiments(client.get_experiments(**query_args),
-                         all=args.all, collapsed=not args.long, users=args.all_users)
+        experiments = util.call_api(lambda: client.get_experiments(**query_args))
+        show_experiments(experiments, all=args.all, collapsed=not args.long, users=args.all_users)
     else:
         handle_error("Id does not identify any RiseML entity!")
 
