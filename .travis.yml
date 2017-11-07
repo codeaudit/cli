@@ -22,29 +22,27 @@ before_install:
 - export LD_LIBRARY_PATH="$HOME/miniconda/envs/py3/lib:$LD_LIBRARY_PATH"
 
 script:
-  - mkdir xxx
-  - touch xxx/yyy
 # install dependencies
-# - conda create -y -n py3 python=3.5
-# - source activate py3
-# - pip install -r requirements.txt pyinstaller
+- conda create -y -n py3 python=3.5
+- source activate py3
+- pip install -r requirements.txt pyinstaller
 
-# # install rsync from scratch
-# - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
-# - tar xvzf rsync-3.1.2.tar.gz
-# - mv rsync-3.1.2 rsync
-# - cd rsync
-# - ./configure --prefix=/usr
-#               --with-included-popt
-#               --with-included-zlib
-#               --disable-iconv
-#               --disable-iconv-open
-# - make
-# - cd -
+# install rsync from scratch
+- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
+- tar xvzf rsync-3.1.2.tar.gz
+- mv rsync-3.1.2 rsync
+- cd rsync
+- ./configure --prefix=/usr
+              --with-included-popt
+              --with-included-zlib
+              --disable-iconv
+              --disable-iconv-open
+- make
+- cd -
 
-# # build binary
-# - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
-# - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
+# build binary
+- pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
+- cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
 deploy:
   provider: s3
@@ -54,9 +52,9 @@ deploy:
     secure: HJo0b598z2HD6r0YsoYxVHLao7tYHf6cK6is4fiD1tooxn0Xv5nDDiQeLOqL3NuwgNuenTkYtCwkzKrw8vUxukM6fqErrmol7unRCctA/+P6ha9aBu8or+gZhwar0K1ybZWpNzfToC/hL4Mkzh1eefXk5srMizRyTMDMKb9zHXhSSNmrIBzcgKR7Mc/uo5En3Y+OWfV5+8bd8IchpQmUbuBWtUzGdS5c0krc2rXyxMY3P9JEG+nZndFUZYMPGKkQDLWEYxhE3G9e+RPqzokDDhrmOModZVScLyNVgsJADloX3SEzOQQ1UQHjTdFYqxZ6RWVgJwkxEXNvrkiIUrFkfretgRnMM0J54k7LPTy2b/8ARqWBIShPdX62NR49fpyWWi/ziSuJnQrzc8yLy11R0Su5DVNbFg+IcLMJqXmpxd060pBOiyMNIboReTPPGdrz0eGxu/ws4Y7/G8wRQDsCUTGrng+YNma104VmRJiItsELXtqWGYlrolKpRWgW4mntYVJu93kcloHfb8h/aY1VwfRP5G7pSVvhbceOujM4Ur7lcq+cpdGhjRlsSaZZCtW2tiBuOg34+BHSouO3D7Jh+kQPUATIRXzUeETiI4RTP39Kac+ux0u/CRwYL/GSU+h8W07ks5mOh1oXvwTotmAQDfEj9o3KecH5MOQxaVd4pf8=
   bucket: cdn.riseml.com
   region: us-west-2
-  local-dir: xxx
+  local-dir: dist/$TRAVIS_OS_NAME
   upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
 
 notifications:
   slack:
-    secure: OpF4eN076hICS8hf/cE2q0kTsSxfhHO83txcAJm8QgCv8NomRvp/uQTWPCDWUhkN6ufo94GwpM4XkfUXcrpOps+y8JsREZtExi2tQjni4jOKxZmacS1OuJ/hK1m1tVs/eY9WJQscFlykWpPJzlIZghpu1JU7Cwe2MfYW0IdKl0WHhfMtzthaB6o6ZICF9WQtoKS5eTZ4/S5sOAdfw2jcELlGclCxkZCW2OF7eeodbkCWtTEfaOxwkNz1Ty8gjXRMIk+5ZCYGh/NVA9peUOTMXL9/LIKz7nnbnBZwiElNUOT1R4mNDrgoVIs0CgyLWk89JH6FaYD4McbxJwlF2MN52lSOu1nKgBtfj3h2dyYwLs7YNt+VaErIQXALz1yUbagA+SOMqxifW7KJpdCzs3HOJ/evzai+KH1TwVyIEw7zNudEeYLj8yDOxZT3taGH8Bf2hGh1PSUlJtV9JWBp/6JZivkCEcniO9orZZuhYQFizuwq6hklHgiIJuN+8COXZBz51cV+ukHhxQJWcT+hZDX/zq00QiR1czAyqyGpZzSqhh2bbUhYpLlrn6sAJgkNM7J+Y+4EQUGyXB0h2i7I9/ZOP5TZsRJnUDwKDtCPF0aiLnGvQX7PmR72OLxrAQFL5dFHRxFi9zHHXZd7g1Pwetyj4mWNYrblPSi7o2Q8rBtkogY=
+    secure: L8ZJ7QiYzJQAc8IeIdoeUOB9UnO0VntzOxsaNtR4Hw3AYm0PKDnaFnXbGrBGX8nglHmwm0V5IdXwT7UD94f3uVG9ZUdKosNE5n05nk8McwlPie4HTLdqyKVdklBUOchzNd+s9bxRKrpDyZDpn0TChDsCjIw1Ndt8unNboIO6SShkkOUuGH9OJj/FzNWzeL2zDROPOA7R+Ys/5Mr8rSuxyHgSpM1f5Beg3A7duRv3ZUaGVoQA4n4Q7ir608zTIj/8+CDju3i9DDlCq+nu8Uu1GOUX6uKTjEl3Mfa7nbWkMNlEbLUXeYhjuvKYs95zKdMGpBUA2Z3w4FRa8/4GMnJOr4vcgnEAiQG349sZLQK/uvIENyYpynyq/V5BLl/3bBKRr6vPk9fFCECV5hzsqdsrJhZ1HkXfnsrXpCAPSGyyaIl6G6IPkigROFyHyYwarrMWshqs5+CPLwqq3kj5FjZyj4snDNrAMuPfEOuzvYPBHozSeMhujYRhyihNfAga6NtB6LWHOMrFUh3/OXChHV2BfqtgNTAjHj0YgCeldCFm7P5i0AjrCJ1luZS3pErcvBbWYORAu6FR0szY8rgbElq9hgQabjzcRBVI7CMt6sANVMOGY9lhxtQLaKn0Ny4fTfD8otZT1/R7dH2ZbeN5+cjqG+59zYiBYX7kqDeoNq702yo=
