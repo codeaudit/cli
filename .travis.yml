@@ -22,27 +22,29 @@ before_install:
 - export LD_LIBRARY_PATH="$HOME/miniconda/envs/py3/lib:$LD_LIBRARY_PATH"
 
 script:
+  - mkdir xxx
+  - touch xxx/yyy
 # install dependencies
-- conda create -y -n py3 python=3.5
-- source activate py3
-- pip install -r requirements.txt pyinstaller
+# - conda create -y -n py3 python=3.5
+# - source activate py3
+# - pip install -r requirements.txt pyinstaller
 
-# install rsync from scratch
-- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
-- tar xvzf rsync-3.1.2.tar.gz
-- mv rsync-3.1.2 rsync
-- cd rsync
-- ./configure --prefix=/usr
-              --with-included-popt
-              --with-included-zlib
-              --disable-iconv
-              --disable-iconv-open
-- make
-- cd -
+# # install rsync from scratch
+# - wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
+# - tar xvzf rsync-3.1.2.tar.gz
+# - mv rsync-3.1.2 rsync
+# - cd rsync
+# - ./configure --prefix=/usr
+#               --with-included-popt
+#               --with-included-zlib
+#               --disable-iconv
+#               --disable-iconv-open
+# - make
+# - cd -
 
-# build binary
-- pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
-- cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
+# # build binary
+# - pyinstaller --clean riseml.spec --distpath dist/$TRAVIS_OS_NAME
+# - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
 deploy:
   provider: s3
@@ -51,7 +53,7 @@ deploy:
     secure: FFFKENVyDaHeufDi2JFTJBah7gLGWfU6Re8QD9rRkh6W7qYJbdC8WeF2448iDZ3PTWoFCeRGw7WKuapFwjogSwIzeAwZ85H5/oa9cavf2DKkHpyKLN9+DE8H6VUPZJpYHqnrpl2iDwuz5zSCx3wfuphTAcxUFvR4oNNmQGwgrusCKa5Bn0wetU1I0y3OpUjXQaup+BtPLTatQj0UXnFA+xPRgs6okBz8Z9V4dAzAYW2lNkoW7Swa/2VEHmJ2zvw2fUFjFfUOYdYLDBqiSmFgT1+PJjfdkXIVhX0LxfurvAI7kIKvzFYjAb7dX7itT/vj+1KCJ8j2wbNQEXZZ0FkK1DtR94roWLkeyjXehsvSeP4mrnlkYsCoKB04H76Bji/Q9/BbD/asDASMD5p+VpVFj0gaTrMhNoW3pAFG+x5AOyxsJzu1n1TJSUMEfHgXa2SwD/J1hPF63sGEE0ULOD+C++ryDYeKXjbXFblgj2rDiAXchdovQ81HSYKaPjm7ZDp0tsnZJLh7zS/rWf8tzPuWi+s8m2YI9eYv7siEupExahKT2jZnL06HI2Gp/RNjqGh8jq6RhmM1WLfWV26GQFgwpLnESHNXgA5hlRob+Xiv7UM3VA5onySn7ZDksH9SHrMiusdy+U3kbbTBdcd/DCZ6K2Mj2qadjLAzwvqjhqO0Lvc=
   bucket: cdn.riseml.com
   region: us-west-2
-  local-dir: dist/$TRAVIS_OS_NAME
+  local-dir: xxx
   upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
 
 notifications:
