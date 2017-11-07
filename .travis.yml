@@ -45,12 +45,6 @@ script:
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
 deploy:
-  - provider: releases
-    skip_cleanup: true
-    api_key:
-      secure: Roys1jwq3ZzEFszf5nkq0ySE4KaDFR3m7yRYbumn4c3JCG6kUK+gFfT6tOcGQhvub35M0KUSC7N7FS2+su/2pJWz0hu6RuvlRtpiyhAjEvY+GJKhg9DDpDwnCdcmr9AAf1OxfQQxpTQ1ab3cVsS9foIcOiyXZ6KCTg5h2XaHOwYSvRLAA5wjAJG2Ai3fDSxnHeasN17pkEOqmmIRxWeGroJ35FDHQjDP1hV/bniW6lqIfU11qDuxEK/cqSzTXXUId76l47dSEwQ6LbDE9zr0EGyuR833yYMGb8cXbmAoxncYWWUd6rGyYQWgNbX9yDXCMFgClRa+1acJwihbnMLiRGvICXI+nXZ6lTEJlkjjTQfbpFAY830RNaLqZ+co7COVkP0VdkQ1DLcsgjfQlhGIu0iTZLcdKV57vB3RfpHMKUcmV0xRn0A27h7PkpdbrmYrut7/1KFrh+7VAEFTeXjKcSa7yqZoOl5GLsfiqjCgGAC+91tILtn9hqJcj6cT1zPOuz8PxM1NwZT+GI5B82ZfclDEY7wKHqXvKAo7NEcncv7yQfOc41svIXi9Un1gYNX+7US38ppA2VVn411IJ+R8c6doRFx69hvbekiAwcx+WWZvEu+K5P8LetooYBjmIGj+d0/+HmFMMt+MfXTKOsAZzF+TX5mdHpuxcxh6nA72IO8=
-    file_glob: true
-    file: dist/riseml_*
   - provider: s3
     skip_cleanup: true
     access_key_id: AKIAJD34GLT7JZCXW2QA
