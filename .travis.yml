@@ -45,15 +45,14 @@ script:
 - cp dist/$TRAVIS_OS_NAME/riseml dist/riseml_$TRAVIS_OS_NAME
 
 deploy:
-  - provider: s3
-    skip_cleanup: true
-    access_key_id: AKIAJD34GLT7JZCXW2QA
-    secret_access_key:
-      secure: N90XrSeoL7PSq/bjAaDOKot9urdfK+/4+flEG751KBvSkYIk+5MYqi7/xdhRr6a4nCtj1aUPc0YE0ng+wojjHxpjHnenDfG4GTAptchXKiQplRrQ9I6jbcsfC0faB9ILyW48Cz8xTIc4ukR6HbCwbCJkYKvDqlUfJMGRNV81EyCi+44r98AI0ZrUS4dz1VcLK8tkDtJFvXkXTNKtbdFGIa3xauYjXG44jS+nyGxA9qlvGOzc84b3EjWb33F3vs8quh6PfODFsxryIrJ76f1LBUDf9R9hcEre9AKEBb3ivq9IrAYNjZlRFNFRp7CjAZmghFzbhpQSTdLFXYB0qkUvRFbbIr4tXa41w1a0NPuzzdeR4TrddFClEYBTHgbJ4q4SvqE18hrEkHxSVlHhluTXzN9NU9seMALGqx4ndc/6Y6tPk8KlhxNa5SBOznCDdaZcxj0IKwo+Bl/IxpynLqcdIQMT7VIPxEIjXP7zn7Rvqba9eRBrS49S/MfsjJ2bwJpo63vDXWD381rArnG5aenYMyXoO7bJa8elPDfuL+6eKLGSsu+/x3kykrJpYznOo0ZVD1fjysmthW2+hzWsMOdFVoPzjiO8AUlq5p7XQwKRLH3f/7G45aYrj84pwLO/UnhyJqZwr1Df0yVT7dmbz1bu6Ad2hW/QJ8Uq56Tga83oWRQ=
-    bucket: cdn.riseml.com
-    region: us-west-2
-    local-dir: dist/$TRAVIS_OS_NAME
-    upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
+  provider: s3
+  access_key_id: AKIAJD34GLT7JZCXW2QA
+  secret_access_key:
+    secure: FFFKENVyDaHeufDi2JFTJBah7gLGWfU6Re8QD9rRkh6W7qYJbdC8WeF2448iDZ3PTWoFCeRGw7WKuapFwjogSwIzeAwZ85H5/oa9cavf2DKkHpyKLN9+DE8H6VUPZJpYHqnrpl2iDwuz5zSCx3wfuphTAcxUFvR4oNNmQGwgrusCKa5Bn0wetU1I0y3OpUjXQaup+BtPLTatQj0UXnFA+xPRgs6okBz8Z9V4dAzAYW2lNkoW7Swa/2VEHmJ2zvw2fUFjFfUOYdYLDBqiSmFgT1+PJjfdkXIVhX0LxfurvAI7kIKvzFYjAb7dX7itT/vj+1KCJ8j2wbNQEXZZ0FkK1DtR94roWLkeyjXehsvSeP4mrnlkYsCoKB04H76Bji/Q9/BbD/asDASMD5p+VpVFj0gaTrMhNoW3pAFG+x5AOyxsJzu1n1TJSUMEfHgXa2SwD/J1hPF63sGEE0ULOD+C++ryDYeKXjbXFblgj2rDiAXchdovQ81HSYKaPjm7ZDp0tsnZJLh7zS/rWf8tzPuWi+s8m2YI9eYv7siEupExahKT2jZnL06HI2Gp/RNjqGh8jq6RhmM1WLfWV26GQFgwpLnESHNXgA5hlRob+Xiv7UM3VA5onySn7ZDksH9SHrMiusdy+U3kbbTBdcd/DCZ6K2Mj2qadjLAzwvqjhqO0Lvc=
+  bucket: cdn.riseml.com
+  region: us-west-2
+  local-dir: dist/$TRAVIS_OS_NAME
+  upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
 
 notifications:
   slack:
