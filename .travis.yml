@@ -54,6 +54,8 @@ deploy:
   region: us-west-2
   local-dir: dist/$TRAVIS_OS_NAME
   upload-dir: releases/$TRAVIS_TAG/$TRAVIS_OS_NAME
+  on:
+    tags: true
 
 notifications:
   slack:
