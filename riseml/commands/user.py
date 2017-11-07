@@ -70,7 +70,7 @@ def run_login(args):
 
         write_config(api_key, api_host, rsync_host, cluster_id)
         print('Login succeeded, config updated.')
-    except KeyboardInterrupt as e:
+    except (KeyboardInterrupt, EOFError) as e:
         print('Aborting login. Configuration unchanged.')
         sys. exit(1)
 
