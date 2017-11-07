@@ -236,7 +236,7 @@ def run_disable(args):
 
 def validate_username(username):
     if not re.match(r'^[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9]$', username):
-        handle_error('Username must start and end with an alphanumeric character and may consist out of hyphens additionally inbetween.')
+        handle_error('Username must start and end with an alphanumeric character and may additionally consist out of hyphens inbetween.')
 
 def validate_email(email):
     if '@' not in email:

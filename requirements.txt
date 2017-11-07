@@ -4,7 +4,7 @@ certifi
 python-dateutil
 future
 requests
--e git+https://github.com/riseml/config-parser.git@66163ade51e491425eaae67c6ae82a192306bd24#egg=config_parser
+-e git+https://github.com/riseml/config-parser.git@c82d07c559977422a09e7bbe3330be8201247fa9#egg=config_parser
 jsonschema
 websocket-client
 rollbar
