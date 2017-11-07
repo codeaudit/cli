@@ -30,10 +30,10 @@ def display_gpus(nodes):
             continue
         sorted_gpus = sorted(n.gpus, key=lambda x: get_device_id(x.device))
         for i, gpu in enumerate(sorted_gpus):
-            rows.append([n.hostname if i == 0 else '', 
-                         n.nvidia_driver if i == 0 else '', 
-                         gpu.name, 
-                         get_device_id(gpu.device), '%.1f' % bytes_to_gib(gpu.mem), 
+            rows.append([n.hostname if i == 0 else '',
+                         n.nvidia_driver if i == 0 else '',
+                         gpu.name,
+                         get_device_id(gpu.device), '%.1f' % bytes_to_gib(gpu.mem),
                          gpu.serial])
 
     print_table(
@@ -65,10 +65,10 @@ def display_short(nodes):
             gpu_mem = sum([gpu.mem for gpu in n.gpus])
         total_cpus += n.cpus
         total_mem += n.mem
-        total_gpus += n.gpus_allocatable
+        total_gpus += gpus
         total_gpu_mem += gpu_mem
         rows.append([n.hostname, n.cpus,  '%.1f' % bytes_to_gib(n.mem), gpus,
-                     format_float(bytes_to_gib(gpu_mem))])        
+                     format_float(bytes_to_gib(gpu_mem))])
 
     rows.append(TableRowDelimiter('-'))
     rows.append(['Total', total_cpus, format_float(bytes_to_gib(total_mem)),
@@ -88,7 +88,7 @@ def display_long(nodes):
     total_cpus = 0
     total_mem = 0
     total_gpus = 0
-    total_gpu_mem = 0    
+    total_gpu_mem = 0
 
     for n in nodes:
         gpus = 0
@@ -97,24 +97,24 @@ def display_long(nodes):
         if n.gpus_allocatable == len(n.gpus):
             gpus = len(n.gpus)
             gpu_mem = sum([gpu.mem for gpu in n.gpus])
-            
+
         total_cpus += n.cpus
         total_mem += n.mem
         total_gpus += gpus
         total_gpu_mem += gpu_mem
-        
+
         rows.append([n.hostname, n.cpus,  format_float(bytes_to_gib(n.mem)), gpus,
                      format_float(bytes_to_gib(gpu_mem)),
-                     n.nvidia_driver if n.nvidia_driver != 'NOT FOUND' else '-', 
-                     n.kubelet_version.lstrip('v'), n.docker_version])        
+                     n.nvidia_driver if n.nvidia_driver != 'NOT FOUND' else '-',
+                     n.kubelet_version.lstrip('v'), n.docker_version])
     rows.append(TableRowDelimiter('-'))
 
     rows.append(['Total', total_cpus, format_float(bytes_to_gib(total_mem)),
                  total_gpus, format_float(bytes_to_gib(total_gpu_mem)), '', '', ''])
-                    
+
 
     print_table(
-        header=['NODE', 'CPU', 'MEM', 'GPU', 'GPU MEM', 
+        header=['NODE', 'CPU', 'MEM', 'GPU', 'GPU MEM',
                 'NVIDIA DRIVER', 'KUBELET VERSION', 'DOCKER VERSION'],
         min_widths=[18, 3, 3, 3, 7, 3, 3, 3],
         rows=rows,
@@ -134,7 +134,7 @@ def display_clusterinfos(clusterinfos):
     print('RiseML Cluster ID: {}'.format(cluster_id))
     if account_name not in ('NOT FOUND', 'NOT VERIFIED'):
         print('RiseML Account: {}'.format(account_name))
-    print('Kubernetes Version %s (Build Date: %s)' % (k8s_version, k8s_build_date))  
+    print('Kubernetes Version %s (Build Date: %s)' % (k8s_version, k8s_build_date))
 
 
 def run(args):
