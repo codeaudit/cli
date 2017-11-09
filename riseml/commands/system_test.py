@@ -117,7 +117,7 @@ def start_job(user, nodename, job_config, stress_script):
     client = DefaultApi(api_client)
     node_selector = ''
     if nodename:
-        node_selector = 'kubernetes.io/hostname=%s' % nodename
+        node_selector = 'kubernetes.io/hostname: %s' % nodename
     experiment = call_api(lambda: client.create_experiment(
         PROJECT_NAME, revision,
         kind='train', config=json.dumps(config.train.as_dict()),
