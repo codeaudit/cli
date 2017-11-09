@@ -5,7 +5,7 @@ python-dateutil
 future
 pyyaml
 requests
--e git+https://github.com/riseml/config-parser.git@c82d07c559977422a09e7bbe3330be8201247fa9#egg=config_parser
+-e git+https://github.com/riseml/config-parser.git@v0.8.0#egg=config-parser
 jsonschema
 websocket-client
 rollbar
