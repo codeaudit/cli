@@ -24,23 +24,23 @@ stats_lock = threading.Lock()
 monitor_stream = None
 
 
-SORTED_STATES = [JobState.running,
-                 JobState.building,
-                 JobState.starting,
-                 JobState.pending,
-                 JobState.failed,
-                 JobState.killed,
-                 JobState.finished,
-                 JobState.created]
+SORTED_STATES = { JobState.running:  0,
+                  JobState.building: 1,
+                  JobState.starting: 1,
+                  JobState.pending:  1,
+                  JobState.failed:   2,
+                  JobState.killed:   2,
+                  JobState.finished: 2,
+                  JobState.created:  3 }
 
 
 def sort_jobs_stats(jobs_stats):
     def job_key(job_stats):
         job = job_stats.job
         try:
-         return (SORTED_STATES.index(job.state), job.short_id)
-        except ValueError:
-            return (len(SORTED_STATES), job.short_id)
+         return (SORTED_STATES[job.state])
+        except KeyError:
+            return 99
     return sorted(jobs_stats, key=job_key)
 
 
@@ -52,7 +52,7 @@ def indent(text, spaces=2):
 def print_user_exit(stream_meta):
     any_id = stream_meta.get('experiment_id') or stream_meta.get('job_id')
     print()  # newline after ^C
-    print('Type `riseml monitor %s` to connect to monitor again' % any_id)            
+    print('Type `riseml monitor %s` to connect to monitor again' % any_id)
 
 
 def formatted_getter(getter):
@@ -70,7 +70,7 @@ def formatted_getter(getter):
 
 
 class Stats():
-    
+
     def get(self, stat_name, fmt=None, transform=None):
         @formatted_getter
         def get(self):
@@ -108,7 +108,7 @@ class JobStats(Stats):
         self.gpu_stats = {}
         # sorted device names of all gpus
         self.gpus = []
-            
+
     def update(self, stats, timestamp=None):
         if not timestamp:
             timestamp = stats.pop('timestamp')
@@ -119,11 +119,11 @@ class JobStats(Stats):
 
     def update_job_state(self, new_state):
         self.job.state = new_state
-    
+
     def _update_stats(self, stats, timestamp):
         self.timestamp = timestamp
         self.stats.update(stats)
-    
+
     def _update_gpu_stats(self, gpu_stats, timestamp):
         for gpu, stats in gpu_stats.items():
             s = self.gpu_stats.get(gpu, GPUStats(gpu))
@@ -153,7 +153,7 @@ class JobStats(Stats):
     def get_gpu_memory_total(self):
         if self.gpus:
             return sum([g.get('memory_total') for g in self.gpu_stats.values()])
-    
+
     @formatted_getter
     def get_gpu_memory_percent(self):
         usage = self.get('gpu_memory_used')
@@ -165,20 +165,20 @@ class JobStats(Stats):
 def get_summary_infos(project_name, jobs_stats):
     def format_cpu(job_stats):
         if job_stats.get('cpu_percent') is None:
-            return '-'        
+            return '-'
         used = '%.1f' % (job_stats.get('cpu_percent')/100)
         requested = '%.1f' % job_stats.job.cpus
         available = '-'
         if job_stats.get('percpu_percent'):
             available = '%d' % len(job_stats.get('percpu_percent'))
-        return '{:>3}/{} |{}'.format(used, 
+        return '{:>3}/{} |{}'.format(used,
                                      available,
                                      requested.rstrip('0').rstrip('.'))
     def format_mem(jobs_stats):
         available = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         used = job_stats.get('memory_used', '%.1f', bytes_to_gib)
         requested = '%.1f' % mib_to_gib(job_stats.job.mem)
-        return '{:>3}/{} |{}'.format(used, 
+        return '{:>3}/{} |{}'.format(used,
                                      available.rstrip('0').rstrip('.'),
                                      requested.rstrip('0').rstrip('.'))
     def format_gpu(jobs_stats):
@@ -187,22 +187,22 @@ def get_summary_infos(project_name, jobs_stats):
             return ' -'
         else:
             used = '%.1f' % (job_stats.get('gpu_percent')/float(100))
-        return '{:>3}/{}'.format(used, 
+        return '{:>3}/{}'.format(used,
                                  requested)
-    
+
     def format_gpu_mem(jobs_stats):
         if job_stats.get('gpu_memory_total') is None:
             return '   -'
         available = job_stats.get('gpu_memory_total', '%.1f', bytes_to_gib)
         used = job_stats.get('gpu_memory_used', '%.1f', bytes_to_gib)
-        return '{:>3}/{}'.format(used, 
+        return '{:>3}/{}'.format(used,
                                  available.rstrip('0').rstrip('.'))
     rows = []
     output = StringIO()
     for job_stats in jobs_stats:
         job = job_stats.job
         if job.state in (JobState.running):
-            rows.append([job.short_id, project_name, 
+            rows.append([job.short_id, project_name,
                          '%s%s' % (get_state_symbol(job.state), job.state),
                          format_cpu(job_stats),
                          format_mem(job_stats),
@@ -237,12 +237,12 @@ def get_cpu_bars(num_cpus, percpu_percent):
     def get_bar_line(cpu_index, percent):
         percent = min(percent, 100.0)
         length = int(round(round(percent) / 100 * bar_width))
-        bar = '=' * (length - 1) 
+        bar = '=' * (length - 1)
         if percent > 0:
             bar += '>'
         fill = ' ' * (bar_width - len(bar)) + '|'
-        line = '{:<3}{:>{right}.1f}% |{}'.format(cpu_index, percent, 
-                                                 bar + fill, 
+        line = '{:<3}{:>{right}.1f}% |{}'.format(cpu_index, percent,
+                                                 bar + fill,
                                                  right=cpu_col_width - 4)
         return line
     if percpu_percent:
@@ -262,7 +262,7 @@ def get_gpu_table(job_stats):
             return '  -'
         available = gpu_stats.get('memory_total', '%.1f', bytes_to_gib)
         used = gpu_stats.get('memory_used', '%.1f', bytes_to_gib)
-        return '{:>3}/{}'.format(used, 
+        return '{:>3}/{}'.format(used,
                                  available.rstrip('0').rstrip('.'))
 
     def format_gpu_pwr(gpu_stats):
@@ -270,7 +270,7 @@ def get_gpu_table(job_stats):
             return '  -'
         limit = gpu_stats.get('power_limit', '%d')
         used = gpu_stats.get('power_draw', '%d')
-        return '{:>3}/{}W'.format(used, 
+        return '{:>3}/{}W'.format(used,
                                  limit.rstrip('0').rstrip('.'))
     rows = []
     output = StringIO()
@@ -301,8 +301,8 @@ def get_gpu_table(job_stats):
 
 def get_detailed_info(job_stats):
     output = StringIO()
-    job = job_stats.job    
-    caption = bold('%s (STATE: %s)' % (job.short_id, 
+    job = job_stats.job
+    caption = bold('%s (STATE: %s)' % (job.short_id,
                                        '%s%s' % (get_state_symbol(job.state), job.state)))
     if job.gpus == 0:
         return '\n'.join([caption, indent('Experiment uses no GPUs')])
@@ -310,7 +310,7 @@ def get_detailed_info(job_stats):
         #total_gib = job_stats.get('memory_limit', '%.1f', bytes_to_gib)
         #used_gib = job_stats.get('memory_used', '%.1f', bytes_to_gib)
         #memory = 'Memory Stats (Used/Total) GB: %s / %s' % (used_gib, total_gib)
-        # cpu_bars = get_cpu_bars(job.cpus, 
+        # cpu_bars = get_cpu_bars(job.cpus,
         #                         job_stats.get('percpu_percent'))
         gpu_table = get_gpu_table(job_stats)
         return '\n'.join([caption, indent(gpu_table)])
@@ -341,7 +341,7 @@ class StatsScreen():
                         stats_screen = get_detailed_infos(sorted_stats)
                     else:
                         stats_screen = get_summary_infos(self.project.name,
-                                                         sorted_stats)            
+                                                         sorted_stats)
 
                 os.system('cls' if os.name == 'nt' else 'clear')
                 print(self._fit_terminal(stats_screen.strip()))
@@ -399,11 +399,11 @@ def stream_stats(job_id_stats, stream_meta={}):
 
     def on_close(ws):
         sys.exit(0)
-    
+
     def on_open(ws):
         nonlocal stream_connected
-        stream_connected = True 
-    
+        stream_connected = True
+
     ws = websocket.WebSocketApp(
         url,
         on_message=on_message,
@@ -426,8 +426,8 @@ def stream_stats(job_id_stats, stream_meta={}):
 
 
 def monitor_jobs(project, jobs, detailed=False, stream_meta={}):
-    job_id_stats = OrderedDict({j.id: JobStats(j) for j in jobs})
+    jobs_stats = [JobStats(j) for j in jobs]
+    job_id_stats = OrderedDict({js.job.id: js for js in jobs_stats})
     stream_stats(job_id_stats, stream_meta)
-    jobs_stats = job_id_stats.values()
     screen = StatsScreen(project, jobs_stats)
     screen.display(detailed, stream_meta)
