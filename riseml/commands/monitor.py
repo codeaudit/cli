@@ -43,7 +43,7 @@ def run(args):
     else:
         experiments = call_api(lambda: client.get_experiments())
         if not experiments:
-            handle_error('No experiment logs to show!')
+            handle_error('No experiments to monitor!')
         experiment = call_api(lambda: client.get_experiment(experiments[0].short_id))
         jobs = get_experiment_jobs(experiment)
         if not jobs:
