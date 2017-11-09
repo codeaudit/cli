@@ -39,12 +39,19 @@ def run(args):
         )
         show_job(job)
     elif args.id and util.is_user_id(args.id):
-        experiments = util.call_api(lambda: client.get_experiments(user=args.id[1:], count=args.num_last))
-        show_experiments(experiments, all=args.all, collapsed=not args.long, users=args.all_users)
-    elif not args.id:
-        query_args = {'all_users': args.all_users, 'count': args.num_last}
+        query_args = {'user': args.id[1:]}
         if not args.all:
             query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
+        else:
+            query_args['count'] = args.num_last
+        experiments = util.call_api(lambda: client.get_experiments(**query_args))
+        show_experiments(experiments, all=args.all, collapsed=not args.long)
+    elif not args.id:
+        query_args = {'all_users': args.all_users}
+        if not args.all:
+            query_args['states'] = 'CREATED|PENDING|STARTING|BUILDING|RUNNING'
+        else:
+            query_args['count'] = args.num_last
         experiments = util.call_api(lambda: client.get_experiments(**query_args))
         show_experiments(experiments, all=args.all, collapsed=not args.long, users=args.all_users)
     else:
@@ -136,8 +143,8 @@ def show_job(job):
     if job.reason is not None:
         print("Reason: {}".format(job.reason))
     if job.message is not None:
-        print("Message: {}".format(job.message))    
-    if job.exit_code is not None:    
+        print("Message: {}".format(job.message))
+    if job.exit_code is not None:
         print("Exit Code: {}".format(job.exit_code))
     print("Requested cpus: {}".format(job.cpus))
     print("Requested mem: {}".format(job.mem))
