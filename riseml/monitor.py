@@ -270,8 +270,7 @@ def get_gpu_table(job_stats):
             return '  -'
         limit = gpu_stats.get('power_limit', '%d')
         used = gpu_stats.get('power_draw', '%d')
-        return '{:>3}/{}W'.format(used,
-                                 limit.rstrip('0').rstrip('.'))
+        return '{:>3}/{}W'.format(used, limit)
     rows = []
     output = StringIO()
     for gpu_index, gpu_dev in enumerate(job_stats.gpus):
