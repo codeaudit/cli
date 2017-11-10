@@ -80,7 +80,7 @@ def run_login(args):
         print('Login succeeded, config updated.')
     except (KeyboardInterrupt, EOFError) as e:
         print('Aborting login. Configuration unchanged.')
-        sys. exit(1)
+        sys.exit(1)
 
 
 def login_api(args):
