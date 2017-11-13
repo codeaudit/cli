@@ -6,6 +6,7 @@ import sys
 import time
 import websocket
 import threading
+import os
 try:
     from StringIO import StringIO
 except ImportError:
@@ -364,28 +365,27 @@ class StatsScreen():
             print_user_exit(stream_meta)
 
 
-def stream_stats(job_id_stats, stream_meta={}):
+def stream_stats(url, job_id_stats, stream_meta={}):
     global monitor_stream
     stream_connected = False
     job_ids = list(job_id_stats.keys())
-    url = '%s/ws/monitor/?jobId=%s' % (get_stream_url(), job_ids[0])
-    if len(job_ids) > 1:
-        url += '&' + '&'.join(['jobId=%s' % job_id for job_id in job_ids[1:]])
-
+    
     def on_message(ws, message):
         try:
             msg = json.loads(message)
             if msg['type'] == 'utilization':
                 stats = msg['data']
                 job_id = stats['job_id']
-                with stats_lock:
-                    job_stats = job_id_stats[job_id]
-                    job_stats.update(stats)
+                if job_id in job_id_stats:
+                    with stats_lock:
+                        job_stats = job_id_stats[job_id]
+                        job_stats.update(stats)
             elif msg['type'] == 'state':
                 job_id = msg['job_id']
-                with stats_lock:
-                    job_stats = job_id_stats[job_id]
-                    job_stats.update_job_state(msg['state'])
+                if job_id in job_id_stats:
+                    with stats_lock:
+                        job_stats = job_id_stats[job_id]
+                        job_stats.update_job_state(msg['state'])
         except Exception as e:
             handle_error(traceback.format_exc())
 
@@ -397,7 +397,8 @@ def stream_stats(job_id_stats, stream_meta={}):
             handle_error(e)
 
     def on_close(ws):
-        sys.exit(0)
+        time.sleep(2)
+        os._exit(0)
 
     def on_open(ws):
         nonlocal stream_connected
@@ -424,9 +425,30 @@ def stream_stats(job_id_stats, stream_meta={}):
         handle_error('Unable to connect to monitor stream')
 
 
-def monitor_jobs(project, jobs, detailed=False, stream_meta={}):
+def get_experiment_jobs(experiment, roles=('train', 'dist-tf-master', 
+                                           'dist-tf-ps', 'dist-tf-worker')):
+   jobs = [j for j in experiment.jobs if j.role in roles]
+   for c in experiment.children:
+       jobs += get_experiment_jobs(c)
+   return jobs
+
+
+def monitor_job(job, detailed=False):
+    url = '%s/ws/jobs/%s/monitor' % (get_stream_url(), job.id)
+    monitor_jobs(url, job.project, [job], 
+        detailed=detailed, stream_meta={"job_id": job.short_id})
+
+
+def monitor_experiment(experiment, detailed=False, stream_meta={}):
+    url = '%s/ws/experiments/%s/monitor' % (get_stream_url(), experiment.id)
+    jobs = get_experiment_jobs(experiment)
+    monitor_jobs(url, experiment.project, jobs,
+        detailed=detailed, stream_meta={"experiment_id": experiment.short_id})
+    
+
+def monitor_jobs(url, project, jobs, detailed=False, stream_meta={}):
     jobs_stats = [JobStats(j) for j in jobs]
     job_id_stats = OrderedDict({js.job.id: js for js in jobs_stats})
-    stream_stats(job_id_stats, stream_meta)
+    stream_stats(url, job_id_stats, stream_meta)
     screen = StatsScreen(project, jobs_stats)
     screen.display(detailed, stream_meta)
