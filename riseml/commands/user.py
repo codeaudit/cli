@@ -147,8 +147,8 @@ def check_sync_config(rsync_url, timeout=20):
     while True:
         sync_cmd = [get_rsync_path(),
                 '--dry-run',
-                '--timeout=5',
-                '--contimeout=5',
+                '--timeout=10',
+                '--contimeout=10',
                 '.',
                 rsync_url]
         proc = subprocess.Popen(sync_cmd,
