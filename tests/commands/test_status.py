@@ -1,7 +1,8 @@
+import time
 import datetime
 import unittest
 from riseml.client import models
-from .status import _get_status_headers, _get_experiment_rows, show_experiments
+from riseml.commands.status import _get_status_headers, _get_experiment_rows, show_experiments
 
 
 class TestStatus(unittest.TestCase):
@@ -71,9 +72,8 @@ class TestStatus(unittest.TestCase):
                     models.experiment.Experiment(
                         short_id="1",
                         state="KILLED",
-                        user=models.user.User(username="admin"),
-                        project=models.project.Project(name="test 2 child"),
                         params="{}",
+                        created_at=time.time()
                     ),
                 ],
             )

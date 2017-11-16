@@ -165,10 +165,10 @@ def get_experiments_rows(group, with_project=True, with_type=True, with_params=T
         values = [indent_str + experiment.short_id]
 
         if with_user:
-            values += [experiment.user.username]
+            values += [group.user.username]
 
         if with_project:
-            values += [experiment.project.name]
+            values += [group.project.name]
 
         values += [u'%s%s' % (util.get_state_symbol(experiment.state), experiment.state),
                    util.get_since_str(experiment.created_at)]
