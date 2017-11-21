@@ -92,7 +92,7 @@ def login_api(args):
         if default:
             print('Default: {}'.format(default))
         else:
-            print('Examples: 54.131.125.42, 54.131.125.42:31213')
+            print('Example: 54.131.125.42:31213')
         while True:
             api_host = input('--> ').strip() or default
             if api_host:
@@ -128,7 +128,7 @@ def login_rsync(args):
         if default:
             print('Default: {}'.format(default))
         else:
-            print('Examples: 54.131.125.43, 54.131.125.42:31876')
+            print('Example: 54.131.125.42:31876')
         while True:
             rsync_host = input('--> ').strip() or default
             if rsync_host:
