@@ -4,6 +4,7 @@ from .logs import add_logs_parser
 from .train import add_train_parser
 from .kill import add_kill_parser
 from .system import add_system_parser
+from .account import add_account_parser
 from .status import add_status_parser
 from .whoami import add_whoami_parser
 from .init import add_init_parser

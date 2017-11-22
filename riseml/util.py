@@ -5,6 +5,7 @@ import sys
 import time
 import re
 import platform
+import webbrowser
 from urllib3.exceptions import LocationValueError, HTTPError
 from datetime import datetime
 
@@ -254,3 +255,11 @@ def get_state_symbol(state):
         return color_string(u'\u2717 ', color='red')
     elif state in ('FAILED'):
         return color_string(u'\u2717 ', color='red')
+
+
+def browser_available():
+    try:
+        webbrowser.get()
+        return True
+    except webbrowser.Error:
+        return False

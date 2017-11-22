@@ -28,6 +28,7 @@ def main():
 
     # system ops
     add_system_parser(subparsers)
+    add_account_parser(subparsers)
 
     # worklow ops
     add_init_parser(subparsers)
@@ -38,12 +39,12 @@ def main():
     add_logs_parser(subparsers)
     add_kill_parser(subparsers)
     add_status_parser(subparsers)
-    
+
     args = parser.parse_args(sys.argv[1:])
 
     if args.v:
         print('api_url: %s' % get_api_url())
-        print('sync_url: %s' % get_sync_url())        
+        print('sync_url: %s' % get_sync_url())
         print('stream_url: %s' % get_stream_url())
         print('git_url: %s' % get_git_url())
 
