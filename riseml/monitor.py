@@ -19,7 +19,8 @@ from collections import OrderedDict
 
 from riseml.errors import handle_error
 from riseml.client_config import get_stream_url
-from riseml.util import bytes_to_gib, print_table, bold, JobState, mib_to_gib, get_state_symbol
+from riseml.ansi import bold
+from riseml.util import bytes_to_gib, print_table, JobState, mib_to_gib, get_state_symbol
 
 stats_lock = threading.Lock()
 monitor_stream = None
@@ -369,7 +370,7 @@ def stream_stats(url, job_id_stats, stream_meta={}):
     global monitor_stream
     stream_connected = False
     job_ids = list(job_id_stats.keys())
-    
+
     def on_message(ws, message):
         try:
             msg = json.loads(message)
@@ -425,7 +426,7 @@ def stream_stats(url, job_id_stats, stream_meta={}):
         handle_error('Unable to connect to monitor stream')
 
 
-def get_experiment_jobs(experiment, roles=('train', 'dist-tf-master', 
+def get_experiment_jobs(experiment, roles=('train', 'dist-tf-master',
                                            'dist-tf-ps', 'dist-tf-worker')):
    jobs = [j for j in experiment.jobs if j.role in roles]
    for c in experiment.children:
@@ -435,7 +436,7 @@ def get_experiment_jobs(experiment, roles=('train', 'dist-tf-master',
 
 def monitor_job(job, detailed=False):
     url = '%s/ws/jobs/%s/monitor' % (get_stream_url(), job.id)
-    monitor_jobs(url, job.project, [job], 
+    monitor_jobs(url, job.project, [job],
         detailed=detailed, stream_meta={"job_id": job.short_id})
 
 
@@ -444,7 +445,7 @@ def monitor_experiment(experiment, detailed=False, stream_meta={}):
     jobs = get_experiment_jobs(experiment)
     monitor_jobs(url, experiment.project, jobs,
         detailed=detailed, stream_meta={"experiment_id": experiment.short_id})
-    
+
 
 def monitor_jobs(url, project, jobs, detailed=False, stream_meta={}):
     jobs_stats = [JobStats(j) for j in jobs]

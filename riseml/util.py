@@ -5,16 +5,19 @@ import sys
 import time
 import re
 import platform
-from urllib3.exceptions import LocationValueError
-
+from urllib3.exceptions import LocationValueError, HTTPError
 from datetime import datetime
 
+from riseml.client.rest import ApiException
 from riseml.consts import IS_BUNDLE
 from riseml.client_config import get_api_server
+from riseml.errors import handle_http_error, handle_error
+from riseml.ansi import bold, color_string, strip_color
 
 USER_ONLY_REGEX = re.compile(r'^\.[^\.]+$')
 EXPERIMENT_ID_REGEX = re.compile(r'^(\.[^\.]+\.)?\d+(\.\d+)?$')
 JOB_ID_REGEX = re.compile(r'^(\.[^\.]+\.)?\d+(\.\d+)?\.[A-Za-z]+(\.\d+)?$')
+
 
 class JobState(object):
 
@@ -30,63 +33,9 @@ class JobState(object):
     killed   = 'KILLED'
 
 
-COLOR_CODES = {
-    # 'black': 30,     NOTE: We don't want that color!
-    'red': 31,
-    'green': 32,
-    'yellow': 33,
-    'blue': 34,
-    'magenta': 35,
-    'cyan': 36,
-    'light gray': 37,
-    'dark gray': 90,
-    'light red': 91,
-    'light green': 92,
-    'light yellow': 93,
-    'light blue': 94,
-    'light magenta': 95,
-    'light cyan': 96,
-    'white': 97
-}
-
-colors = {}
-
-COLORS_DISABLED = not sys.stdout.isatty()
-
-def bold(s): return color_string(s, ansi_code=1)
-
-def get_color_pairs():
-    for name, code in COLOR_CODES.items():
-        yield(name, str(code))
-        yield('bold_' + name, str(code) + ';1')
-
-
-for (name, ansi_code) in get_color_pairs():
-
-    colors[name] = ansi_code
-
-def ansi_sequence(code):
-    return "\033[%sm" % code
-
-# from https://github.com/jonathaneunice/colors/blob/master/colors/colors.py
-def strip_color(s):
-    return re.sub('\x1b\\[(K|.*?m)', '', s)
-
-def color_string(s, color=None, ansi_code=None):
-    assert color is not None or ansi_code is not None, "You need to supply `color` or `ansi_code` param."
-    assert not (color is not None and ansi_code is not None), "You need to supply either `color` or `ansi_code`"
-
-    if COLORS_DISABLED:
-        # return non-colored string if non-terminal output
-        return s
-    else:
-        if color:
-            ansi_code = colors[color]
-        return "%s%s%s" % (ansi_sequence(ansi_code), s, ansi_sequence(0))
-
-
 class TableElement():
     pass
+
 
 class TableRowDelimiter(TableElement):
     def __init__(self, symbol):
@@ -98,8 +47,8 @@ class TableRowDelimiter(TableElement):
 def print_table(header, rows, min_widths=None,
                 file=sys.stdout, bold_header=True,
                 column_spaces=1, indent=0):
-    
-    indent_str = ' ' * indent  
+
+    indent_str = ' ' * indent
     n_columns = len(header)
 
     if not min_widths:
@@ -108,8 +57,8 @@ def print_table(header, rows, min_widths=None,
         widths = list(min_widths)
         assert len(widths) == len(header), \
             "Widths must have same length as header"
-        
-    
+
+
     for i, (h, w) in enumerate(zip(header, widths)):
         if len(h) > w:
             widths[i] = len(h)
@@ -131,7 +80,7 @@ def print_table(header, rows, min_widths=None,
                 widths[i] = item_len
 
     table_width = sum(widths) + (n_columns - 1) * column_spaces
-    
+
     # see https://stackoverflow.com/questions/14140756/python-s-str-format-fill-characters-and-ansi-colors
     def ansi_ljust(s, width):
         needed = width - len(strip_color(s))
@@ -205,7 +154,7 @@ def format_float(f):
 
 
 def get_readable_size(value):
-    for f, u in ((bytes_to_gib, 'GB'), (bytes_to_mib, 'MB') , 
+    for f, u in ((bytes_to_gib, 'GB'), (bytes_to_mib, 'MB') ,
                  (bytes_to_kib, 'KB')):
         if f(value) >= 1:
             return '%.1f %s' % (f(value), u)
@@ -234,11 +183,6 @@ def resolve_path(binary):
                 return loc
 
 
-from riseml.client.rest import ApiException
-from riseml.errors import handle_http_error, handle_error
-from urllib3.exceptions import HTTPError
-
-
 def call_api(api_fn, not_found=None):
     try:
         return api_fn()
@@ -247,6 +191,8 @@ def call_api(api_fn, not_found=None):
             raise e
         elif e.status == 401:
             handle_error("You are not authorized!")
+        elif e.status == 403:
+                handle_http_error(e.body, e.status)
         elif e.status == 404 and not_found:
             not_found()
         else:
@@ -261,30 +207,38 @@ def call_api(api_fn, not_found=None):
             exc_type=e.__class__.__name__
         ))
 
+
 def is_job_id(id):
     return JOB_ID_REGEX.match(id) is not None
+
 
 def is_experiment_id(id):
     return EXPERIMENT_ID_REGEX.match(id) is not None
 
+
 def is_user_id(id):
     return USER_ONLY_REGEX.match(id) is not None
+
 
 def has_tensorboard(experiment):
     return experiment.framework == 'tensorflow' and \
         experiment.framework_config.get('tensorboard', False)
 
+
 def is_tensorboard_job(job):
     return job.role == 'tensorboard'
+
 
 def tensorboard_job(experiment):
     return next((job for job in experiment.jobs if is_tensorboard_job(job)), None)
 
+
 def tensorboard_job_url(job):
     return "{}/{}".format(get_api_server(), job.external_service_name)
 
+
 def get_state_symbol(state):
-    assert state in ('CREATED', 'PENDING', 'BUILDING', 'STARTING', 
+    assert state in ('CREATED', 'PENDING', 'BUILDING', 'STARTING',
               'RUNNING', 'FAILED', 'FINISHED', 'KILLED'), 'Unknown state %s' % state
     if state in ('CREATED'):
         return u'\u25cb '
@@ -300,7 +254,3 @@ def get_state_symbol(state):
         return color_string(u'\u2717 ', color='red')
     elif state in ('FAILED'):
         return color_string(u'\u2717 ', color='red')
-
-if __name__ == '__main__':
-    for s in ('CREATED', 'PENDING', 'BUILDING', 'STARTING', 'RUNNING', 'FAILED', 'FINISHED', 'KILLED'):
-        print(get_state_symbol(s), s)
