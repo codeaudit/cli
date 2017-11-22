@@ -197,7 +197,7 @@ def get_riseml_backend_url():
     default = 'https://riseml.com/backend/'
     if get_environment() == 'staging':
         default = 'https://riseml-staging.com/backend/'
-    return default
+    return get_client_config()['cluster'].get('backend', default)
 
 
 def get_cluster_id():
