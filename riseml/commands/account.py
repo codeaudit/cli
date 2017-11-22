@@ -1,7 +1,8 @@
 import webbrowser
+import requests
 
 from riseml.client import AdminApi, ApiClient
-from riseml.util import call_api, browser_available
+from riseml.util import call_api, browser_available, handle_http_error, handle_error
 from .system_info import add_system_info_parser
 from .system_test import add_system_test_parser
 from riseml.client_config import get_riseml_backend_url
@@ -31,7 +32,7 @@ def add_account_upgrade_parser(subparsers):
 
 def add_account_info_parser(subparsers):
     parser = subparsers.add_parser('info', help="show info about your account")
-    parser.set_defaults(run=run_upgrade)
+    parser.set_defaults(run=run_info)
 
 
 def add_account_sync_parser(subparsers):
@@ -40,8 +41,9 @@ def add_account_sync_parser(subparsers):
 
 
 def run_upgrade(args):
-    cluster_id = get_cluster_id()
-    register_url = get_riseml_backend_url() + 'upgrade?clusterId=' + cluster_id
+    cluster_id = get_cluster_infos().get('cluster_id')
+    register_url = get_riseml_backend_url() + 'upgrade?clusterId=%s' % cluster_id
+    print(register_url)
     if browser_available():
         webbrowser.open_new_tab(register_url)
     else:
@@ -54,7 +56,18 @@ def run_sync(args):
 
 
 def run_info(args):
-    print('Please enter the account key you would like to set: ')
+    cluster_infos = get_cluster_infos()
+    cluster_id = cluster_infos.get('cluster_id')
+    cluster_account_key = cluster_infos.get('account_key')
+    info_url = get_riseml_backend_url() + 'clusters/%s' % cluster_id
+    try:
+        res = requests.get(info_url)
+        # check whether account_key and enabled_features match
+        # + display infos
+    except requests.HTTPError as e:
+        handle_http_error(e.body, e.status_code)
+    except requests.ConnectionError as e:
+        handle_error("Error connecting to RiseML backend: %s" % str(e))
 
 
 def run_register(args):
@@ -75,9 +88,8 @@ def run_register(args):
         print("Account %s registered" % account_name)
 
 
-def get_cluster_id():
+def get_cluster_infos():
     api_client = ApiClient()
     client = AdminApi(api_client)
     res = call_api(lambda: client.get_cluster_infos())
-    infos = {r.key: r.value for r in res}
-    return infos.get('cluster_id')
+    return {r.key: r.value for r in res}
