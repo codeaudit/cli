@@ -19,7 +19,7 @@ logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-v', help="show endpoints", action='store_const', const=True)
-    parser.add_argument('--version', '-V', help="show version", action='version', version='RiseML {}'.format(VERSION))
+    parser.add_argument('--version', '-V', help="show version", action='version', version='RiseML CLI {}'.format(VERSION))
     subparsers = parser.add_subparsers()
 
     # user ops
