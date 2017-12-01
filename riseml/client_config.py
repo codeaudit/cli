@@ -194,10 +194,10 @@ def get_rollbar_endpoint():
 
 
 def get_riseml_backend_url():
-    default = 'https://riseml.com/backend/'
+    backend = 'https://riseml.com/backend/'
     if get_environment() == 'staging':
-        default = 'https://riseml-staging.com/backend/'
-    return get_client_config()['cluster'].get('backend', default)
+        backend = 'https://riseml-staging.com/backend/'
+    return backend
 
 
 def get_cluster_id():
