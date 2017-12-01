@@ -6,32 +6,9 @@ from .system_test import add_system_test_parser
 def add_system_parser(subparsers):
     parser = subparsers.add_parser('system', help="system level commands")
     subsubparsers = parser.add_subparsers()
-    add_system_register_parser(subsubparsers)    
     add_system_info_parser(subsubparsers)
     add_system_test_parser(subsubparsers)
     def run(args):
         parser.print_usage()
     parser.set_defaults(run=run)
 
-
-def add_system_register_parser(subparsers):
-    parser = subparsers.add_parser('register', help="register cluster with account")
-    parser.set_defaults(run=run_register)
-
-
-def run_register(args):
-    print('Please enter the account key you would like to set: ')
-    account_key = input('--> ').strip()
-    api_client = ApiClient()
-    client = AdminApi(api_client)
-    data = {'account_key': account_key}
-    res = call_api(lambda: client.update_or_create_cluster_info(data))
-    infos = {r.key: r.value for r in res}
-    account_name = infos.get('account_name')
-    if account_name == 'NOT FOUND':
-        print('Account key set, but no corresponding account found.'
-              ' Is the account key correct?')
-    elif account_name == 'NOT VERIFIED':
-        print('Account key set, but could not verify account due to network issues.')
-    else:
-        print("Account %s registered" % account_name)

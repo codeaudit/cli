@@ -13,6 +13,7 @@
 from __future__ import absolute_import
 
 # import models into model package
+from .account import Account
 from .cluster_info import ClusterInfo
 from .error import Error
 from .experiment import Experiment

@@ -13,6 +13,7 @@
 from __future__ import absolute_import
 
 # import models into sdk package
+from .models.account import Account
 from .models.cluster_info import ClusterInfo
 from .models.error import Error
 from .models.experiment import Experiment

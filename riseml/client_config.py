@@ -33,12 +33,12 @@ clusters:
 
 users:
 - name: default
-  user:  
+  user:
     api-key: ""
 """
 
 def get_config_file():
-    home = str(Path.home())    
+    home = str(Path.home())
     return os.path.join(home, CONFIG_PATH, CONFIG_FILE)
 
 
@@ -135,25 +135,25 @@ clusters:
 
 users:
 - name: default
-  user:  
+  user:
     api-key: {api_key}
-""".format(api_host=api_host, 
-           api_key=api_key, 
+""".format(api_host=api_host,
+           api_key=api_key,
            rsync_host=rsync_host,
            cluster_id=cluster_id,
            environment=environment)
     return config
 
 
-def write_config(api_key, api_host, rsync_host, cluster_id, 
+def write_config(api_key, api_host, rsync_host, cluster_id,
                  environment='production'):
     try:
         os.makedirs(os.path.dirname(get_config_file()))
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise
-    config = generate_config(api_key, api_host, rsync_host, 
-                             cluster_id, environment)                
+    config = generate_config(api_key, api_host, rsync_host,
+                             cluster_id, environment)
     with open(get_config_file(), 'wt') as f:
         f.write(config)
 
@@ -191,6 +191,13 @@ def get_rollbar_endpoint():
     if get_environment() == 'staging':
         default = 'https://backend.riseml-staging.com/errors/client/'
     return get_client_config()['cluster'].get('rollbar-server', default)
+
+
+def get_riseml_backend_url():
+    backend = 'https://riseml.com/backend/'
+    if get_environment() == 'staging':
+        backend = 'https://riseml-staging.com/backend/'
+    return backend
 
 
 def get_cluster_id():
