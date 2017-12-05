@@ -68,7 +68,7 @@ def add_login_parser(subparsers):
 
 
 def run_login(args):
-    print('Configuring new user login. This may overwrite existing configuration. \n')
+    print('Configuring new user login. This will overwrite your existing configuration. \n')
     try:
         api_key, api_host, cluster_id = login_api(args)
         print()
@@ -99,7 +99,7 @@ def login_api(args):
                 break
             print('You need to enter a value!')
         print()
-  
+
     api_key = args.api_key
     if not args.api_key:
         default = get_api_key()
@@ -142,7 +142,7 @@ def login_rsync(args):
 
 def check_sync_config(rsync_url, timeout=20):
     print('Waiting %ss for connection to sync server %s ...' % (timeout, rsync_url))
-    
+
     start = time.time()
     while True:
         sync_cmd = [get_rsync_path(),
@@ -153,7 +153,7 @@ def check_sync_config(rsync_url, timeout=20):
                 rsync_url]
         proc = subprocess.Popen(sync_cmd,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)    
+                                stderr=subprocess.STDOUT)
         res = proc.wait()
         if res != 0:
             if time.time() - start < timeout:
@@ -285,4 +285,3 @@ def validate_username(username):
 def validate_email(email):
     if '@' not in email:
         handle_error('Invalid email')
-    
