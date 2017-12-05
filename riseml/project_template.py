@@ -3,9 +3,8 @@ project_template = """project: {project_name}
 
 project_init_template = """project: {project_name}
 train:
-  image:
-    name: tensorflow/tensorflow:1.2.0
-    install:
+  image: tensorflow/tensorflow:1.2.0
+  install:
     - apt-get -y update
     - apt-get -y install git
     - git clone https://github.com/tensorflow/models
