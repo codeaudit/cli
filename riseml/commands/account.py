@@ -1,11 +1,8 @@
 import webbrowser
-import requests
 
 from riseml.client import AdminApi, ApiClient
-from riseml.util import call_api, browser_available, handle_http_error, handle_error, bold
-from .system_info import add_system_info_parser
-from .system_test import add_system_test_parser
-from riseml.client_config import get_riseml_backend_url
+from riseml.util import call_api, browser_available, bold
+from riseml.client_config import get_riseml_url
 
 
 def add_account_parser(subparsers):
@@ -48,7 +45,7 @@ def run_upgrade(args):
         print('You have not registered with an account. '
               'Please run ' + bold('riseml account register'))
     else:
-        register_url = get_riseml_backend_url() + 'upgrade/%s' % account.key
+        register_url = get_riseml_url() + 'upgrade/%s' % account.key
         if browser_available():
             webbrowser.open_new_tab(register_url)
         else:
@@ -87,12 +84,12 @@ def run_register(args):
     if account.key is not None:
         print('You have already registered with an account.')
     else:
-        register_url = get_riseml_backend_url() + 'pricing/%s' % account.cluster_id
+        register_url = get_riseml_url() + 'pricing/%s' % account.cluster_id
         if browser_available():
             webbrowser.open_new_tab(register_url)
         else:
             print('Please visit this URL and follow instructions'
-                ' to upgrade your account: %s' % register_url)
+                  ' to upgrade your account: %s' % register_url)
         print('\nPlease enter your account key: ')
         account_key = input('').strip()
         api_client = ApiClient()

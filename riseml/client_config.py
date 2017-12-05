@@ -200,6 +200,13 @@ def get_riseml_backend_url():
     return backend
 
 
+def get_riseml_url():
+    url = 'https://riseml.com/'
+    if get_environment() == 'staging':
+        url = 'https://riseml-staging.com/'
+    return url
+
+
 def get_cluster_id():
     return get_client_config()['cluster']['cluster-id']
 
