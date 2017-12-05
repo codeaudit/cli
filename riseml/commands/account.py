@@ -48,7 +48,7 @@ def run_upgrade(args):
         print('You have not registered with an account. '
               'Please run ' + bold('riseml account register'))
     else:
-        register_url = get_riseml_backend_url() + 'upgrade?accounKey=%s' % account.key
+        register_url = get_riseml_backend_url() + 'upgrade/%s' % account.key
         if browser_available():
             webbrowser.open_new_tab(register_url)
         else:
@@ -87,11 +87,14 @@ def run_register(args):
     if account.key is not None:
         print('You have already registered with an account.')
     else:
-        register_url = get_riseml_backend_url() + 'register'
-        print('If you haven\'t registered your account yet, please go to the following'
-            ' URL to get your account key:\n\n %s' % register_url)
+        register_url = get_riseml_backend_url() + 'pricing/%s' % account.cluster_id
+        if browser_available():
+            webbrowser.open_new_tab(register_url)
+        else:
+            print('Please visit this URL and follow instructions'
+                ' to upgrade your account: %s' % register_url)
         print('\nPlease enter your account key: ')
-        account_key = input('--> ').strip()
+        account_key = input('').strip()
         api_client = ApiClient()
         client = AdminApi(api_client)
         res = call_api(lambda: client.update_account(account_key=account_key))
