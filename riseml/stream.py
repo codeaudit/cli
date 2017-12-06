@@ -12,7 +12,7 @@ from riseml.ansi import COLOR_CODES, color_string
 from . import util
 
 ANSI_ESCAPE_REGEX = re.compile(r'\x1b\[(\d+)m')
-TENSORBOARD_STARTING_REGEX = re.compile(r'Starting TensorBoard (\d+) at (http://[^:]+:\d+)')
+TENSORBOARD_STARTING_REGEX = re.compile(r'(TensorBoard ([^\s]+) at )(http://[^:]+:\d+)')
 
 class LogPrinter(object):
     def __init__(self, url, ids_to_name, stream_meta=None):
@@ -80,7 +80,7 @@ class LogPrinter(object):
         if 'tensorboard' in self.ids_to_name[msg['job_id']] \
             and self.stream_meta.get("tensorboard_job"):
             line = re.sub(TENSORBOARD_STARTING_REGEX,
-                            r'Starting Tensorboard \1 at {}'.format(
+                            r'\1{}'.format(
                                 util.tensorboard_job_url(self.stream_meta.get("tensorboard_job"))
                             ),
                             line)
