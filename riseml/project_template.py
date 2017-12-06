@@ -4,6 +4,8 @@ project_template = """project: {project_name}
 project_init_template = """project: {project_name}
 train:
   framework: tensorflow
+  tensorflow:
+    version: 1.2.0
   install:
     - apt-get -y update
     - apt-get -y install git
