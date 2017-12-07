@@ -1,7 +1,9 @@
 import webbrowser
+import requests
+import sys
 
 from riseml.client import AdminApi, ApiClient
-from riseml.util import call_api, browser_available, bold
+from riseml.util import call_api, browser_available, bold, read_yes_no
 from riseml.client_config import get_riseml_url
 
 
@@ -66,15 +68,24 @@ def run_sync(args):
 
 
 def run_info(args):
+    def readable_features(features):
+        names = {'user_management': 'User Management'}
+        return ', '.join([names.get(f, f) for f in names])
+
     api_client = ApiClient()
     client = AdminApi(api_client)
     account = call_api(lambda: client.get_account_info())
+
+
     if account.name is None:
         print('You have not registered with an account. '
               'Please run ' + bold('riseml account register'))
     else:
-        print('Account name: %s' % account.name)
-        print('Account key:  %s' % account.key)
+        backend_info = get_account_info_backend(account.key)
+        print('Name:     %s' % account.name)
+        print('Key:      %s' % account.key)
+        print('Plan:     %s' % backend_info['plan'])
+        print('Features: %s' % readable_features(account.enabled_features))
 
 
 def run_register(args):
@@ -82,21 +93,40 @@ def run_register(args):
     client = AdminApi(api_client)
     account = call_api(lambda: client.get_account_info())
     if account.key is not None:
-        print('You have already registered with an account.')
+        print('Note: this cluster is already registered with an account. '
+              ' You can continue and register with another account.')
     else:
-        register_url = get_riseml_url() + 'pricing/%s' % account.cluster_id
-        if browser_available():
-            webbrowser.open_new_tab(register_url)
+        key_exists = read_yes_no('Do you already have an account key')
+        if key_exists:
+            read_and_register_account_key()
         else:
-            print('Please visit this URL and follow instructions'
-                  ' to upgrade your account: %s' % register_url)
-        print('\nPlease enter your account key: ')
-        account_key = input('').strip()
-        api_client = ApiClient()
-        client = AdminApi(api_client)
-        res = call_api(lambda: client.update_account(account_key=account_key))
-        if res.name is None:
-            print('Invalid account key. Please verify that your key is correct '
-                  'or ask for support via contact@riseml.com')
-        else:
-            print('Registered succesfully! Account name: %s' % res.name)
+            register_url = get_riseml_url() + 'register/basic/%s' % account.cluster_id
+            if browser_available():
+                webbrowser.open_new_tab(register_url)
+            else:
+                print('Please visit this URL and follow instructions'
+                    ' to upgrade your account: %s' % register_url)
+            read_and_register_account_key()
+
+
+def read_and_register_account_key():
+    account_key = input('Please enter your account key: ').strip()
+    api_client = ApiClient()
+    client = AdminApi(api_client)
+    res = call_api(lambda: client.update_account(account_key=account_key))
+    if res.name is None:
+        print('Invalid account key. Please verify that your key is correct '
+              'or ask for support via contact@riseml.com')
+    else:
+        print('Registered succesfully! Account name: %s' % res.name)
+
+
+def get_account_info_backend(account_key):
+    url = get_riseml_url() + 'backend/accounts/%s' % account_key
+    try:
+        res = requests.get(url)
+        res.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print("Couldn't obtain account information from RiseML.")
+        sys.exit(1)
+    return res.json()

@@ -263,3 +263,14 @@ def browser_available():
         return True
     except webbrowser.Error:
         return False
+
+
+def read_yes_no(question):
+    y_n = input("%s [y/n]:" % question)
+    while y_n not in ('y', 'n'):
+        print("Please enter a valid choice [y/n]")
+        y_n = input("%s: [y/n]" % question)
+    if y_n == 'y':
+        return True
+    else:
+        return False
