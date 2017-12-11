@@ -84,7 +84,7 @@ def run_info(args):
         backend_info = get_account_info_backend(account.key)
         print('Name:     %s' % account.name)
         print('Key:      %s' % account.key)
-        print('Plan:     %s' % backend_info['plan'])
+        print('Plan:     %s' % backend_info['plan'].title())
         print('Features: %s' % readable_features(account.enabled_features))
 
 

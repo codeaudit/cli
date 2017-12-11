@@ -84,11 +84,14 @@ def get_current_context(config):
         if not user:
             handle_error('user %s not available in client configuration' % context['user'])
         validate_user_config(user)
+
         cluster = get_cluster_config(context['cluster'], config)
         if not cluster:
             handle_error('cluster %s not available in client configuration' % context['cluster'])
         validate_cluster_config(cluster)
-        return user, cluster
+        context['user'] = user
+        context['cluster'] = cluster
+        return context
     else:
         handle_error('current context not available in client configuration')
 
@@ -110,9 +113,7 @@ def validate_cluster_config(cluster_config):
 
 def get_client_config():
     config = read_config()
-    user, cluster = get_current_context(config)
-    return { 'user': user,
-             'cluster': cluster}
+    return get_current_context(config)
 
 
 def generate_config(api_key, api_host, rsync_host, cluster_id, environment):
@@ -193,18 +194,11 @@ def get_rollbar_endpoint():
     return get_client_config()['cluster'].get('rollbar-server', default)
 
 
-def get_riseml_backend_url():
-    backend = 'https://riseml.com/backend/'
-    if get_environment() == 'staging':
-        backend = 'https://riseml-staging.com/backend/'
-    return backend
-
-
 def get_riseml_url():
     url = 'https://riseml.com/'
     if get_environment() == 'staging':
         url = 'https://riseml-staging.com/'
-    return url
+    return get_client_config().get('backend', url)
 
 
 def get_cluster_id():
@@ -212,4 +206,4 @@ def get_cluster_id():
 
 
 def get_environment():
-    return get_client_config()['cluster']['environment']
+    return get_client_config()['environment']
