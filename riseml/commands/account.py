@@ -70,7 +70,7 @@ def run_sync(args):
 def run_info(args):
     def readable_features(features):
         names = {'user_management': 'User Management'}
-        return ', '.join([names.get(f, f) for f in names])
+        return ', '.join([names.get(f, f) for f in features])
 
     api_client = ApiClient()
     client = AdminApi(api_client)
@@ -85,7 +85,10 @@ def run_info(args):
         print('Name:     %s' % account.name)
         print('Key:      %s' % account.key)
         print('Plan:     %s' % backend_info['plan'].title())
-        print('Features: %s' % readable_features(account.enabled_features))
+        if not account.enabled_features:
+            print('Features: Run ' + bold('riseml account upgrade') + ' to enable features.')
+        else:
+            print('Features: %s' % readable_features(account.enabled_features))
 
 
 def run_register(args):
@@ -95,6 +98,7 @@ def run_register(args):
     if account.key is not None:
         print('Note: this cluster is already registered with an account. '
               ' You can continue and register with another account.')
+        read_and_register_account_key()
     else:
         key_exists = read_yes_no('Do you already have an account key')
         if key_exists:
@@ -116,7 +120,8 @@ def read_and_register_account_key():
     res = call_api(lambda: client.update_account(account_key=account_key))
     if res.name is None:
         print('Invalid account key. Please verify that your key is correct '
-              'or ask for support via contact@riseml.com')
+              'or ask for support via contact@riseml.com. '
+              'Your cluster is not registered with an account.')
     else:
         print('Registered succesfully! Account name: %s' % res.name)
 
