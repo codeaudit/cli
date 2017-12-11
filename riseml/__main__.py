@@ -54,6 +54,8 @@ def main():
         except HTTPError as e:
             # all uncaught http errors goes here
             handle_error(str(e))
+        except KeyboardInterrupt:
+            print('\nAborting...')
     else:
         parser.print_usage()
 
