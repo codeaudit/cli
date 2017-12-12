@@ -29,7 +29,6 @@ clusters:
       api-server: ""
       sync-server: ""
       cluster-id: ""
-      environment: development
 
 users:
 - name: default

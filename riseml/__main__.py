@@ -60,14 +60,14 @@ def main():
 
 def entrypoint():
     if get_environment() not in ['development', 'test']:
-        if not get_cluster_id():
-            handle_error("RiseML cluster ID ist not available")
+        cluster_id = get_cluster_id()
         rollbar.init(
-            get_cluster_id(), # Use cluster id as access token
+            cluster_id if cluster_id else '00000000-0000-0000-0000-000000000000',
             get_environment(),
             endpoint=get_rollbar_endpoint(),
             root=os.path.dirname(os.path.realpath(__file__)))
         try:
+
             main()
         except Exception:
             rollbar.report_exc_info()
