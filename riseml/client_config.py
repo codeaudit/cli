@@ -125,6 +125,7 @@ contexts:
     context:
       cluster: default
       user: default
+      environment: {environment}
 
 clusters:
   - name: default
@@ -132,7 +133,6 @@ clusters:
       api-server: http://{api_host}
       sync-server: rsync://{rsync_host}/sync
       cluster-id: {cluster_id}
-      environment: {environment}
 
 users:
 - name: default
@@ -206,4 +206,4 @@ def get_cluster_id():
 
 
 def get_environment():
-    return get_client_config()['environment']
+    return get_client_config().get('environment', 'production')
