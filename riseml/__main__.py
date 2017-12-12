@@ -71,7 +71,7 @@ def entrypoint():
             main()
         except Exception:
             rollbar.report_exc_info()
-            handle_error("An unexpected error occured. A report was sent to RiseML successfully.")
+            handle_error("An unexpected error occured.")
     else:
         main()
 
