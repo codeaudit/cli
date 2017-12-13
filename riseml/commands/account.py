@@ -70,7 +70,7 @@ def run_sync(args):
 def run_info(args):
     def readable_features(features):
         names = {'user_management': 'User Management'}
-        return ', '.join([names.get(f, f) for f in features])
+        return [names.get(f, f) for f in features]
 
     api_client = ApiClient()
     client = AdminApi(api_client)
@@ -84,11 +84,13 @@ def run_info(args):
         backend_info = get_account_info_backend(account.key)
         print('Name:     %s' % account.name)
         print('Key:      %s' % account.key)
-        print('Plan:     %s' % backend_info['plan'].title())
-        if not account.enabled_features:
-            print('Features: Run ' + bold('riseml account upgrade') + ' to enable features.')
-        else:
-            print('Features: %s' % readable_features(account.enabled_features))
+        upgrade_text = ''
+        plan = backend_info['plan']
+        if plan == 'basic':
+            upgrade_text = ' (run ' + bold('riseml account upgrade') + ' to switch)'
+        print('Plan:     %s%s' % (plan.title(), upgrade_text))
+        for feature in readable_features(account.enabled_features):
+            print('          - %s' % feature)
 
 
 def run_register(args):
