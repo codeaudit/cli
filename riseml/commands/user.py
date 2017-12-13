@@ -61,15 +61,20 @@ def add_list_parser(subparsers):
 
 def add_login_parser(subparsers):
     parser = subparsers.add_parser('login', help="login new user")
-    parser.add_argument('--api-host', help="DNS or IP/PORT of RiseML API server")
-    parser.add_argument('--sync-host', help="DNS or IP/PORT of RiseML sync server")
-    parser.add_argument('--api-key', help="Riseml API key")
+    parser.add_argument('--api-host', help="Hostname/IP and port of RiseML API server")
+    parser.add_argument('--sync-host', help="Hostname/IP and port of RiseML sync server")
+    parser.add_argument('--api-key', help="RiseML API key")
+    parser.add_argument('--host', help="Use this hostname for API/sync server with default ports 31213/31876")
     parser.set_defaults(run=run_login)
 
 
 def run_login(args):
     print('Configuring new user login. This will overwrite your existing configuration. \n')
     try:
+        if args.host:
+            args.api_host = args.host + ':31213'
+            args.sync_host = args.host + ':31876'
+
         api_key, api_host, cluster_id = login_api(args)
         print()
 
