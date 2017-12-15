@@ -111,7 +111,7 @@ def run_register(args):
                 webbrowser.open_new_tab(register_url)
             else:
                 print('Please visit this URL and follow instructions'
-                    ' to upgrade your account: %s' % register_url)
+                    ' to register an account: %s' % register_url)
             read_and_register_account_key()
 
 
