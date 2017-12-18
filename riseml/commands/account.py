@@ -82,15 +82,15 @@ def run_info(args):
               'Please run ' + bold('riseml account register'))
     else:
         backend_info = get_account_info_backend(account.key)
-        print('Name:     %s' % account.name)
-        print('Key:      %s' % account.key)
+        print('Name: %s' % account.name)
+        print('Key:  %s' % account.key)
         upgrade_text = ''
         plan = backend_info['plan']
         if plan == 'basic':
             upgrade_text = ' (run ' + bold('riseml account upgrade') + ' to switch)'
-        print('Plan:     %s%s' % (plan.title(), upgrade_text))
+        print('Plan: %s%s' % (plan.title(), upgrade_text))
         for feature in readable_features(account.enabled_features):
-            print('          - %s' % feature)
+            print('      - %s' % feature)
 
 
 def run_register(args):
@@ -99,7 +99,7 @@ def run_register(args):
     account = call_api(lambda: client.get_account_info())
     if account.key is not None:
         print('Note: this cluster is already registered with an account. '
-              ' You can continue and register with another account.')
+              'You can continue and register with another account.')
         read_and_register_account_key()
     else:
         key_exists = read_yes_no('Do you already have an account key')
