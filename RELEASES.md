@@ -1,23 +1,31 @@
+# v1.0.1 (2018/01/11)
+A minor update that prints a Tensorboard url when a training is started.
+
+## Release Notes
+- Print Tensorboard URL when starting a training
+
+
+# v1.0.0 (2017/12/19)
+🎉 We reached our first major release, which is considered to be stable offically!
+
+## Release Notes
+- Bug fixes
+
+## Updating
+There is no specific update process for the client. You can delete the old version and install the latest by following the [installation guide](install.md).
+
+
 # v0.8.1 (2017/11/16)
+Some minor bug fixes.
 
 ## Release Notes
 - Increased rsync timeout to 10 seconds
 - Fixed error when running riseml status -au
 
-## Updating
-There are no update process for the client. You can delete the old version and install the latest by following the [installation guide](http://docs.riseml.com/install/cli.html). The compiled binaries are located in our CDN.
-- Linux: https://cdn.riseml.com/releases/v0.8.1/linux/riseml
-- MacOS: https://cdn.riseml.com/releases/v0.8.1/mac/riseml
-
 
 # v0.8.0 (2017/11/13)
 
 🎉 This is the first public release of RiseML!
-
-## Installation
-To install RiseML client, follow the [installation guide](http://docs.riseml.com/install/cli.html). The compiled binaries are located in our CDN.
-- Linux: https://cdn.riseml.com/releases/v0.8.0/linux/riseml
-- MacOS: https://cdn.riseml.com/releases/v0.8.0/mac/risemlp
 
 ## Release Notes
 The client has the following functionality:

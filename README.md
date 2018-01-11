@@ -6,23 +6,17 @@ This is the command-line client for RiseML, which allows you to run and manage e
 
 ## Installation
 
-The latest version is available for download as a single binary (provided via pyInstaller).
+The latest version can be downloaded and installed as a single binary by executing the following command:
 
-For Linux:
 ```bash
-wget https://cdn.riseml.com/releases/latest/linux/riseml
+bash -c "$(curl -fsSL https://get.riseml.com/install-cli)"
 ```
 
-For macOS:
-```bash
-wget https://cdn.riseml.com/releases/latest/osx/riseml
-```
+Follow the script's instructions and add `~/.riseml/bin` to your PATH if you're not installing it globally.
 
-Make the file executable and move the binary in to your PATH:
-```bash
-chmod a+x riseml
-sudo mv riseml /usr/local/bin/riseml
-```
+To download RiseML manually (e.g., because you need a specific version), follow our detailed [installation instructions](INSTALL.md).
+
+See our [release notes](RELEASES.md) for a list of recent changes and how to upgrade from previous versions.
 
 ## Development
 
