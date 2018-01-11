@@ -2,6 +2,7 @@ import json
 
 from riseml.client import DefaultApi, ApiClient
 
+from riseml import util
 from riseml.configs import load_config
 from riseml.user import get_user
 from riseml.project import push_project
@@ -34,4 +35,9 @@ def run_train(args):
     if args.logs:
         stream_experiment_log(experiment)
     else:
-        print('Started experiment %s. To obtain logs, type `riseml logs %s`.' % (experiment.short_id, experiment.short_id))
+        print('Started experiment %s in background...' % (experiment.short_id))
+        if util.has_tensorboard(experiment):
+            tensorboard_job = util.tensorboard_job(experiment)
+            if tensorboard_job:
+                print('TensorBoard: {}'.format(util.tensorboard_job_url(tensorboard_job)))
+        print('Type `riseml logs %s` to connect to log stream.' % (experiment.short_id))
