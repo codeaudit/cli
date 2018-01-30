@@ -2,8 +2,8 @@
 import sys
 import os
 import argparse
+import builtins
 import rollbar
-import sys
 
 from urllib3.exceptions import HTTPError
 
@@ -58,9 +58,28 @@ def main():
             print('\nAborting...')
     else:
         parser.print_usage()
+    
+def safely_encoded_print(print_func):
+    def convert_to_ascii(arg):
+        if isinstance(arg, str):
+            arg = arg.replace(u'\u25cb ', '').replace(u'\u25cf ', '')
+            arg = arg.replace(u'\u2713 ', '').replace(u'\u2717 ', '')
+            arg = arg.replace(u'├╴', '  ').replace(u'╰╴', '  ')
+            return str.encode(arg, encoding='ascii', errors='replace').decode()
+        else:
+            return arg
 
+    def wrapped_print_func(*args, **kwargs):
+        try:
+            return print_func(*args, **kwargs)
+        except UnicodeEncodeError:
+            converted_args = [convert_to_ascii(arg) for arg in args]
+            return print_func(*converted_args, **kwargs)
+
+    return wrapped_print_func
 
 def entrypoint():
+    builtins.print = safely_encoded_print(print)
     if get_environment() not in ['development', 'test']:
         cluster_id = get_cluster_id()
         rollbar.init(
