@@ -28,9 +28,9 @@ script:
 - pip install -r requirements.txt pyinstaller
 
 # install rsync from scratch
-- wget https://download.samba.org/pub/rsync/rsync-3.1.2.tar.gz
-- tar xvzf rsync-3.1.2.tar.gz
-- mv rsync-3.1.2 rsync
+- wget https://download.samba.org/pub/rsync/rsync-3.1.3.tar.gz
+- tar xvzf rsync-3.1.3.tar.gz
+- mv rsync-3.1.3 rsync
 - cd rsync
 - ./configure --prefix=/usr
               --with-included-popt
