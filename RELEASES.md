@@ -1,3 +1,6 @@
+# v1.0.2 (2018/02/01)
+Fixes output of Unicode characters in non-utf-8 locales.
+
 # v1.0.1 (2018/01/11)
 A minor update that prints a Tensorboard url when a training is started.
 
